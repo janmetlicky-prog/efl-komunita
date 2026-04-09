@@ -462,7 +462,7 @@ async function doLogin() {
   const admin = isAdmin(email);
 
   // Zkontroluj jestli uživatel existuje
-  const { data: existing } = await db.from('users').select('*').eq('email', email).single();
+  const { data: existing } = await db.from('users').select('*').eq('email', email).maybeSingle();
 
   if (existing) {
     currentUser = { ...existing, is_admin: admin };
@@ -484,7 +484,7 @@ async function doLogin() {
   document.getElementById('login-screen').classList.add('hidden');
   await loadIntents();
   await loadMyActivity();
-  if (admin) showToast('👑 Přihlášen jako administrátor!');
+  if (admin) showToast('👑 Vítej zpět, Jane! Jsi přihlášen jako administrátor.');
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
   else showToast('🌍 Vítej v komunitě!');
 }
@@ -503,7 +503,7 @@ function updateUserUI() {
   const parts = currentUser.name.trim().split(' ');
   const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
   document.getElementById('nav-avatar').textContent = ini;
-  document.getElementById('nav-name').textContent = (currentUser.is_admin ? '👑 ' : '') + parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
+  document.getElementById('nav-name').textContent = (currentUser.is_admin === true ? '👑 ' : '') + parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
   document.getElementById('modal-avatar').textContent = ini;
   document.getElementById('modal-name').textContent = currentUser.name;
   document.getElementById('pf-name').value = currentUser.name || '';
@@ -511,7 +511,8 @@ function updateUserUI() {
   document.getElementById('pf-style').value = currentUser.travel_style || '';
   document.getElementById('pf-bio').value = currentUser.bio || '';
   const adminBadge = currentUser.is_admin ? ' · 👑 Admin' : '';
-  document.getElementById('modal-sub').textContent = currentUser.is_admin ? '👑 Administrátor Essence for Life' : currentUser.verified ? '✅ Ověřený klient Essence for Life' : '🌍 Člen komunity';
+  const adminLabel = currentUser.is_admin === true;
+  document.getElementById('modal-sub').textContent = adminLabel ? '👑 Administrátor Essence for Life' : currentUser.verified ? '✅ Ověřený klient Essence for Life' : '🌍 Člen komunity';
 }
 
 // ── NAČTENÍ DAT ─────────────────────────────────────────────────────────────
