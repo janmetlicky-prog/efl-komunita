@@ -422,10 +422,11 @@ const EFL_CLIENTS = [
   'adela@essenceforlife.cz',
   'info@essenceforlife.cz',
   'jan.metlicky@gmail.com',
+  'adela@essenceforlife.cz',
   // ... další emaily klientů
 ];
 
-const ADMINS = ['jan.metlicky@gmail.com'];
+const ADMINS = ['jan.metlicky@gmail.com', 'adela@essenceforlife.cz'];
 
 function isEFLClient(email) {
   return EFL_CLIENTS.includes(email.toLowerCase().trim());
@@ -484,7 +485,7 @@ async function doLogin() {
   document.getElementById('login-screen').classList.add('hidden');
   await loadIntents();
   await loadMyActivity();
-  if (admin) showToast('👑 Vítej zpět, Jane! Jsi přihlášen jako administrátor.');
+  if (admin) showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
   else showToast('🌍 Vítej v komunitě!');
 }
