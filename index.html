@@ -7,13 +7,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --efl:       #C0E0E1;
     --teal:      #2A9CA0;
     --teal-dark: #1A6B6E;
     --orange:    #E8773A;
-    --white:     #FFFFFF;
     --bg:        #FAFAFA;
     --card:      #FFFFFF;
     --border:    #E2EFF0;
@@ -22,184 +22,238 @@
     --accent:    #2A9D8F;
     --chip-bg:   #EEF8F9;
   }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+  /* LOGIN SCREEN */
+  .login-screen { position:fixed; inset:0; background:var(--teal-dark); display:flex; align-items:center; justify-content:center; z-index:9000; }
+  .login-screen.hidden { display:none; }
+  .login-box { background:white; border-radius:20px; padding:2.5rem; width:400px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .login-logo { text-align:center; margin-bottom:1.75rem; }
+  .login-logo img { height:48px; filter:none; }
+  .login-logo h2 { font-family:'Playfair Display',serif; color:var(--teal-dark); font-size:1.4rem; margin-top:.75rem; }
+  .login-logo p { color:var(--muted); font-size:.85rem; margin-top:.35rem; font-weight:300; }
+  .login-field { margin-bottom:1rem; }
+  .login-field label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.3rem; }
+  .login-field input { width:100%; padding:.65rem .9rem; border:1px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none; color:var(--text); transition:border-color .2s; }
+  .login-field input:focus { border-color:var(--teal); }
+  .btn-login { width:100%; background:var(--teal-dark); color:white; border:none; border-radius:10px; padding:.8rem; font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:500; cursor:pointer; transition:background .2s; margin-top:.5rem; }
+  .btn-login:hover { background:var(--teal); }
+  .login-note { text-align:center; font-size:.75rem; color:var(--muted); margin-top:1rem; line-height:1.5; }
+  .badge-preview { display:flex; gap:.75rem; justify-content:center; margin:1.25rem 0; }
+  .badge { display:inline-flex; align-items:center; gap:.4rem; padding:.3rem .8rem; border-radius:20px; font-size:.75rem; font-weight:500; }
+  .badge.verified { background:rgba(232,119,58,.1); color:#B85A1E; border:1px solid rgba(232,119,58,.3); }
+  .badge.member { background:rgba(42,156,160,.1); color:var(--teal-dark); border:1px solid rgba(42,156,160,.3); }
+  .login-error { background:#fee; border:1px solid #fcc; border-radius:8px; padding:.6rem .9rem; font-size:.82rem; color:#c00; margin-top:.75rem; display:none; }
+  .login-success { background:#efe; border:1px solid #cfc; border-radius:8px; padding:.6rem .9rem; font-size:.82rem; color:#060; margin-top:.75rem; display:none; }
 
   /* HEADER */
-  header { background: var(--teal-dark); padding: 0 2rem; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 16px rgba(26,107,110,0.2); }
-  .logo-wrap { display: flex; align-items: center; gap: 1rem; }
-  .logo-img { height: 34px; width: auto; filter: brightness(0) invert(1); opacity: 0.95; }
-  .logo-divider { width: 1px; height: 24px; background: rgba(192,224,225,0.25); }
-  .logo-sub { color: var(--efl); font-size: 0.68rem; letter-spacing: 0.22em; text-transform: uppercase; }
-  nav { display: flex; gap: 0.25rem; }
-  nav button { background: none; border: none; color: rgba(192,224,225,0.6); padding: 0.45rem 1.1rem; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 6px; transition: all 0.2s; }
-  nav button:hover, nav button.active { color: var(--efl); background: rgba(192,224,225,0.12); }
-  .user-badge { display: flex; align-items: center; gap: 0.7rem; color: rgba(192,224,225,0.85); font-size: 0.83rem; cursor: pointer; }
-  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--teal); border: 2px solid rgba(192,224,225,0.4); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.8rem; color: white; }
+  header { background:var(--teal-dark); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:64px; position:sticky; top:0; z-index:1000; box-shadow:0 2px 16px rgba(26,107,110,.2); }
+  .logo-wrap { display:flex; align-items:center; gap:1rem; }
+  .logo-img { height:34px; filter:brightness(0) invert(1); opacity:.95; }
+  .logo-divider { width:1px; height:24px; background:rgba(192,224,225,.25); }
+  .logo-sub { color:var(--efl); font-size:.68rem; letter-spacing:.22em; text-transform:uppercase; }
+  nav { display:flex; gap:.25rem; }
+  nav button { background:none; border:none; color:rgba(192,224,225,.6); padding:.45rem 1rem; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; border-radius:6px; transition:all .2s; }
+  nav button:hover, nav button.active { color:var(--efl); background:rgba(192,224,225,.12); }
+  .user-badge { display:flex; align-items:center; gap:.7rem; color:rgba(192,224,225,.85); font-size:.83rem; cursor:pointer; }
+  .avatar { width:34px; height:34px; border-radius:50%; background:var(--teal); border:2px solid rgba(192,224,225,.4); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:.8rem; color:white; }
 
   /* MAIN */
-  main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
-  .section { display: none; }
-  .section.active { display: block; }
-  .page-header { margin-bottom: 1.75rem; }
-  .page-header h1 { font-family: 'Playfair Display', serif; font-size: 1.85rem; color: var(--teal-dark); margin-bottom: 0.3rem; }
-  .page-header p { color: var(--muted); font-size: 0.88rem; font-weight: 300; }
+  main { max-width:1200px; margin:0 auto; padding:2rem 1.5rem; }
+  .section { display:none; } .section.active { display:block; }
+  .page-header { margin-bottom:1.75rem; }
+  .page-header h1 { font-family:'Playfair Display',serif; font-size:1.85rem; color:var(--teal-dark); margin-bottom:.3rem; }
+  .page-header p { color:var(--muted); font-size:.88rem; font-weight:300; }
 
   /* COMMUNITY */
-  .community-layout { display: grid; grid-template-columns: 1fr 330px; gap: 1.5rem; align-items: start; }
-  .feed { display: flex; flex-direction: column; gap: 1rem; }
+  .community-layout { display:grid; grid-template-columns:1fr 330px; gap:1.5rem; align-items:start; }
+  .feed { display:flex; flex-direction:column; gap:1rem; }
+  .filter-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .filter-chip { padding:.32rem .85rem; border-radius:20px; border:1px solid var(--border); background:white; font-family:'DM Sans',sans-serif; font-size:.78rem; cursor:pointer; color:var(--muted); transition:all .2s; }
+  .filter-chip.active { background:var(--teal); border-color:var(--teal); color:white; }
 
-  .filter-bar { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
-  .filter-chip { padding: 0.32rem 0.85rem; border-radius: 20px; border: 1px solid var(--border); background: white; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; cursor: pointer; color: var(--muted); transition: all 0.2s; }
-  .filter-chip.active { background: var(--teal); border-color: var(--teal); color: white; }
+  .intent-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; box-shadow:0 1px 8px rgba(0,0,0,.04); transition:box-shadow .2s, transform .2s; }
+  .intent-card:hover { box-shadow:0 6px 24px rgba(42,156,160,.1); transform:translateY(-1px); }
+  .intent-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:.75rem; }
+  .intent-who { display:flex; align-items:center; gap:.75rem; }
+  .intent-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:.88rem; color:white; flex-shrink:0; }
+  .intent-name { font-weight:500; font-size:.9rem; color:var(--teal-dark); }
+  .intent-time { font-size:.72rem; color:var(--muted); margin-top:.1rem; }
+  .destination-badge { display:flex; align-items:center; gap:.5rem; background:var(--teal-dark); color:var(--efl); padding:.35rem .9rem; border-radius:20px; font-family:'Playfair Display',serif; font-size:.9rem; font-style:italic; white-space:nowrap; }
+  .intent-body { font-size:.88rem; color:var(--text); line-height:1.65; margin-bottom:1rem; font-weight:300; }
+  .intent-meta { display:flex; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .meta-chip { display:flex; align-items:center; gap:.35rem; font-size:.75rem; color:var(--muted); background:var(--chip-bg); padding:.22rem .65rem; border-radius:20px; border:1px solid var(--border); }
+  .meta-chip.partner { color:var(--orange); background:rgba(232,119,58,.08); border-color:rgba(232,119,58,.2); }
 
-  .intent-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; box-shadow: 0 1px 8px rgba(0,0,0,0.04); transition: box-shadow 0.2s, transform 0.2s; }
-  .intent-card:hover { box-shadow: 0 6px 24px rgba(42,156,160,0.1); transform: translateY(-1px); }
-  .intent-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.75rem; }
-  .intent-who { display: flex; align-items: center; gap: 0.75rem; }
-  .intent-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.88rem; color: white; flex-shrink: 0; }
-  .intent-name { font-weight: 500; font-size: 0.9rem; color: var(--teal-dark); }
-  .intent-time { font-size: 0.72rem; color: var(--muted); margin-top: 0.1rem; }
-  .destination-badge { display: flex; align-items: center; gap: 0.5rem; background: var(--teal-dark); color: var(--efl); padding: 0.35rem 0.9rem; border-radius: 20px; font-family: 'Playfair Display', serif; font-size: 0.9rem; font-style: italic; white-space: nowrap; }
-  .intent-body { font-size: 0.88rem; color: var(--text); line-height: 1.65; margin-bottom: 1rem; font-weight: 300; }
-  .intent-meta { display: flex; gap: 0.6rem; margin-bottom: 1rem; flex-wrap: wrap; }
-  .meta-chip { display: flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; color: var(--muted); background: var(--chip-bg); padding: 0.22rem 0.65rem; border-radius: 20px; border: 1px solid var(--border); }
-  .meta-chip.partner { color: var(--orange); background: rgba(232,119,58,0.08); border-color: rgba(232,119,58,0.2); }
+  .milestone-badge { display:inline-flex; align-items:center; gap:.35rem; background:linear-gradient(135deg,var(--orange),#f4a261); color:white; padding:.2rem .7rem; border-radius:20px; font-size:.72rem; font-weight:600; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.8;} }
 
-  /* MILNÍK */
-  .milestone-badge { display: inline-flex; align-items: center; gap: 0.35rem; background: linear-gradient(135deg, var(--orange), #f4a261); color: white; padding: 0.2rem 0.7rem; border-radius: 20px; font-size: 0.72rem; font-weight: 600; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.8;} }
+  .intent-actions { display:flex; align-items:center; gap:.5rem; padding-top:.75rem; border-top:1px solid var(--border); flex-wrap:wrap; }
+  .action-btn { display:flex; align-items:center; gap:.4rem; padding:.38rem .85rem; border-radius:8px; border:1px solid var(--border); background:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.8rem; color:var(--muted); transition:all .2s; }
+  .action-btn:hover { border-color:var(--teal); color:var(--teal); }
+  .action-btn.interested { background:var(--teal); border-color:var(--teal); color:white; }
+  .action-btn.liked { color:var(--orange); border-color:var(--orange); background:rgba(232,119,58,.06); }
+  .interest-count { margin-left:auto; font-size:.75rem; color:var(--muted); display:flex; align-items:center; gap:.4rem; }
+  .interest-avatars { display:flex; }
+  .interest-avatars .mini-av { width:22px; height:22px; border-radius:50%; border:2px solid white; margin-left:-6px; font-size:.58rem; display:flex; align-items:center; justify-content:center; color:white; font-weight:600; }
+  .interest-avatars .mini-av:first-child { margin-left:0; }
 
-  .intent-actions { display: flex; align-items: center; gap: 0.5rem; padding-top: 0.75rem; border-top: 1px solid var(--border); flex-wrap: wrap; }
-  .action-btn { display: flex; align-items: center; gap: 0.4rem; padding: 0.38rem 0.85rem; border-radius: 8px; border: 1px solid var(--border); background: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: var(--muted); transition: all 0.2s; }
-  .action-btn:hover { border-color: var(--teal); color: var(--teal); }
-  .action-btn.interested { background: var(--teal); border-color: var(--teal); color: white; }
-  .action-btn.liked { color: var(--orange); border-color: var(--orange); background: rgba(232,119,58,0.06); }
+  .comments { margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--border); display:none; }
+  .comments.open { display:block; }
+  .comment { display:flex; gap:.6rem; margin-bottom:.6rem; align-items:flex-start; }
+  .comment-bubble { background:var(--chip-bg); border-radius:8px 8px 8px 2px; padding:.5rem .75rem; font-size:.82rem; line-height:1.5; color:var(--text); flex:1; border:1px solid var(--border); }
+  .comment-author { font-weight:500; font-size:.72rem; color:var(--teal-dark); margin-bottom:.15rem; }
+  .comment-input-row { display:flex; gap:.5rem; margin-top:.5rem; }
+  .comment-input-row input { flex:1; padding:.5rem .75rem; border:1px solid var(--border); border-radius:8px; font-size:.82rem; font-family:'DM Sans',sans-serif; outline:none; background:white; }
+  .comment-input-row input:focus { border-color:var(--teal); }
+  .comment-input-row button { background:var(--teal-dark); color:var(--efl); border:none; border-radius:8px; padding:.5rem .8rem; cursor:pointer; }
 
-  .interest-count { margin-left: auto; font-size: 0.75rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
-  .interest-avatars { display: flex; }
-  .interest-avatars .mini-av { width: 22px; height: 22px; border-radius: 50%; border: 2px solid white; margin-left: -6px; font-size: 0.58rem; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
-  .interest-avatars .mini-av:first-child { margin-left: 0; }
-
-  .comments { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); display: none; }
-  .comments.open { display: block; }
-  .comment { display: flex; gap: 0.6rem; margin-bottom: 0.6rem; align-items: flex-start; }
-  .comment-bubble { background: var(--chip-bg); border-radius: 8px 8px 8px 2px; padding: 0.5rem 0.75rem; font-size: 0.82rem; line-height: 1.5; color: var(--text); flex: 1; border: 1px solid var(--border); }
-  .comment-author { font-weight: 500; font-size: 0.72rem; color: var(--teal-dark); margin-bottom: 0.15rem; }
-  .comment-input-row { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
-  .comment-input-row input { flex: 1; padding: 0.5rem 0.75rem; border: 1px solid var(--border); border-radius: 8px; font-size: 0.82rem; font-family: 'DM Sans', sans-serif; outline: none; background: white; }
-  .comment-input-row input:focus { border-color: var(--teal); }
-  .comment-input-row button { background: var(--teal-dark); color: var(--efl); border: none; border-radius: 8px; padding: 0.5rem 0.8rem; cursor: pointer; }
-
-  /* NEW INTENT FORM */
-  .new-intent-card { background: var(--teal-dark); border-radius: 14px; padding: 1.5rem; position: sticky; top: 82px; }
-  .new-intent-card h3 { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--efl); margin-bottom: 1.25rem; font-style: italic; }
-  .form-group { margin-bottom: 0.85rem; }
-  .form-group label { display: block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(192,224,225,0.55); margin-bottom: 0.3rem; }
-  .form-group input, .form-group textarea { width: 100%; padding: 0.55rem 0.8rem; border: 1px solid rgba(192,224,225,0.15); border-radius: 8px; background: rgba(255,255,255,0.07); color: rgba(240,250,250,0.95); font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none; transition: border-color 0.2s; }
-  .form-group input:focus, .form-group textarea:focus { border-color: var(--efl); }
-  .form-group input::placeholder, .form-group textarea::placeholder { color: rgba(192,224,225,0.3); }
-  .form-group textarea { resize: none; height: 80px; }
-  .partner-toggle { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; }
-  .toggle { width: 40px; height: 22px; background: rgba(255,255,255,0.1); border-radius: 11px; position: relative; cursor: pointer; transition: background 0.2s; border: none; flex-shrink: 0; }
-  .toggle.on { background: var(--orange); }
-  .toggle::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
-  .toggle.on::after { left: 21px; }
-  .toggle-label { font-size: 0.8rem; color: rgba(192,224,225,0.6); }
-  .btn-post { width: 100%; background: var(--teal); color: white; border: none; border-radius: 8px; padding: 0.75rem; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
-  .btn-post:hover { background: var(--accent); }
+  /* NEW INTENT */
+  .new-intent-card { background:var(--teal-dark); border-radius:14px; padding:1.5rem; position:sticky; top:82px; }
+  .new-intent-card h3 { font-family:'Playfair Display',serif; font-size:1.05rem; color:var(--efl); margin-bottom:1.25rem; font-style:italic; }
+  .form-group { margin-bottom:.85rem; }
+  .form-group label { display:block; font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:rgba(192,224,225,.55); margin-bottom:.3rem; }
+  .form-group input, .form-group textarea { width:100%; padding:.55rem .8rem; border:1px solid rgba(192,224,225,.15); border-radius:8px; background:rgba(255,255,255,.07); color:rgba(240,250,250,.95); font-family:'DM Sans',sans-serif; font-size:.85rem; outline:none; transition:border-color .2s; }
+  .form-group input:focus, .form-group textarea:focus { border-color:var(--efl); }
+  .form-group input::placeholder, .form-group textarea::placeholder { color:rgba(192,224,225,.3); }
+  .form-group textarea { resize:none; height:80px; }
+  .partner-toggle { display:flex; align-items:center; gap:.75rem; margin-bottom:1rem; }
+  .toggle { width:40px; height:22px; background:rgba(255,255,255,.1); border-radius:11px; position:relative; cursor:pointer; transition:background .2s; border:none; flex-shrink:0; }
+  .toggle.on { background:var(--orange); }
+  .toggle::after { content:''; position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:3px; left:3px; transition:left .2s; }
+  .toggle.on::after { left:21px; }
+  .toggle-label { font-size:.8rem; color:rgba(192,224,225,.6); }
+  .btn-post { width:100%; background:var(--teal); color:white; border:none; border-radius:8px; padding:.75rem; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:500; cursor:pointer; transition:background .2s; }
+  .btn-post:hover { background:var(--accent); }
 
   /* MAP */
-  .map-layout { display: grid; grid-template-columns: 1fr 310px; gap: 1.5rem; align-items: start; }
-  .map-container { background: var(--card); border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: 0 1px 8px rgba(0,0,0,0.04); position: relative; }
-  #world-map { width: 100%; display: block; cursor: grab; }
-  #world-map:active { cursor: grabbing; }
-  .map-legend { padding: 0.8rem 1.25rem; border-top: 1px solid var(--border); display: flex; gap: 2rem; font-size: 0.8rem; color: var(--muted); }
-  .legend-item { display: flex; align-items: center; gap: 0.6rem; font-weight: 500; }
-  .legend-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 4px rgba(0,0,0,0.2); }
-  .legend-dot.efl { background: var(--orange); }
-  .legend-dot.personal { background: var(--teal-dark); }
-  .map-tooltip { position: absolute; background: var(--teal-dark); color: var(--efl); padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.78rem; pointer-events: none; display: none; z-index: 100; white-space: nowrap; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-  .map-tooltip small { display: block; color: rgba(192,224,225,0.55); font-size: 0.68rem; }
-  .map-sidebar { display: flex; flex-direction: column; gap: 1rem; }
-  .stats-card { background: var(--teal-dark); border-radius: 14px; padding: 1.25rem; }
-  .stats-card h3 { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: var(--efl); margin-bottom: 1rem; }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-  .stat { text-align: center; }
-  .stat-num { font-size: 1.8rem; font-weight: 600; color: var(--efl); line-height: 1; }
-  .stat-label { font-size: 0.66rem; color: rgba(192,224,225,0.55); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.2rem; }
-  .map-key { display: flex; gap: 1rem; margin-bottom: 0.85rem; }
-  .key-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.73rem; font-weight: 500; }
-  .key-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; box-shadow: 0 1px 3px rgba(0,0,0,0.15); flex-shrink: 0; }
-  .key-dot.efl { background: var(--orange); }
-  .key-dot.personal { background: var(--teal-dark); }
-  .add-place-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; }
-  .add-place-card h3 { font-size: 0.74rem; font-weight: 500; color: var(--teal-dark); margin-bottom: 0.85rem; text-transform: uppercase; letter-spacing: 0.1em; }
-  .country-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.9rem; }
-  .tab-btn { flex: 1; padding: 0.4rem; border-radius: 6px; border: 1px solid var(--border); background: none; cursor: pointer; font-size: 0.75rem; font-family: 'DM Sans', sans-serif; transition: all 0.2s; color: var(--muted); }
-  .tab-btn.active.efl-tab { background: var(--orange); border-color: var(--orange); color: white; }
-  .tab-btn.active.personal-tab { background: var(--teal-dark); border-color: var(--teal-dark); color: white; }
-  .place-inputs { display: flex; flex-direction: column; gap: 0.45rem; margin-bottom: 0.6rem; }
-  .place-inputs input { width: 100%; padding: 0.52rem 0.8rem; border: 1px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; background: white; color: var(--text); outline: none; transition: border-color 0.2s; }
-  .place-inputs input:focus { border-color: var(--teal); }
-  .place-inputs input::placeholder { color: #aab; }
-  .btn-add { width: 100%; background: var(--teal); color: white; border: none; border-radius: 8px; padding: 0.58rem; cursor: pointer; font-size: 0.83rem; font-family: 'DM Sans', sans-serif; transition: background 0.2s; font-weight: 500; }
-  .btn-add:hover { background: var(--teal-dark); }
-  .place-list { margin-top: 0.9rem; display: flex; flex-direction: column; gap: 0.3rem; max-height: 190px; overflow-y: auto; }
-  .place-tag { display: flex; align-items: center; justify-content: space-between; padding: 0.28rem 0.65rem; border-radius: 7px; font-size: 0.77rem; }
-  .place-tag.efl { background: rgba(232,119,58,0.1); color: #B85A1E; border: 1px solid rgba(232,119,58,0.2); }
-  .place-tag.personal { background: rgba(26,107,110,0.08); color: var(--teal-dark); border: 1px solid rgba(26,107,110,0.15); }
-  .place-tag-name { font-weight: 500; }
-  .place-tag-country { opacity: 0.6; margin-left: 0.3rem; font-size: 0.7rem; }
-  .remove-tag { background: none; border: none; cursor: pointer; color: inherit; opacity: 0.35; font-size: 1rem; line-height: 1; padding: 0; transition: opacity 0.2s; }
-  .remove-tag:hover { opacity: 1; }
+  .map-layout { display:grid; grid-template-columns:1fr 310px; gap:1.5rem; align-items:start; }
+  .map-container { background:var(--card); border-radius:14px; overflow:hidden; border:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,.04); position:relative; }
+  #world-map { width:100%; display:block; cursor:grab; }
+  #world-map:active { cursor:grabbing; }
+  .map-legend { padding:.8rem 1.25rem; border-top:1px solid var(--border); display:flex; gap:2rem; font-size:.8rem; color:var(--muted); }
+  .legend-item { display:flex; align-items:center; gap:.6rem; font-weight:500; }
+  .legend-dot { width:14px; height:14px; border-radius:50%; border:2px solid white; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+  .legend-dot.efl { background:var(--orange); }
+  .legend-dot.personal { background:var(--teal-dark); }
+  .map-tooltip { position:absolute; background:var(--teal-dark); color:var(--efl); padding:.35rem .75rem; border-radius:6px; font-size:.78rem; pointer-events:none; display:none; z-index:100; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  .map-tooltip small { display:block; color:rgba(192,224,225,.55); font-size:.68rem; }
+  .map-sidebar { display:flex; flex-direction:column; gap:1rem; }
+  .stats-card { background:var(--teal-dark); border-radius:14px; padding:1.25rem; }
+  .stats-card h3 { font-family:'Playfair Display',serif; font-size:.95rem; color:var(--efl); margin-bottom:1rem; }
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+  .stat { text-align:center; }
+  .stat-num { font-size:1.8rem; font-weight:600; color:var(--efl); line-height:1; }
+  .stat-label { font-size:.66rem; color:rgba(192,224,225,.55); text-transform:uppercase; letter-spacing:.08em; margin-top:.2rem; }
+  .map-key { display:flex; gap:1rem; margin-bottom:.85rem; }
+  .key-item { display:flex; align-items:center; gap:.4rem; font-size:.73rem; font-weight:500; }
+  .key-dot { width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 1px 3px rgba(0,0,0,.15); flex-shrink:0; }
+  .key-dot.efl { background:var(--orange); }
+  .key-dot.personal { background:var(--teal-dark); }
+  .add-place-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem; }
+  .add-place-card h3 { font-size:.74rem; font-weight:500; color:var(--teal-dark); margin-bottom:.85rem; text-transform:uppercase; letter-spacing:.1em; }
+  .country-tabs { display:flex; gap:.5rem; margin-bottom:.9rem; }
+  .tab-btn { flex:1; padding:.4rem; border-radius:6px; border:1px solid var(--border); background:none; cursor:pointer; font-size:.75rem; font-family:'DM Sans',sans-serif; transition:all .2s; color:var(--muted); }
+  .tab-btn.active.efl-tab { background:var(--orange); border-color:var(--orange); color:white; }
+  .tab-btn.active.personal-tab { background:var(--teal-dark); border-color:var(--teal-dark); color:white; }
+  .place-inputs { display:flex; flex-direction:column; gap:.45rem; margin-bottom:.6rem; }
+  .place-inputs input { width:100%; padding:.52rem .8rem; border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.82rem; background:white; color:var(--text); outline:none; transition:border-color .2s; }
+  .place-inputs input:focus { border-color:var(--teal); }
+  .place-inputs input::placeholder { color:#aab; }
+  .btn-add { width:100%; background:var(--teal); color:white; border:none; border-radius:8px; padding:.58rem; cursor:pointer; font-size:.83rem; font-family:'DM Sans',sans-serif; transition:background .2s; font-weight:500; }
+  .btn-add:hover { background:var(--teal-dark); }
+  .place-list { margin-top:.9rem; display:flex; flex-direction:column; gap:.3rem; max-height:190px; overflow-y:auto; }
+  .place-tag { display:flex; align-items:center; justify-content:space-between; padding:.28rem .65rem; border-radius:7px; font-size:.77rem; }
+  .place-tag.efl { background:rgba(232,119,58,.1); color:#B85A1E; border:1px solid rgba(232,119,58,.2); }
+  .place-tag.personal { background:rgba(26,107,110,.08); color:var(--teal-dark); border:1px solid rgba(26,107,110,.15); }
+  .place-tag-name { font-weight:500; }
+  .place-tag-country { opacity:.6; margin-left:.3rem; font-size:.7rem; }
+  .remove-tag { background:none; border:none; cursor:pointer; color:inherit; opacity:.35; font-size:1rem; line-height:1; padding:0; transition:opacity .2s; }
+  .remove-tag:hover { opacity:1; }
 
   /* PROFIL MODAL */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(26,107,110,0.4); z-index: 2000; display: none; align-items: center; justify-content: center; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: white; border-radius: 16px; width: 440px; max-width: 95vw; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.2); position: relative; }
-  .modal-header { background: var(--teal-dark); padding: 1.5rem; display: flex; align-items: center; gap: 1rem; }
-  .modal-avatar-lg { width: 64px; height: 64px; border-radius: 50%; background: var(--teal); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.4rem; color: white; border: 3px solid rgba(192,224,225,0.4); flex-shrink: 0; }
-  .modal-header-info h2 { font-family: 'Playfair Display', serif; color: var(--efl); font-size: 1.2rem; }
-  .modal-header-info p { color: rgba(192,224,225,0.6); font-size: 0.78rem; margin-top: 0.2rem; }
-  .modal-body { padding: 1.5rem; }
-  .profile-stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.75rem; margin-bottom: 1.25rem; }
-  .profile-stat { text-align: center; background: var(--chip-bg); border-radius: 10px; padding: 0.75rem 0.5rem; border: 1px solid var(--border); }
-  .profile-stat-num { font-size: 1.4rem; font-weight: 600; color: var(--teal-dark); }
-  .profile-stat-label { font-size: 0.67rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 0.15rem; }
-  .profile-field { margin-bottom: 0.9rem; }
-  .profile-field label { display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 0.3rem; }
-  .profile-field input, .profile-field textarea { width: 100%; padding: 0.55rem 0.8rem; border: 1px solid var(--border); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; outline: none; color: var(--text); }
-  .profile-field input:focus, .profile-field textarea:focus { border-color: var(--teal); }
-  .profile-field textarea { resize: none; height: 70px; }
-  .btn-save { width: 100%; background: var(--teal); color: white; border: none; border-radius: 8px; padding: 0.7rem; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500; cursor: pointer; }
-  .btn-save:hover { background: var(--teal-dark); }
-  .modal-close { position: absolute; top: 1rem; right: 1rem; background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+  .modal-overlay { position:fixed; inset:0; background:rgba(26,107,110,.4); z-index:2000; display:none; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:16px; width:440px; max-width:95vw; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.2); position:relative; }
+  .modal-header { background:var(--teal-dark); padding:1.5rem; display:flex; align-items:center; gap:1rem; }
+  .modal-avatar-lg { width:64px; height:64px; border-radius:50%; background:var(--teal); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.4rem; color:white; border:3px solid rgba(192,224,225,.4); flex-shrink:0; }
+  .modal-header-info h2 { font-family:'Playfair Display',serif; color:var(--efl); font-size:1.2rem; }
+  .modal-header-info p { color:rgba(192,224,225,.6); font-size:.78rem; margin-top:.2rem; }
+  .modal-body { padding:1.5rem; }
+  .profile-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin-bottom:1.25rem; }
+  .profile-stat { text-align:center; background:var(--chip-bg); border-radius:10px; padding:.75rem .5rem; border:1px solid var(--border); }
+  .profile-stat-num { font-size:1.4rem; font-weight:600; color:var(--teal-dark); }
+  .profile-stat-label { font-size:.67rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-top:.15rem; }
+  .profile-field { margin-bottom:.9rem; }
+  .profile-field label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.3rem; }
+  .profile-field input, .profile-field textarea { width:100%; padding:.55rem .8rem; border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.85rem; outline:none; color:var(--text); }
+  .profile-field input:focus, .profile-field textarea:focus { border-color:var(--teal); }
+  .profile-field textarea { resize:none; height:70px; }
+  .btn-save { width:100%; background:var(--teal); color:white; border:none; border-radius:8px; padding:.7rem; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:500; cursor:pointer; }
+  .btn-save:hover { background:var(--teal-dark); }
+  .modal-close { position:absolute; top:1rem; right:1rem; background:rgba(255,255,255,.1); border:none; color:white; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
+  .user-badge-inline { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .6rem; border-radius:20px; font-size:.72rem; font-weight:500; margin-left:.5rem; }
+  .user-badge-inline.verified { background:rgba(232,119,58,.1); color:#B85A1E; border:1px solid rgba(232,119,58,.2); }
+  .user-badge-inline.member { background:rgba(42,156,160,.1); color:var(--teal-dark); border:1px solid rgba(42,156,160,.2); }
 
   /* MOJE */
-  .mine-tabs { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; }
-  .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
-  .empty-state .es-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
-  .empty-state h3 { font-family: 'Playfair Display', serif; color: var(--teal-dark); margin-bottom: 0.5rem; }
-  .empty-state p { font-size: 0.88rem; font-weight: 300; }
+  .mine-tabs { display:flex; gap:.5rem; margin-bottom:1.25rem; }
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+  .empty-state .es-icon { font-size:2.5rem; margin-bottom:.75rem; }
+  .empty-state h3 { font-family:'Playfair Display',serif; color:var(--teal-dark); margin-bottom:.5rem; }
+  .empty-state p { font-size:.88rem; font-weight:300; }
+
+  /* LOADING */
+  .loading { text-align:center; padding:2rem; color:var(--muted); font-size:.88rem; }
+  .spinner { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spin .8s linear infinite; margin-right:.5rem; vertical-align:middle; }
+  @keyframes spin { to{transform:rotate(360deg);} }
 
   /* TOAST */
-  .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--teal-dark); color: var(--efl); padding: 0.7rem 1.2rem; border-radius: 10px; font-size: 0.82rem; box-shadow: 0 4px 20px rgba(0,0,0,0.15); transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 9999; display: flex; align-items: center; gap: 0.5rem; max-width: 340px; }
-  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast { position:fixed; bottom:2rem; right:2rem; background:var(--teal-dark); color:var(--efl); padding:.7rem 1.2rem; border-radius:10px; font-size:.82rem; box-shadow:0 4px 20px rgba(0,0,0,.15); transform:translateY(100px); opacity:0; transition:all .3s; z-index:9999; display:flex; align-items:center; gap:.5rem; max-width:340px; }
+  .toast.show { transform:translateY(0); opacity:1; }
 
-  @media (max-width: 900px) {
-    .map-layout, .community-layout { grid-template-columns: 1fr; }
-    .new-intent-card { position: static; }
-    nav button { font-size: 0.72rem; padding: 0.45rem 0.65rem; }
+  @media (max-width:900px) {
+    .map-layout, .community-layout { grid-template-columns:1fr; }
+    .new-intent-card { position:static; }
+    nav button { font-size:.7rem; padding:.45rem .6rem; }
   }
 </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://essenceforlife.cz/wp-content/uploads/2024/03/EFL-logo.png" alt="EFL"
+           onerror="this.style.display='none'">
+      <h2>Cestovní komunita</h2>
+      <p>Sdílej sny, najdi parťáky, cestuj s EFL</p>
+    </div>
+    <div class="badge-preview">
+      <span class="badge verified">✅ Ověřený klient EFL</span>
+      <span class="badge member">🌍 Člen komunity</span>
+    </div>
+    <div class="login-field">
+      <label>Tvoje jméno</label>
+      <input type="text" id="login-name" placeholder="Jana Nováková" />
+    </div>
+    <div class="login-field">
+      <label>Emailová adresa</label>
+      <input type="email" id="login-email" placeholder="jana@example.com" />
+    </div>
+    <button class="btn-login" onclick="doLogin()">Vstoupit do komunity →</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-success" id="login-success"></div>
+    <p class="login-note">Komunita je otevřená pro všechny. Klienti EFL získají ověřený odznak.</p>
+  </div>
+</div>
+
 <header>
   <div class="logo-wrap">
-    <img src="https://essenceforlife.cz/wp-content/uploads/2024/03/EFL-logo.png" alt="Essence for Life" class="logo-img" onerror="this.style.display='none';document.getElementById('lf').style.display='block'">
+    <img src="https://essenceforlife.cz/wp-content/uploads/2024/03/EFL-logo.png" alt="EFL" class="logo-img"
+         onerror="this.style.display='none';document.getElementById('lf').style.display='block'">
     <span id="lf" style="display:none;font-family:'Playfair Display',serif;color:var(--efl);font-size:1.1rem;font-style:italic">Essence for Life</span>
     <div class="logo-divider"></div>
     <div class="logo-sub">Cestovní komunita</div>
@@ -210,8 +264,8 @@
     <button onclick="showSection('map',this)">🗺 Mapa</button>
   </nav>
   <div class="user-badge" onclick="openProfile()">
-    <div class="avatar" id="nav-avatar">MK</div>
-    <span id="nav-name">Marie K.</span>
+    <div class="avatar" id="nav-avatar">?</div>
+    <span id="nav-name">...</span>
   </div>
 </header>
 
@@ -221,20 +275,17 @@
   <section id="community-section" class="section active">
     <div class="page-header">
       <h1>Mapa cestovatelských snů</h1>
-      <p>Sdílej svůj sen, najdi parťáky na cestu a nech se inspirovat ostatními.<br><em style="color:var(--teal-dark);font-style:italic;font-family:'Playfair Display',serif;font-size:.95rem">Tady vznikají skutečné cesty, ne jen plány.</em></p>
+      <p>Sdílej svůj sen, najdi parťáky na cestu a nech se inspirovat ostatními.<br>
+      <em style="color:var(--teal-dark);font-style:italic;font-family:'Playfair Display',serif;font-size:.95rem">Tady vznikají skutečné cesty, ne jen plány.</em></p>
     </div>
     <div class="community-layout">
       <div>
         <div class="filter-bar">
           <button class="filter-chip active" onclick="filterIntents('vse',this)">Vše</button>
           <button class="filter-chip" onclick="filterIntents('partner',this)">👥 Hledám parťáka</button>
-          <button class="filter-chip" onclick="filterIntents('2026',this)">2026</button>
-          <button class="filter-chip" onclick="filterIntents('2027',this)">2027</button>
-          <button class="filter-chip" onclick="filterIntents('asie',this)">Asie</button>
-          <button class="filter-chip" onclick="filterIntents('evropa',this)">Evropa</button>
           <button class="filter-chip" onclick="filterIntents('oblibene',this)">❤️ Oblíbené</button>
         </div>
-        <div class="feed" id="feed"></div>
+        <div class="feed" id="feed"><div class="loading"><span class="spinner"></span>Načítám záměry…</div></div>
       </div>
       <div>
         <div class="new-intent-card">
@@ -285,7 +336,7 @@
   <section id="map-section" class="section">
     <div class="page-header">
       <h1>Moje cestovatelská mapa</h1>
-      <p>Kam jsi cestovala s Essence for Life — a kam ještě sama. Přidej libovolné místo, město nebo region.</p>
+      <p>Kam jsi cestovala s Essence for Life — a kam ještě sama.</p>
     </div>
     <div class="map-layout">
       <div class="map-container">
@@ -300,10 +351,10 @@
         <div class="stats-card">
           <h3>Tvůj cestovatelský profil</h3>
           <div class="stats-grid">
-            <div class="stat"><div class="stat-num" id="efl-count">4</div><div class="stat-label">Místa s EFL</div></div>
-            <div class="stat"><div class="stat-num" id="personal-count">7</div><div class="stat-label">Vlastní místa</div></div>
-            <div class="stat"><div class="stat-num" id="country-count">9</div><div class="stat-label">Zemí celkem</div></div>
-            <div class="stat"><div class="stat-num" id="continent-count">3</div><div class="stat-label">Kontinenty</div></div>
+            <div class="stat"><div class="stat-num" id="efl-count">0</div><div class="stat-label">Místa s EFL</div></div>
+            <div class="stat"><div class="stat-num" id="personal-count">0</div><div class="stat-label">Vlastní místa</div></div>
+            <div class="stat"><div class="stat-num" id="country-count">0</div><div class="stat-label">Zemí celkem</div></div>
+            <div class="stat"><div class="stat-num" id="continent-count">0</div><div class="stat-label">Kontinenty</div></div>
           </div>
         </div>
         <div class="add-place-card">
@@ -334,23 +385,24 @@
   <div class="modal">
     <button class="modal-close" onclick="closeProfile()">×</button>
     <div class="modal-header">
-      <div class="modal-avatar-lg" id="modal-avatar">MK</div>
+      <div class="modal-avatar-lg" id="modal-avatar">?</div>
       <div class="modal-header-info">
-        <h2 id="modal-name">Marie Krátká</h2>
-        <p id="modal-sub">Členka komunity od 2024</p>
+        <h2 id="modal-name">...</h2>
+        <p id="modal-sub">Člen komunity</p>
       </div>
     </div>
     <div class="modal-body">
       <div class="profile-stats-grid">
-        <div class="profile-stat"><div class="profile-stat-num" id="ps-places">11</div><div class="profile-stat-label">Destinací</div></div>
-        <div class="profile-stat"><div class="profile-stat-num" id="ps-intents">1</div><div class="profile-stat-label">Záměrů</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-intents">0</div><div class="profile-stat-label">Záměrů</div></div>
         <div class="profile-stat"><div class="profile-stat-num" id="ps-interest">0</div><div class="profile-stat-label">Zájem</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-liked">0</div><div class="profile-stat-label">Oblíbených</div></div>
       </div>
-      <div class="profile-field"><label>Jméno</label><input type="text" id="pf-name" value="Marie Krátká"/></div>
+      <div class="profile-field"><label>Jméno</label><input type="text" id="pf-name"/></div>
       <div class="profile-field"><label>Odkud jsi</label><input type="text" id="pf-city" placeholder="Praha, Brno…"/></div>
       <div class="profile-field"><label>Styl cestování</label><input type="text" id="pf-style" placeholder="Pomalé cestování, trekking, kultura…"/></div>
-      <div class="profile-field"><label>O mně</label><textarea id="pf-bio" placeholder="Pár slov o sobě a svých cestovatelských snech…"></textarea></div>
+      <div class="profile-field"><label>O mně</label><textarea id="pf-bio" placeholder="Pár slov o sobě…"></textarea></div>
       <button class="btn-save" onclick="saveProfile()">Uložit profil</button>
+      <button style="width:100%;margin-top:.5rem;padding:.6rem;border:1px solid var(--border);border-radius:8px;background:none;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.82rem;" onclick="doLogout()">Odhlásit se</button>
     </div>
   </div>
 </div>
@@ -358,44 +410,405 @@
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
 <script>
-const COLORS = ['#2A9CA0','#E8773A','#264653','#E9C46A','#6D6875','#457B9D','#2A9D8F'];
-const MILESTONE = 5;
+// ── SUPABASE ────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://zpsqeytpddpmggshydwe.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc3FleXRwZGRwbWdnc2h5ZHdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDc0MjksImV4cCI6MjA5MTMyMzQyOX0.upzALn9Q6flsayNL9QHt7XhXBOBg-2NG75ANaomLExQ';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY);
 
-// ── PROFIL ──────────────────────────────────────────────────────────────────
-let profile = { name: 'Marie K.', fullName: 'Marie Krátká' };
-function openProfile() { document.getElementById('profile-modal').classList.add('open'); }
-function closeProfile() { document.getElementById('profile-modal').classList.remove('open'); }
-function saveProfile() {
-  profile.fullName = document.getElementById('pf-name').value || profile.fullName;
-  const parts = profile.fullName.trim().split(' ');
-  profile.name = parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
-  const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
-  document.getElementById('nav-avatar').textContent = ini;
-  document.getElementById('nav-name').textContent = profile.name;
-  document.getElementById('modal-avatar').textContent = ini;
-  document.getElementById('modal-name').textContent = profile.fullName;
-  closeProfile(); showToast('Profil uložen!');
+// ── OVĚŘENÍ KLIENTŮ EFL ─────────────────────────────────────────────────────
+// Sem přidáš emaily z vaší databáze
+const EFL_CLIENTS = [
+  'adela@essenceforlife.cz',
+  'info@essenceforlife.cz',
+  // ... další emaily klientů
+];
+
+function isEFLClient(email) {
+  return EFL_CLIENTS.includes(email.toLowerCase().trim());
 }
 
-// ── MAPA ────────────────────────────────────────────────────────────────────
+// ── STAV APLIKACE ───────────────────────────────────────────────────────────
+const COLORS = ['#2A9CA0','#E8773A','#264653','#E9C46A','#6D6875','#457B9D','#2A9D8F'];
+const MILESTONE = 5;
+let currentUser = null;
+let allIntents = [];
+let myInterests = new Set();
+let myLikes = new Set();
+let activeFilter = 'vse';
+let mineTab = 'my';
+
+// ── LOGIN ───────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const errEl = document.getElementById('login-error');
+  const okEl = document.getElementById('login-success');
+
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Vyplň prosím své jméno.'; errEl.style.display = 'block'; return; }
+  if (!email || !email.includes('@')) { errEl.textContent = 'Zadej platnou emailovou adresu.'; errEl.style.display = 'block'; return; }
+
+  const verified = isEFLClient(email);
+
+  // Zkontroluj jestli uživatel existuje
+  const { data: existing } = await db.from('users').select('*').eq('email', email).single();
+
+  if (existing) {
+    // Přihlásit existujícího
+    currentUser = existing;
+  } else {
+    // Vytvořit nového
+    const { data: newUser, error } = await db.from('users').insert({
+      email, name, verified
+    }).select().single();
+    if (error) { errEl.textContent = 'Chyba při registraci. Zkus to znovu.'; errEl.style.display = 'block'; return; }
+    currentUser = newUser;
+  }
+
+  // Uložit do localStorage
+  localStorage.setItem('efl_user', JSON.stringify(currentUser));
+
+  // Aktualizovat UI
+  updateUserUI();
+  document.getElementById('login-screen').classList.add('hidden');
+  await loadIntents();
+  await loadMyActivity();
+  showToast(verified ? '✅ Přihlášen jako ověřený klient EFL!' : '🌍 Vítej v komunitě!');
+}
+
+function doLogout() {
+  localStorage.removeItem('efl_user');
+  currentUser = null;
+  closeProfile();
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-email').value = '';
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  const parts = currentUser.name.trim().split(' ');
+  const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  document.getElementById('nav-avatar').textContent = ini;
+  document.getElementById('nav-name').textContent = parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
+  document.getElementById('modal-avatar').textContent = ini;
+  document.getElementById('modal-name').textContent = currentUser.name;
+  document.getElementById('pf-name').value = currentUser.name || '';
+  document.getElementById('pf-city').value = currentUser.city || '';
+  document.getElementById('pf-style').value = currentUser.travel_style || '';
+  document.getElementById('pf-bio').value = currentUser.bio || '';
+  document.getElementById('modal-sub').textContent = currentUser.verified ? '✅ Ověřený klient EFL' : '🌍 Člen komunity';
+}
+
+// ── NAČTENÍ DAT ─────────────────────────────────────────────────────────────
+async function loadIntents() {
+  const { data, error } = await db
+    .from('intents')
+    .select(`*, users(name, verified)`)
+    .order('created_at', { ascending: false });
+
+  if (error) { console.error(error); return; }
+  allIntents = data || [];
+  renderFeed();
+}
+
+async function loadMyActivity() {
+  if (!currentUser) return;
+
+  const { data: interests } = await db.from('interests').select('intent_id').eq('user_id', currentUser.id);
+  const { data: likes } = await db.from('likes').select('intent_id').eq('user_id', currentUser.id);
+  const { data: comments } = await db.from('comments').select('id').eq('user_id', currentUser.id);
+
+  myInterests = new Set((interests || []).map(i => i.intent_id));
+  myLikes = new Set((likes || []).map(l => l.intent_id));
+
+  document.getElementById('my-posts-count').textContent = allIntents.filter(i => i.user_id === currentUser.id).length;
+  document.getElementById('my-interest-count').textContent = myInterests.size;
+  document.getElementById('my-liked-count').textContent = myLikes.size;
+  document.getElementById('my-comment-count').textContent = (comments || []).length;
+  document.getElementById('ps-intents').textContent = allIntents.filter(i => i.user_id === currentUser.id).length;
+  document.getElementById('ps-interest').textContent = myInterests.size;
+  document.getElementById('ps-liked').textContent = myLikes.size;
+}
+
+// ── RENDER FEED ─────────────────────────────────────────────────────────────
+async function getInterestCounts() {
+  const { data } = await db.from('interests').select('intent_id');
+  const counts = {};
+  (data || []).forEach(r => { counts[r.intent_id] = (counts[r.intent_id] || 0) + 1; });
+  return counts;
+}
+
+async function getCommentCounts() {
+  const { data } = await db.from('comments').select('intent_id');
+  const counts = {};
+  (data || []).forEach(r => { counts[r.intent_id] = (counts[r.intent_id] || 0) + 1; });
+  return counts;
+}
+
+async function renderFeed() {
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '<div class="loading"><span class="spinner"></span>Načítám…</div>';
+
+  const [interestCounts, commentCounts] = await Promise.all([getInterestCounts(), getCommentCounts()]);
+
+  let filtered = allIntents.filter(i => {
+    if (activeFilter === 'partner') return i.looking_for_partner;
+    if (activeFilter === 'oblibene') return myLikes.has(i.id);
+    return true;
+  });
+
+  if (!filtered.length) {
+    feed.innerHTML = `<div class="empty-state"><div class="es-icon">✈️</div><h3>Žádné záměry</h3><p>Zatím tu nic není — buď první!</p></div>`;
+    return;
+  }
+
+  feed.innerHTML = '';
+  filtered.forEach(intent => {
+    const cnt = interestCounts[intent.id] || 0;
+    const commentCnt = commentCounts[intent.id] || 0;
+    const milestone = cnt >= MILESTONE;
+    const userName = intent.users?.name || 'Anonym';
+    const verified = intent.users?.verified;
+    const parts = userName.trim().split(' ');
+    const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    const colorIdx = Math.abs(userName.charCodeAt(0)) % COLORS.length;
+    const timeAgo = formatTime(intent.created_at);
+    const isInterested = myInterests.has(intent.id);
+    const isLiked = myLikes.has(intent.id);
+
+    feed.innerHTML += `<div class="intent-card">
+      <div class="intent-header">
+        <div class="intent-who">
+          <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
+          <div>
+            <div class="intent-name">${userName}${verified ? '<span class="user-badge-inline verified">✅ EFL</span>' : ''}</div>
+            <div class="intent-time">${timeAgo}</div>
+          </div>
+        </div>
+        <div class="destination-badge">✈ ${intent.destination}</div>
+      </div>
+      <div class="intent-meta">
+        ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
+        ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
+        ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců — EFL připravuje nabídku!</span>` : ''}
+      </div>
+      <div class="intent-body">${intent.description || ''}</div>
+      <div class="intent-actions">
+        <button class="action-btn ${isInterested ? 'interested' : ''}" onclick="toggleInterest('${intent.id}', this)">${isInterested ? '✓ Mám zájem' : '✋ Mám zájem'}</button>
+        <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${intent.id}', this)">${isLiked ? '❤️' : '🤍'}</button>
+        <button class="action-btn" onclick="toggleComments('${intent.id}')">💬 ${commentCnt}</button>
+        <button class="action-btn" onclick="shareIntent('${intent.id}', '${intent.destination}')">🔗</button>
+        <div class="interest-count">${cnt} zájem</div>
+      </div>
+      <div class="comments" id="comments-${intent.id}"></div>
+    </div>`;
+  });
+}
+
+async function toggleInterest(intentId, btn) {
+  if (!currentUser) return;
+  if (myInterests.has(intentId)) {
+    await db.from('interests').delete().eq('intent_id', intentId).eq('user_id', currentUser.id);
+    myInterests.delete(intentId);
+    btn.classList.remove('interested');
+    btn.textContent = '✋ Mám zájem';
+  } else {
+    await db.from('interests').insert({ intent_id: intentId, user_id: currentUser.id });
+    myInterests.add(intentId);
+    btn.classList.add('interested');
+    btn.textContent = '✓ Mám zájem';
+    showToast('Zájem zaznamenán!');
+  }
+  await loadMyActivity();
+}
+
+async function toggleLike(intentId, btn) {
+  if (!currentUser) return;
+  if (myLikes.has(intentId)) {
+    await db.from('likes').delete().eq('intent_id', intentId).eq('user_id', currentUser.id);
+    myLikes.delete(intentId);
+    btn.classList.remove('liked');
+    btn.textContent = '🤍';
+  } else {
+    await db.from('likes').insert({ intent_id: intentId, user_id: currentUser.id });
+    myLikes.add(intentId);
+    btn.classList.add('liked');
+    btn.textContent = '❤️';
+    showToast('Přidáno do oblíbených ❤️');
+  }
+  await loadMyActivity();
+}
+
+async function toggleComments(intentId) {
+  const el = document.getElementById(`comments-${intentId}`);
+  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
+
+  el.classList.add('open');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+
+  const { data } = await db.from('comments').select(`*, users(name, verified)`).eq('intent_id', intentId).order('created_at');
+  const commHtml = (data || []).map(c => `
+    <div class="comment">
+      <div class="intent-avatar" style="background:${c.users?.verified ? '#1A6B6E' : COLORS[2]};width:28px;height:28px;font-size:.65rem;flex-shrink:0">
+        ${(c.users?.name || 'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+      </div>
+      <div class="comment-bubble">
+        <div class="comment-author">${c.users?.name || 'Anonym'}${c.users?.verified ? ' ✅' : ''}</div>
+        ${c.text}
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = `${commHtml}
+    <div class="comment-input-row">
+      <input type="text" placeholder="Přidat komentář…" id="cinput-${intentId}" onkeydown="if(event.key==='Enter')addComment('${intentId}')"/>
+      <button onclick="addComment('${intentId}')">→</button>
+    </div>`;
+}
+
+async function addComment(intentId) {
+  if (!currentUser) return;
+  const inp = document.getElementById(`cinput-${intentId}`);
+  const text = inp.value.trim(); if (!text) return;
+  await db.from('comments').insert({ intent_id: intentId, user_id: currentUser.id, text });
+  showToast('Komentář přidán');
+  await toggleComments(intentId);
+  await toggleComments(intentId);
+}
+
+function filterIntents(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('#community-section .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function shareIntent(id, dest) {
+  navigator.clipboard.writeText(window.location.href + '?intent=' + id).catch(() => {});
+  showToast(`Odkaz na "${dest}" zkopírován 🔗`);
+}
+
+async function postIntent() {
+  if (!currentUser) return;
+  const dest = document.getElementById('new-dest').value.trim();
+  const date = document.getElementById('new-date').value.trim();
+  const desc = document.getElementById('new-desc').value.trim();
+  const partner = document.getElementById('partner-toggle').classList.contains('on');
+  if (!dest || !desc) { showToast('Vyplň prosím destinaci a popis'); return; }
+
+  const { error } = await db.from('intents').insert({
+    user_id: currentUser.id,
+    destination: dest,
+    travel_date: date || null,
+    description: desc,
+    looking_for_partner: partner
+  });
+
+  if (error) { showToast('Chyba při ukládání. Zkus to znovu.'); return; }
+
+  document.getElementById('new-dest').value = '';
+  document.getElementById('new-date').value = '';
+  document.getElementById('new-desc').value = '';
+  document.getElementById('partner-toggle').classList.remove('on');
+
+  await loadIntents();
+  await loadMyActivity();
+  showToast('Záměr sdílen! ✈️');
+}
+
+// ── MOJE ZÁLOŽKA ─────────────────────────────────────────────────────────────
+async function renderMineFeed() {
+  const feed = document.getElementById('mine-feed');
+  const [interestCounts, commentCounts] = await Promise.all([getInterestCounts(), getCommentCounts()]);
+
+  let filtered = mineTab === 'my' ? allIntents.filter(i => i.user_id === currentUser?.id)
+    : mineTab === 'interest' ? allIntents.filter(i => myInterests.has(i.id))
+    : allIntents.filter(i => myLikes.has(i.id));
+
+  const msgs = { my: 'Ještě jsi nesdílela žádný záměr.', interest: 'Zatím nemáš označený zájem.', liked: 'Zatím nemáš žádné oblíbené.' };
+  const icons = { my: '📌', interest: '✋', liked: '❤️' };
+
+  if (!filtered.length) {
+    feed.innerHTML = `<div class="empty-state"><div class="es-icon">${icons[mineTab]}</div><h3>Nic tu není</h3><p>${msgs[mineTab]}</p></div>`;
+    return;
+  }
+  feed.innerHTML = '';
+  filtered.forEach(intent => {
+    const cnt = interestCounts[intent.id] || 0;
+    const commentCnt = commentCounts[intent.id] || 0;
+    const userName = intent.users?.name || currentUser?.name || 'Ty';
+    const parts = userName.trim().split(' ');
+    const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    const colorIdx = Math.abs(userName.charCodeAt(0)) % COLORS.length;
+    feed.innerHTML += `<div class="intent-card">
+      <div class="intent-header">
+        <div class="intent-who">
+          <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
+          <div><div class="intent-name">${userName}</div><div class="intent-time">${formatTime(intent.created_at)}</div></div>
+        </div>
+        <div class="destination-badge">✈ ${intent.destination}</div>
+      </div>
+      <div class="intent-meta">
+        ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
+        ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
+      </div>
+      <div class="intent-body">${intent.description || ''}</div>
+      <div class="intent-actions">
+        <div class="interest-count">${cnt} zájem · 💬 ${commentCnt}</div>
+      </div>
+    </div>`;
+  });
+}
+
+function switchMineTab(tab, btn) {
+  mineTab = tab;
+  document.querySelectorAll('.mine-tabs .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMineFeed();
+}
+
+// ── PROFIL ───────────────────────────────────────────────────────────────────
+function openProfile() { document.getElementById('profile-modal').classList.add('open'); }
+function closeProfile() { document.getElementById('profile-modal').classList.remove('open'); }
+
+async function saveProfile() {
+  if (!currentUser) return;
+  const updates = {
+    name: document.getElementById('pf-name').value || currentUser.name,
+    city: document.getElementById('pf-city').value,
+    travel_style: document.getElementById('pf-style').value,
+    bio: document.getElementById('pf-bio').value,
+  };
+  const { error } = await db.from('users').update(updates).eq('id', currentUser.id);
+  if (error) { showToast('Chyba při ukládání'); return; }
+  currentUser = { ...currentUser, ...updates };
+  localStorage.setItem('efl_user', JSON.stringify(currentUser));
+  updateUserUI();
+  closeProfile();
+  showToast('Profil uložen!');
+}
+
+// ── MAPA ─────────────────────────────────────────────────────────────────────
 const places = {
   efl: [
-    { name: 'Kérala', country: 'Indie', lat: 10.85, lng: 76.27 },
-    { name: 'Marakéš', country: 'Maroko', lat: 31.63, lng: -8.01 },
-    { name: 'Chiang Mai', country: 'Thajsko', lat: 18.79, lng: 98.98 },
-    { name: 'Cusco', country: 'Peru', lat: -13.53, lng: -71.97 },
+    { name:'Kérala', country:'Indie', lat:10.85, lng:76.27 },
+    { name:'Marakéš', country:'Maroko', lat:31.63, lng:-8.01 },
+    { name:'Chiang Mai', country:'Thajsko', lat:18.79, lng:98.98 },
+    { name:'Cusco', country:'Peru', lat:-13.53, lng:-71.97 },
   ],
   personal: [
-    { name: 'Kyoto', country: 'Japonsko', lat: 35.01, lng: 135.76 },
-    { name: 'Reykjavík', country: 'Island', lat: 64.14, lng: -21.89 },
-    { name: 'Řím', country: 'Itálie', lat: 41.90, lng: 12.49 },
-    { name: 'Amalfi', country: 'Itálie', lat: 40.63, lng: 14.60 },
-    { name: 'Dolomity', country: 'Itálie', lat: 46.41, lng: 11.84 },
-    { name: 'Santorini', country: 'Řecko', lat: 36.39, lng: 25.46 },
-    { name: 'Bergen', country: 'Norsko', lat: 60.39, lng: 5.32 },
+    { name:'Kyoto', country:'Japonsko', lat:35.01, lng:135.76 },
+    { name:'Reykjavík', country:'Island', lat:64.14, lng:-21.89 },
+    { name:'Řím', country:'Itálie', lat:41.90, lng:12.49 },
+    { name:'Amalfi', country:'Itálie', lat:40.63, lng:14.60 },
+    { name:'Dolomity', country:'Itálie', lat:46.41, lng:11.84 },
+    { name:'Santorini', country:'Řecko', lat:36.39, lng:25.46 },
+    { name:'Bergen', country:'Norsko', lat:60.39, lng:5.32 },
   ]
 };
-
 let activeTab = 'personal', projection, gMap, dotsGroup, svgMap;
 
 async function initMap() {
@@ -409,43 +822,40 @@ async function initMap() {
   const g = svg.append('g'); gMap = g;
   try {
     const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
-    g.selectAll('path.country').data(topojson.feature(world, world.objects.countries).features)
-      .enter().append('path').attr('class', 'country').attr('d', pathFn)
-      .attr('fill', '#EEF7F8').attr('stroke', '#C0DDE0').attr('stroke-width', 0.4);
+    g.selectAll('path').data(topojson.feature(world, world.objects.countries).features)
+      .enter().append('path').attr('d', pathFn).attr('fill', '#EEF7F8').attr('stroke', '#C0DDE0').attr('stroke-width', 0.4);
   } catch(e) {}
   svg.call(d3.zoom().scaleExtent([1, 10]).on('zoom', e => g.attr('transform', e.transform)));
   svgMap = svg;
-  renderDots(); renderPlaceList(); updateStats();
+  renderDots(); renderPlaceList(); updateMapStats();
 }
 
 function renderDots() {
   if (!svgMap) return;
   if (dotsGroup) dotsGroup.remove();
   dotsGroup = gMap.append('g');
-  const tooltip = document.getElementById('map-tooltip');
-  const container = document.querySelector('.map-container');
-
+  const tip = document.getElementById('map-tooltip');
+  const cont = document.querySelector('.map-container');
   places.efl.forEach(p => {
     if (!p.lat && !p.lng) return;
     const [x, y] = projection([p.lng, p.lat]);
-    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 14).attr('fill', 'rgba(232,119,58,0.15)');
-    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 9).attr('fill', 'rgba(232,119,58,0.25)');
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 14).attr('fill', 'rgba(232,119,58,.15)');
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 9).attr('fill', 'rgba(232,119,58,.25)');
     dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 7)
       .attr('fill', '#E8773A').attr('stroke', 'white').attr('stroke-width', 2).style('cursor', 'pointer')
-      .on('mouseover', function(ev) { tooltip.style.display='block'; tooltip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''} · s EFL</small>`; d3.select(this).attr('r', 10); })
-      .on('mousemove', function(ev) { const r=container.getBoundingClientRect(); tooltip.style.left=(ev.clientX-r.left+14)+'px'; tooltip.style.top=(ev.clientY-r.top-42)+'px'; })
-      .on('mouseout', function() { tooltip.style.display='none'; d3.select(this).attr('r', 7); });
+      .on('mouseover', function(ev) { tip.style.display='block'; tip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''} · s EFL</small>`; d3.select(this).attr('r', 10); })
+      .on('mousemove', function(ev) { const r=cont.getBoundingClientRect(); tip.style.left=(ev.clientX-r.left+14)+'px'; tip.style.top=(ev.clientY-r.top-42)+'px'; })
+      .on('mouseout', function() { tip.style.display='none'; d3.select(this).attr('r', 7); });
   });
-
   places.personal.forEach(p => {
     if (!p.lat && !p.lng) return;
     const [x, y] = projection([p.lng, p.lat]);
-    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 9).attr('fill', 'rgba(26,107,110,0.15)');
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 9).attr('fill', 'rgba(26,107,110,.15)');
     dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 5.5)
       .attr('fill', '#1A6B6E').attr('stroke', 'white').attr('stroke-width', 1.8).style('cursor', 'pointer')
-      .on('mouseover', function(ev) { tooltip.style.display='block'; tooltip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''}</small>`; d3.select(this).attr('r', 8); })
-      .on('mousemove', function(ev) { const r=container.getBoundingClientRect(); tooltip.style.left=(ev.clientX-r.left+14)+'px'; tooltip.style.top=(ev.clientY-r.top-42)+'px'; })
-      .on('mouseout', function() { tooltip.style.display='none'; d3.select(this).attr('r', 5.5); });
+      .on('mouseover', function(ev) { tip.style.display='block'; tip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''}</small>`; d3.select(this).attr('r', 8); })
+      .on('mousemove', function(ev) { const r=cont.getBoundingClientRect(); tip.style.left=(ev.clientX-r.left+14)+'px'; tip.style.top=(ev.clientY-r.top-42)+'px'; })
+      .on('mouseout', function() { tip.style.display='none'; d3.select(this).attr('r', 5.5); });
   });
 }
 
@@ -455,210 +865,89 @@ function renderPlaceList() {
   places.personal.forEach((p, i) => { list.innerHTML += `<div class="place-tag personal"><span><span class="place-tag-name">${p.name}</span><span class="place-tag-country">${p.country ? '· ' + p.country : ''}</span></span><button class="remove-tag" onclick="removePlace('personal',${i})">×</button></div>`; });
 }
 
-function updateStats() {
-  const ec = new Set(places.efl.map(p=>p.country||p.name));
-  const pc = new Set(places.personal.map(p=>p.country||p.name));
-  const all = new Set([...ec,...pc]);
+function updateMapStats() {
+  const all = new Set([...places.efl.map(p=>p.country||p.name), ...places.personal.map(p=>p.country||p.name)]);
   const cont = new Set();
-  [...places.efl,...places.personal].forEach(p => {
-    if(!p.lat) return;
-    if(p.lat>35&&p.lng>-30&&p.lng<60) cont.add('EU');
-    else if(p.lat>0&&p.lng>60) cont.add('AS');
-    else if(p.lat<0&&p.lng>60) cont.add('OC');
-    else if(p.lng>-20&&p.lng<55&&p.lat<35) cont.add('AF');
-    else if(p.lng<-30&&p.lat>15) cont.add('NA');
-    else if(p.lng<-30&&p.lat<=15) cont.add('SA');
+  [...places.efl, ...places.personal].forEach(p => {
+    if (!p.lat) return;
+    if (p.lat>35&&p.lng>-30&&p.lng<60) cont.add('EU');
+    else if (p.lat>0&&p.lng>60) cont.add('AS');
+    else if (p.lat<0&&p.lng>60) cont.add('OC');
+    else if (p.lng>-20&&p.lng<55&&p.lat<35) cont.add('AF');
+    else if (p.lng<-30&&p.lat>15) cont.add('NA');
+    else if (p.lng<-30&&p.lat<=15) cont.add('SA');
   });
   document.getElementById('efl-count').textContent = places.efl.length;
   document.getElementById('personal-count').textContent = places.personal.length;
   document.getElementById('country-count').textContent = all.size;
   document.getElementById('continent-count').textContent = cont.size;
-  document.getElementById('ps-places').textContent = all.size;
 }
 
 function selectTab(tab) {
   activeTab = tab;
-  document.getElementById('tab-personal').classList.toggle('active', tab==='personal');
-  document.getElementById('tab-efl').classList.toggle('active', tab==='efl');
+  document.getElementById('tab-personal').classList.toggle('active', tab === 'personal');
+  document.getElementById('tab-efl').classList.toggle('active', tab === 'efl');
 }
 
 async function addPlace() {
   const pi = document.getElementById('place-input');
   const ci = document.getElementById('country-input');
-  const name = pi.value.trim(); if(!name) return;
+  const name = pi.value.trim(); if (!name) return;
   const country = ci.value.trim();
   try {
     const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(country ? name+', '+country : name)}&format=json&limit=1`);
     const data = await res.json();
-    if(data.length>0) places[activeTab].push({name, country, lat:parseFloat(data[0].lat), lng:parseFloat(data[0].lon)});
-    else places[activeTab].push({name, country, lat:0, lng:0});
-  } catch { places[activeTab].push({name, country, lat:0, lng:0}); }
-  renderDots(); renderPlaceList(); updateStats();
-  pi.value=''; ci.value='';
+    if (data.length > 0) places[activeTab].push({ name, country, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+    else places[activeTab].push({ name, country, lat: 0, lng: 0 });
+  } catch { places[activeTab].push({ name, country, lat: 0, lng: 0 }); }
+  renderDots(); renderPlaceList(); updateMapStats();
+  pi.value = ''; ci.value = '';
   showToast(`${name} přidáno na mapu!`);
 }
 
-function removePlace(type, idx) { places[type].splice(idx,1); renderDots(); renderPlaceList(); updateStats(); }
+function removePlace(type, idx) { places[type].splice(idx, 1); renderDots(); renderPlaceList(); updateMapStats(); }
 
-// ── ZÁMĚRY ──────────────────────────────────────────────────────────────────
-const intents = [
-  { id:1, name:'Marie K.', initials:'MK', color:COLORS[0], mine:true, dest:'Japonsko', date:'podzim 2027', desc:'Snila jsem o Japonsku celý život. Chci vidět chrám Fushimi Inari, bambusový les Arashiyama a zůstat jednu noc v rjokanu. Preferuji pomalejší tempo, maximum 8–10 lidí.', partner:true, time:'před 2 dny', interests:['JN','PV','KH'], tags:['asie','2027','partner'], comments:[{author:'Jana N.',text:'Já bych šla! Podzim v Japonsku je úžasný, stromy mění barvy.'},{author:'EFL Adéla',text:'Sledujeme zájem, Japonsko podzim je moc hezký termín 🍁'}] },
-  { id:2, name:'Pavel V.', initials:'PV', color:COLORS[1], mine:false, dest:'Patagonie', date:'únor 2026', desc:'Trek W v Torres del Paine. Hledám 2–3 lidi kteří to myslí vážně — fyzicky zdatnější, bez přílišného komfortu, ale s radostí z přírody.', partner:true, time:'před 5 dny', interests:['MK','RS'], tags:['2026','partner'], comments:[{author:'René S.',text:'Mám zájem! Patagonie je sen.'}] },
-  { id:3, name:'Kateřina H.', initials:'KH', color:COLORS[2], mine:false, dest:'Island', date:'září 2026', desc:'Chci vidět polární záři a projet celý ostrov v kruhu. Zatím sama, ale klidně i se skupinou přes EFL — záleží co se dá domluvit.', partner:false, time:'před týdnem', interests:['MK','JN','PV','RS'], tags:['evropa','2026'], comments:[] },
-  { id:4, name:'Jana N.', initials:'JN', color:COLORS[3], mine:false, dest:'Vietnam', date:'jaro 2026', desc:'Plávím na Ha Long Bay, procházím staré město Hoi An. Ráda bych se připojila k menší skupině — solo cesta je fajn, ale parťáci jsou vítáni.', partner:true, time:'před 2 týdny', interests:['KH'], tags:['asie','2026','partner'], comments:[] },
-];
-
-let activeFilter='vse', openComments=new Set(), interestedIn=new Set(), likedSet=new Set(), mineTab='my';
-
-function interestCount(i) { return i.interests.length + (interestedIn.has(i.id) ? 1 : 0); }
-
-function renderCard(intent, container) {
-  const cnt = interestCount(intent);
-  const milestone = cnt >= MILESTONE;
-  const avs = intent.interests.slice(0,3).map((ini,idx)=>`<div class="mini-av" style="background:${COLORS[idx+1]}">${ini}</div>`).join('');
-  const commHtml = intent.comments.map(c=>`<div class="comment"><div class="intent-avatar" style="background:${c.author.includes('EFL')?'#1A6B6E':COLORS[2]};width:28px;height:28px;font-size:0.65rem;flex-shrink:0">${c.author.split(' ').map(w=>w[0]).join('').slice(0,2)}</div><div class="comment-bubble"><div class="comment-author">${c.author}</div>${c.text}</div></div>`).join('');
-
-  container.innerHTML += `<div class="intent-card">
-    <div class="intent-header">
-      <div class="intent-who"><div class="intent-avatar" style="background:${intent.color}">${intent.initials}</div><div><div class="intent-name">${intent.name}</div><div class="intent-time">${intent.time}</div></div></div>
-      <div class="destination-badge">✈ ${intent.dest}</div>
-    </div>
-    <div class="intent-meta">
-      <span class="meta-chip">📅 ${intent.date}</span>
-      ${intent.partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
-      ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců — EFL připravuje nabídku!</span>` : ''}
-    </div>
-    <div class="intent-body">${intent.desc}</div>
-    <div class="intent-actions">
-      <button class="action-btn ${interestedIn.has(intent.id)?'interested':''}" onclick="toggleInterest(${intent.id})">${interestedIn.has(intent.id)?'✓ Mám zájem':'✋ Mám zájem'}</button>
-      <button class="action-btn ${likedSet.has(intent.id)?'liked':''}" onclick="toggleLike(${intent.id})">${likedSet.has(intent.id)?'❤️':'🤍'}</button>
-      <button class="action-btn" onclick="toggleComments(${intent.id})">💬 ${intent.comments.length}</button>
-      <button class="action-btn" onclick="shareIntent(${intent.id})">🔗 Sdílet</button>
-      <div class="interest-count"><div class="interest-avatars">${avs}</div>&nbsp;${cnt} zájem</div>
-    </div>
-    <div class="comments ${openComments.has(intent.id)?'open':''}" id="comments-${intent.id}">
-      ${commHtml}
-      <div class="comment-input-row"><input type="text" placeholder="Přidat komentář…" id="cinput-${intent.id}" onkeydown="if(event.key==='Enter')addComment(${intent.id})"/><button onclick="addComment(${intent.id})">→</button></div>
-    </div>
-  </div>`;
-}
-
-function renderFeed() {
-  const feed = document.getElementById('feed'); feed.innerHTML = '';
-  const filtered = intents.filter(i => {
-    if(activeFilter==='vse') return true;
-    if(activeFilter==='partner') return i.partner;
-    if(activeFilter==='oblibene') return likedSet.has(i.id);
-    return i.tags.includes(activeFilter);
-  });
-  if(!filtered.length) { feed.innerHTML=`<div class="empty-state"><div class="es-icon">✈️</div><h3>Žádné záměry</h3><p>Zatím tu nic není — buď první!</p></div>`; return; }
-  filtered.forEach(i => renderCard(i, feed));
-}
-
-function renderMineFeed() {
-  const feed = document.getElementById('mine-feed'); feed.innerHTML = '';
-  const filtered = mineTab==='my' ? intents.filter(i=>i.mine) : mineTab==='interest' ? intents.filter(i=>interestedIn.has(i.id)) : intents.filter(i=>likedSet.has(i.id));
-  const msgs = {my:'Ještě jsi nesdílela žádný záměr.',interest:'Zatím nemáš označený zájem.',liked:'Zatím nemáš žádné oblíbené.'};
-  const icons = {my:'📌',interest:'✋',liked:'❤️'};
-  if(!filtered.length) { feed.innerHTML=`<div class="empty-state"><div class="es-icon">${icons[mineTab]}</div><h3>Nic tu není</h3><p>${msgs[mineTab]}</p></div>`; return; }
-  filtered.forEach(i => renderCard(i, feed));
-  updateMineStats();
-}
-
-function updateMineStats() {
-  document.getElementById('my-posts-count').textContent = intents.filter(i=>i.mine).length;
-  document.getElementById('my-interest-count').textContent = interestedIn.size;
-  document.getElementById('my-liked-count').textContent = likedSet.size;
-  document.getElementById('my-comment-count').textContent = intents.reduce((a,i)=>a+i.comments.filter(c=>c.author===profile.name||c.author===profile.fullName).length, 0);
-  document.getElementById('ps-intents').textContent = intents.filter(i=>i.mine).length;
-  document.getElementById('ps-interest').textContent = interestedIn.size;
-}
-
-function switchMineTab(tab, btn) {
-  mineTab = tab;
-  document.querySelectorAll('.mine-tabs .filter-chip').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderMineFeed();
-}
-
-function toggleInterest(id) {
-  if(interestedIn.has(id)) interestedIn.delete(id);
-  else {
-    interestedIn.add(id);
-    const i = intents.find(x=>x.id===id);
-    if(interestCount(i) >= MILESTONE) showToast(`🔥 "${i.dest}" dosáhl ${MILESTONE} zájemců! EFL vás brzy osloví.`);
-    else showToast('Zájem zaznamenán!');
-  }
-  renderFeed();
-  if(document.getElementById('mine-section').classList.contains('active')) renderMineFeed();
-  updateMineStats();
-}
-
-function toggleLike(id) {
-  if(likedSet.has(id)) likedSet.delete(id);
-  else { likedSet.add(id); showToast('Přidáno do oblíbených ❤️'); }
-  renderFeed();
-  if(document.getElementById('mine-section').classList.contains('active')) renderMineFeed();
-  updateMineStats();
-}
-
-function toggleComments(id) {
-  if(openComments.has(id)) openComments.delete(id); else openComments.add(id);
-  renderFeed();
-  if(document.getElementById('mine-section').classList.contains('active')) renderMineFeed();
-}
-
-function addComment(id) {
-  const inp = document.getElementById(`cinput-${id}`);
-  const t = inp.value.trim(); if(!t) return;
-  intents.find(i=>i.id===id).comments.push({author: profile.name, text: t});
-  openComments.add(id); renderFeed();
-  if(document.getElementById('mine-section').classList.contains('active')) renderMineFeed();
-  showToast('Komentář přidán'); updateMineStats();
-}
-
-function filterIntents(f, btn) {
-  activeFilter = f;
-  document.querySelectorAll('#community-section .filter-chip').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active'); renderFeed();
-}
-
-function shareIntent(id) {
-  const i = intents.find(x=>x.id===id);
-  navigator.clipboard.writeText(window.location.href + '?intent=' + id).catch(()=>{});
-  showToast(`Odkaz na "${i.dest}" zkopírován 🔗`);
-}
-
-function postIntent() {
-  const dest = document.getElementById('new-dest').value.trim();
-  const date = document.getElementById('new-date').value.trim();
-  const desc = document.getElementById('new-desc').value.trim();
-  const partner = document.getElementById('partner-toggle').classList.contains('on');
-  if(!dest||!desc) { showToast('Vyplň prosím destinaci a popis'); return; }
-  intents.unshift({id:Date.now(), name:profile.name, initials:'MK', color:COLORS[0], mine:true, dest, date:date||'termín upřesním', desc, partner, time:'právě teď', interests:[], tags:['2026'], comments:[]});
-  document.getElementById('new-dest').value='';
-  document.getElementById('new-date').value='';
-  document.getElementById('new-desc').value='';
-  document.getElementById('partner-toggle').classList.remove('on');
-  renderFeed(); updateMineStats();
-  showToast('Záměr sdílen! EFL dostalo upozornění. ✈️');
-}
-
+// ── NAVIGACE ──────────────────────────────────────────────────────────────────
 function showSection(name, btn) {
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-  document.getElementById(name+'-section').classList.add('active');
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(name + '-section').classList.add('active');
   btn.classList.add('active');
-  if(name==='map') { setTimeout(()=>{ if(!svgMap) initMap(); }, 100); }
-  if(name==='mine') renderMineFeed();
+  if (name === 'map') setTimeout(() => { if (!svgMap) initMap(); }, 100);
+  if (name === 'mine') renderMineFeed();
 }
 
-function showToast(msg) { const t=document.getElementById('toast'); document.getElementById('toast-msg').textContent=msg; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3200); }
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function formatTime(ts) {
+  if (!ts) return '';
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return 'právě teď';
+  if (diff < 3600) return `před ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `před ${Math.floor(diff/3600)} hod`;
+  if (diff < 604800) return `před ${Math.floor(diff/86400)} dny`;
+  return new Date(ts).toLocaleDateString('cs-CZ');
+}
 
-document.getElementById('place-input').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('country-input').focus(); });
-document.getElementById('country-input').addEventListener('keydown', e=>{ if(e.key==='Enter') addPlace(); });
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3200);
+}
 
-renderFeed();
-updateMineStats();
+document.getElementById('place-input').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('country-input').focus(); });
+document.getElementById('country-input').addEventListener('keydown', e => { if (e.key === 'Enter') addPlace(); });
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  const saved = localStorage.getItem('efl_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    updateUserUI();
+    document.getElementById('login-screen').classList.add('hidden');
+    await loadIntents();
+    await loadMyActivity();
+  }
+})();
 </script>
 </body>
 </html>
