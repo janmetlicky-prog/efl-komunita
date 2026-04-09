@@ -259,7 +259,7 @@
     <div class="logo-sub">Cestovní komunita</div>
   </div>
   <nav>
-    <button class="active" onclick="showSection('community',this)">✈ Záměry</button>
+    <button class="active" onclick="showSection('community',this)">✈ Sny</button>
     <button onclick="showSection('mine',this)">📌 Moje</button>
     <button onclick="showSection('map',this)">🗺 Mapa</button>
   </nav>
@@ -271,7 +271,7 @@
 
 <main>
 
-  <!-- ZÁMĚRY -->
+  <!-- SYNY -->
   <section id="community-section" class="section active">
     <div class="page-header">
       <h1>Mapa cestovatelských snů</h1>
@@ -285,7 +285,7 @@
           <button class="filter-chip" onclick="filterIntents('partner',this)">👥 Hledám parťáka</button>
           <button class="filter-chip" onclick="filterIntents('oblibene',this)">❤️ Oblíbené</button>
         </div>
-        <div class="feed" id="feed"><div class="loading"><span class="spinner"></span>Načítám záměry…</div></div>
+        <div class="feed" id="feed"><div class="loading"><span class="spinner"></span>Načítám sny…</div></div>
       </div>
       <div>
         <div class="new-intent-card">
@@ -297,7 +297,7 @@
             <button class="toggle" id="partner-toggle" onclick="this.classList.toggle('on')"></button>
             <span class="toggle-label">Hledám parťáka na cestu</span>
           </div>
-          <button class="btn-post" onclick="postIntent()">Sdílet záměr →</button>
+          <button class="btn-post" onclick="postIntent()">Sdílet sen →</button>
         </div>
       </div>
     </div>
@@ -306,13 +306,13 @@
   <!-- MOJE -->
   <section id="mine-section" class="section">
     <div class="page-header">
-      <h1>Moje záměry</h1>
-      <p>Přehled tvé aktivity v komunitě</p>
+      <h1>Moje sny</h1>
+      <p>Tvoje sny, zájem a oblíbené na jednom místě</p>
     </div>
     <div class="community-layout">
       <div>
         <div class="mine-tabs">
-          <button class="filter-chip active" id="mt-my" onclick="switchMineTab('my',this)">📌 Moje příspěvky</button>
+          <button class="filter-chip active" id="mt-my" onclick="switchMineTab('my',this)">📌 Moje sny</button>
           <button class="filter-chip" id="mt-interest" onclick="switchMineTab('interest',this)">✋ Mám zájem</button>
           <button class="filter-chip" id="mt-liked" onclick="switchMineTab('liked',this)">❤️ Oblíbené</button>
         </div>
@@ -322,7 +322,7 @@
         <div class="stats-card">
           <h3>Tvoje aktivita</h3>
           <div class="stats-grid">
-            <div class="stat"><div class="stat-num" id="my-posts-count">0</div><div class="stat-label">Záměrů</div></div>
+            <div class="stat"><div class="stat-num" id="my-posts-count">0</div><div class="stat-label">Snů</div></div>
             <div class="stat"><div class="stat-num" id="my-interest-count">0</div><div class="stat-label">Zájem</div></div>
             <div class="stat"><div class="stat-num" id="my-liked-count">0</div><div class="stat-label">Oblíbených</div></div>
             <div class="stat"><div class="stat-num" id="my-comment-count">0</div><div class="stat-label">Komentářů</div></div>
@@ -393,7 +393,7 @@
     </div>
     <div class="modal-body">
       <div class="profile-stats-grid">
-        <div class="profile-stat"><div class="profile-stat-num" id="ps-intents">0</div><div class="profile-stat-label">Záměrů</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-intents">0</div><div class="profile-stat-label">Snů</div></div>
         <div class="profile-stat"><div class="profile-stat-num" id="ps-interest">0</div><div class="profile-stat-label">Zájem</div></div>
         <div class="profile-stat"><div class="profile-stat-num" id="ps-liked">0</div><div class="profile-stat-label">Oblíbených</div></div>
       </div>
@@ -575,7 +575,7 @@ async function renderFeed() {
   });
 
   if (!filtered.length) {
-    feed.innerHTML = `<div class="empty-state"><div class="es-icon">✈️</div><h3>Žádné záměry</h3><p>Zatím tu nic není — buď první!</p></div>`;
+    feed.innerHTML = `<div class="empty-state"><div class="es-icon">✈️</div><h3>Žádné sny</h3><p>Zatím tu nic není — buď první!</p></div>`;
     return;
   }
 
@@ -729,7 +729,7 @@ async function postIntent() {
 
   await loadIntents();
   await loadMyActivity();
-  showToast('Záměr sdílen! ✈️');
+  showToast('Sen sdílen! ✈️');
 }
 
 // ── MOJE ZÁLOŽKA ─────────────────────────────────────────────────────────────
@@ -741,7 +741,7 @@ async function renderMineFeed() {
     : mineTab === 'interest' ? allIntents.filter(i => myInterests.has(i.id))
     : allIntents.filter(i => myLikes.has(i.id));
 
-  const msgs = { my: 'Ještě jsi nesdílela žádný záměr.', interest: 'Zatím nemáš označený zájem.', liked: 'Zatím nemáš žádné oblíbené.' };
+  const msgs = { my: 'Ještě jsi nesdílela žádný sen.', interest: 'Zatím nemáš označený zájem.', liked: 'Zatím nemáš žádné oblíbené.' };
   const icons = { my: '📌', interest: '✋', liked: '❤️' };
 
   if (!filtered.length) {
