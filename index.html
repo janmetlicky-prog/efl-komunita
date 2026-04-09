@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EFL Komunita — Essence for Life</title>
+<title>Komunita Essence for Life</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
@@ -229,10 +229,10 @@
       <img src="https://essenceforlife.cz/wp-content/uploads/2024/03/EFL-logo.png" alt="EFL"
            onerror="this.style.display='none'">
       <h2>Cestovní komunita</h2>
-      <p>Sdílej sny, najdi parťáky, cestuj s EFL</p>
+      <p>Sdílej sny, najdi parťáky, cestuj s Essence for Life</p>
     </div>
     <div class="badge-preview">
-      <span class="badge verified">✅ Ověřený klient EFL</span>
+      <span class="badge verified">✅ Ověřený klient Essence for Life</span>
       <span class="badge member">🌍 Člen komunity</span>
     </div>
     <div class="login-field">
@@ -343,7 +343,7 @@
         <svg id="world-map"></svg>
         <div class="map-tooltip" id="map-tooltip"></div>
         <div class="map-legend">
-          <div class="legend-item"><div class="legend-dot efl"></div> Cesty s EFL</div>
+          <div class="legend-item"><div class="legend-dot efl"></div> Cesty s Essence for Life</div>
           <div class="legend-item"><div class="legend-dot personal"></div> Vlastní cesty</div>
         </div>
       </div>
@@ -351,7 +351,7 @@
         <div class="stats-card">
           <h3>Tvůj cestovatelský profil</h3>
           <div class="stats-grid">
-            <div class="stat"><div class="stat-num" id="efl-count">0</div><div class="stat-label">Místa s EFL</div></div>
+            <div class="stat"><div class="stat-num" id="efl-count">0</div><div class="stat-label">Místa s Essence for Life</div></div>
             <div class="stat"><div class="stat-num" id="personal-count">0</div><div class="stat-label">Vlastní místa</div></div>
             <div class="stat"><div class="stat-num" id="country-count">0</div><div class="stat-label">Zemí celkem</div></div>
             <div class="stat"><div class="stat-num" id="continent-count">0</div><div class="stat-label">Kontinenty</div></div>
@@ -360,7 +360,7 @@
         <div class="add-place-card">
           <h3>Přidat místo</h3>
           <div class="map-key">
-            <div class="key-item" style="color:#B85A1E"><div class="key-dot efl"></div> Cesta s EFL</div>
+            <div class="key-item" style="color:#B85A1E"><div class="key-dot efl"></div> Cesta s Essence for Life</div>
             <div class="key-item" style="color:var(--teal-dark)"><div class="key-dot personal"></div> Vlastní cesta</div>
           </div>
           <div class="country-tabs">
@@ -416,16 +416,23 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 const { createClient } = supabase;
 const db = createClient(SUPA_URL, SUPA_KEY);
 
-// ── OVĚŘENÍ KLIENTŮ EFL ─────────────────────────────────────────────────────
+// ── OVĚŘENÍ KLIENTŮ ESSENCE FOR LIFE ─────────────────────────────────────────────────────
 // Sem přidáš emaily z vaší databáze
 const EFL_CLIENTS = [
   'adela@essenceforlife.cz',
   'info@essenceforlife.cz',
+  'jan.metlicky@gmail.com',
   // ... další emaily klientů
 ];
 
+const ADMINS = ['jan.metlicky@gmail.com'];
+
 function isEFLClient(email) {
   return EFL_CLIENTS.includes(email.toLowerCase().trim());
+}
+
+function isAdmin(email) {
+  return ADMINS.includes(email.toLowerCase().trim());
 }
 
 // ── STAV APLIKACE ───────────────────────────────────────────────────────────
@@ -452,31 +459,34 @@ async function doLogin() {
   if (!email || !email.includes('@')) { errEl.textContent = 'Zadej platnou emailovou adresu.'; errEl.style.display = 'block'; return; }
 
   const verified = isEFLClient(email);
+  const admin = isAdmin(email);
 
   // Zkontroluj jestli uživatel existuje
   const { data: existing } = await db.from('users').select('*').eq('email', email).single();
 
   if (existing) {
-    // Přihlásit existujícího
-    currentUser = existing;
+    currentUser = { ...existing, is_admin: admin };
+    // Aktualizuj admin status pokud je potřeba
+    if (admin && !existing.is_admin) {
+      await db.from('users').update({ is_admin: true, verified: true }).eq('id', existing.id);
+      currentUser.is_admin = true; currentUser.verified = true;
+    }
   } else {
-    // Vytvořit nového
     const { data: newUser, error } = await db.from('users').insert({
-      email, name, verified
+      email, name, verified, is_admin: admin
     }).select().single();
     if (error) { errEl.textContent = 'Chyba při registraci. Zkus to znovu.'; errEl.style.display = 'block'; return; }
     currentUser = newUser;
   }
 
-  // Uložit do localStorage
   localStorage.setItem('efl_user', JSON.stringify(currentUser));
-
-  // Aktualizovat UI
   updateUserUI();
   document.getElementById('login-screen').classList.add('hidden');
   await loadIntents();
   await loadMyActivity();
-  showToast(verified ? '✅ Přihlášen jako ověřený klient EFL!' : '🌍 Vítej v komunitě!');
+  if (admin) showToast('👑 Přihlášen jako administrátor!');
+  else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
+  else showToast('🌍 Vítej v komunitě!');
 }
 
 function doLogout() {
@@ -493,14 +503,15 @@ function updateUserUI() {
   const parts = currentUser.name.trim().split(' ');
   const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
   document.getElementById('nav-avatar').textContent = ini;
-  document.getElementById('nav-name').textContent = parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
+  document.getElementById('nav-name').textContent = (currentUser.is_admin ? '👑 ' : '') + parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
   document.getElementById('modal-avatar').textContent = ini;
   document.getElementById('modal-name').textContent = currentUser.name;
   document.getElementById('pf-name').value = currentUser.name || '';
   document.getElementById('pf-city').value = currentUser.city || '';
   document.getElementById('pf-style').value = currentUser.travel_style || '';
   document.getElementById('pf-bio').value = currentUser.bio || '';
-  document.getElementById('modal-sub').textContent = currentUser.verified ? '✅ Ověřený klient EFL' : '🌍 Člen komunity';
+  const adminBadge = currentUser.is_admin ? ' · 👑 Admin' : '';
+  document.getElementById('modal-sub').textContent = currentUser.is_admin ? '👑 Administrátor Essence for Life' : currentUser.verified ? '✅ Ověřený klient Essence for Life' : '🌍 Člen komunity';
 }
 
 // ── NAČTENÍ DAT ─────────────────────────────────────────────────────────────
@@ -585,7 +596,7 @@ async function renderFeed() {
         <div class="intent-who">
           <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
           <div>
-            <div class="intent-name">${userName}${verified ? '<span class="user-badge-inline verified">✅ EFL</span>' : ''}</div>
+            <div class="intent-name">${userName}${verified ? '<span class="user-badge-inline verified">✅ Essence for Life</span>' : ''}</div>
             <div class="intent-time">${timeAgo}</div>
           </div>
         </div>
@@ -594,7 +605,7 @@ async function renderFeed() {
       <div class="intent-meta">
         ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
         ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
-        ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců — EFL připravuje nabídku!</span>` : ''}
+        ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců — Essence for Life připravuje nabídku!</span>` : ''}
       </div>
       <div class="intent-body">${intent.description || ''}</div>
       <div class="intent-actions">
@@ -843,7 +854,7 @@ function renderDots() {
     dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 9).attr('fill', 'rgba(232,119,58,.25)');
     dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 7)
       .attr('fill', '#E8773A').attr('stroke', 'white').attr('stroke-width', 2).style('cursor', 'pointer')
-      .on('mouseover', function(ev) { tip.style.display='block'; tip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''} · s EFL</small>`; d3.select(this).attr('r', 10); })
+      .on('mouseover', function(ev) { tip.style.display='block'; tip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''} · s Essence for Life</small>`; d3.select(this).attr('r', 10); })
       .on('mousemove', function(ev) { const r=cont.getBoundingClientRect(); tip.style.left=(ev.clientX-r.left+14)+'px'; tip.style.top=(ev.clientY-r.top-42)+'px'; })
       .on('mouseout', function() { tip.style.display='none'; d3.select(this).attr('r', 7); });
   });
