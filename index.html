@@ -816,14 +816,44 @@ function updateUserUI() {
 }
 
 // ── NAČTENÍ DAT ─────────────────────────────────────────────────────────────
+const DEMO_INTENTS = [
+  { id:'demo-1', user_id:'demo', destination:'Japonsko', travel_date:'podzim 2027',
+    description:'Snila jsem o Japonsku celý život. Chci vidět chrám Fushimi Inari, bambusový les Arashiyama a zůstat jednu noc v rjokanu. Preferuji pomalejší tempo, maximum 8–10 lidí.',
+    looking_for_partner:true, created_at: new Date(Date.now()-2*86400000).toISOString(),
+    users:{ name:'Marie K.', verified:true },
+    _demo_comments:[
+      {author:'Jana N.', verified:false, text:'Já bych šla! Podzim v Japonsku je úžasný, stromy mění barvy.'},
+      {author:'Adéla — Essence for Life', verified:true, text:'Sledujeme zájem, Japonsko podzim je moc hezký termín 🍁'}
+    ], _demo_interests: 3 },
+  { id:'demo-2', user_id:'demo', destination:'Patagonie', travel_date:'únor 2026',
+    description:'Trek W v Torres del Paine. Hledám 2–3 lidi kteří to myslí vážně — fyzicky zdatnější, bez přílišného komfortu, ale s radostí z přírody.',
+    looking_for_partner:true, created_at: new Date(Date.now()-5*86400000).toISOString(),
+    users:{ name:'Pavel V.', verified:true },
+    _demo_comments:[
+      {author:'René S.', verified:false, text:'Mám zájem! Patagonie je sen.'}
+    ], _demo_interests: 5 },
+  { id:'demo-3', user_id:'demo', destination:'Island', travel_date:'září 2026',
+    description:'Chci vidět polární záři a projet celý ostrov v kruhu. Zatím sama, ale klidně i se skupinou přes Essence for Life — záleží co se dá domluvit.',
+    looking_for_partner:false, created_at: new Date(Date.now()-7*86400000).toISOString(),
+    users:{ name:'Kateřina H.', verified:true },
+    _demo_comments:[], _demo_interests: 4 },
+  { id:'demo-4', user_id:'demo', destination:'Vietnam', travel_date:'jaro 2026',
+    description:'Plávím na Ha Long Bay, procházím staré město Hoi An. Ráda bych se připojila k menší skupině — solo cesta je fajn, ale parťáci jsou vítáni.',
+    looking_for_partner:true, created_at: new Date(Date.now()-14*86400000).toISOString(),
+    users:{ name:'Jana N.', verified:false },
+    _demo_comments:[], _demo_interests: 1 },
+];
+
 async function loadIntents() {
   const { data, error } = await db
     .from('intents')
     .select(`*, users(name, verified)`)
     .order('created_at', { ascending: false });
 
-  if (error) { console.error(error); return; }
-  allIntents = data || [];
+  if (error) { console.error(error); }
+  // Zobrazit demo sny + reálná data dohromady
+  const real = (data || []);
+  allIntents = [...real, ...DEMO_INTENTS];
   renderFeed();
 }
 
@@ -880,8 +910,8 @@ async function renderFeed() {
 
   feed.innerHTML = '';
   filtered.forEach(intent => {
-    const cnt = interestCounts[intent.id] || 0;
-    const commentCnt = commentCounts[intent.id] || 0;
+    const cnt = intent._demo_interests !== undefined ? intent._demo_interests : (interestCounts[intent.id] || 0);
+    const commentCnt = intent._demo_comments !== undefined ? intent._demo_comments.length : (commentCounts[intent.id] || 0);
     const milestone = cnt >= MILESTONE;
     const userName = intent.users?.name || 'Anonym';
     const verified = intent.users?.verified;
@@ -961,6 +991,26 @@ async function toggleComments(intentId) {
 
   el.classList.add('open');
   el.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+
+  // Demo komentáře
+  if (intentId.startsWith('demo-')) {
+    const demo = DEMO_INTENTS.find(i => i.id === intentId);
+    const commHtml = (demo?._demo_comments || []).map(c => `
+      <div class="comment">
+        <div class="intent-avatar" style="background:${c.author.includes('Essence')?'#1A6B6E':'#2A9CA0'};width:28px;height:28px;font-size:.65rem;flex-shrink:0">
+          ${c.author.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+        </div>
+        <div class="comment-bubble">
+          <div class="comment-author">${c.author}${c.verified?' ✅':''}</div>
+          ${c.text}
+        </div>
+      </div>`).join('');
+    el.innerHTML = `${commHtml}<div class="comment-input-row">
+      <input type="text" placeholder="Přidat komentář…" id="cinput-${intentId}" onkeydown="if(event.key==='Enter')addComment('${intentId}')"/>
+      <button onclick="addComment('${intentId}')">→</button>
+    </div>`;
+    return;
+  }
 
   const { data } = await db.from('comments').select(`*, users(name, verified)`).eq('intent_id', intentId).order('created_at');
   const commHtml = (data || []).map(c => `
@@ -1049,8 +1099,8 @@ async function renderMineFeed() {
   }
   feed.innerHTML = '';
   filtered.forEach(intent => {
-    const cnt = interestCounts[intent.id] || 0;
-    const commentCnt = commentCounts[intent.id] || 0;
+    const cnt = intent._demo_interests !== undefined ? intent._demo_interests : (interestCounts[intent.id] || 0);
+    const commentCnt = intent._demo_comments !== undefined ? intent._demo_comments.length : (commentCounts[intent.id] || 0);
     const userName = intent.users?.name || currentUser?.name || 'Ty';
     const parts = userName.trim().split(' ');
     const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
