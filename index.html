@@ -197,6 +197,16 @@
   .user-badge-inline.verified { background:rgba(232,119,58,.1); color:#B85A1E; border:1px solid rgba(232,119,58,.2); }
   .user-badge-inline.member { background:rgba(42,156,160,.1); color:var(--teal-dark); border:1px solid rgba(42,156,160,.2); }
 
+  /* DOPORUČENÍ */
+  .rec-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; box-shadow:0 1px 8px rgba(0,0,0,.04); transition:box-shadow .2s,transform .2s; }
+  .rec-card:hover { box-shadow:0 6px 24px rgba(42,156,160,.1); transform:translateY(-1px); }
+  .rec-stars { color:#E9C46A; font-size:1rem; letter-spacing:.1rem; }
+  .rec-type-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .65rem; border-radius:20px; font-size:.72rem; font-weight:500; }
+  .rec-type-badge.pobyt_efl { background:rgba(42,156,160,.1); color:var(--teal-dark); border:1px solid rgba(42,156,160,.2); }
+  .rec-type-badge.misto { background:rgba(232,119,58,.08); color:#B85A1E; border:1px solid rgba(232,119,58,.2); }
+  .rec-type-badge.tip { background:rgba(233,196,106,.15); color:#8a6d00; border:1px solid rgba(233,196,106,.3); }
+  .star-btn.active { opacity:1 !important; }
+
   /* MOJE */
   .mine-tabs { display:flex; gap:.5rem; margin-bottom:1.25rem; }
   .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
@@ -261,6 +271,7 @@
   <nav>
     <button class="active" onclick="showSection('community',this)">✈ Sny</button>
     <button onclick="showSection('mine',this)">📌 Moje</button>
+    <button onclick="showSection('doporuceni',this)">⭐ Doporučení</button>
     <button onclick="showSection('map',this)">🗺 Mapa</button>
   </nav>
   <div class="user-badge" onclick="openProfile()">
@@ -327,6 +338,50 @@
             <div class="stat"><div class="stat-num" id="my-liked-count">0</div><div class="stat-label">Oblíbených</div></div>
             <div class="stat"><div class="stat-num" id="my-comment-count">0</div><div class="stat-label">Komentářů</div></div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOPORUČENÍ -->
+  <section id="doporuceni-section" class="section">
+    <div class="page-header">
+      <h1>Doporučení</h1>
+      <p>Sdílej své zkušenosti — místa, pobyty s Essence for Life a tipy pro ostatní cestovatele.</p>
+    </div>
+    <div class="community-layout">
+      <div>
+        <div class="filter-bar">
+          <button class="filter-chip active" onclick="filterRecs('vse',this)">Vše</button>
+          <button class="filter-chip" onclick="filterRecs('pobyt_efl',this)">🌿 Pobyt s Essence for Life</button>
+          <button class="filter-chip" onclick="filterRecs('misto',this)">📍 Místo</button>
+          <button class="filter-chip" onclick="filterRecs('tip',this)">💡 Tip</button>
+        </div>
+        <div class="feed" id="rec-feed"><div class="loading"><span class="spinner"></span>Načítám doporučení…</div></div>
+      </div>
+      <div>
+        <div class="new-intent-card">
+          <h3>Sdílej doporučení</h3>
+          <div class="form-group">
+            <label>Typ</label>
+            <select id="rec-type" style="width:100%;padding:.55rem .8rem;border:1px solid rgba(192,224,225,.15);border-radius:8px;background:rgba(255,255,255,.07);color:rgba(240,250,250,.95);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+              <option value="pobyt_efl">🌿 Pobyt s Essence for Life</option>
+              <option value="misto">📍 Místo / destinace</option>
+              <option value="tip">💡 Cestovatelský tip</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Název místa nebo pobytu</label><input type="text" id="rec-title" placeholder="Bali Reset Week, Kjóto, Machu Picchu…"/></div>
+          <div class="form-group"><label>Hodnocení</label>
+            <div style="display:flex;gap:.5rem;margin-top:.3rem" id="rec-stars">
+              <button onclick="setStars(1)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(2)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(3)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(4)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(5)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+            </div>
+          </div>
+          <div class="form-group"><label>Tvůj zážitek</label><textarea id="rec-text" placeholder="Co tě nejvíc zaujalo? Co bys doporučila ostatním?"></textarea></div>
+          <button class="btn-post" onclick="postRec()">Sdílet doporučení →</button>
         </div>
       </div>
     </div>
@@ -1279,6 +1334,139 @@ async function addPlace() {
 function removePlace(type, idx) { places[type].splice(idx, 1); renderDots(); renderPlaceList(); updateMapStats(); }
 
 // ── NAVIGACE ──────────────────────────────────────────────────────────────────
+// ── DOPORUČENÍ ────────────────────────────────────────────────────────────────
+const DEMO_RECS = [
+  { id:'rec-1', user_id:'demo', title:'Reset Week Madeira', type:'pobyt_efl', stars:5,
+    text:'Naprosto úžasný pobyt. Adéla vytvořila bezpečný prostor pro opravdový odpočinek i sebepoznání. Výhledy na oceán, ranní jóga, skvělá skupina lidí. Určitě se vrátím!',
+    created_at: new Date(Date.now()-3*86400000).toISOString(), users:{name:'Kateřina H.', verified:true} },
+  { id:'rec-2', user_id:'demo', title:'Kjóto — čtvrť Higashiyama', type:'misto', stars:5,
+    text:'Jedno z nejkrásnějších míst která jsem kdy viděla. Doporučuji přijít brzy ráno před turisty — úzké uličky s bambusem a chrámy jsou kouzelné. Ubytování v rjokanu je must have.',
+    created_at: new Date(Date.now()-7*86400000).toISOString(), users:{name:'Marie K.', verified:true} },
+  { id:'rec-3', user_id:'demo', title:'Tip: Aplikace Maps.me na offline mapy', type:'tip', stars:4,
+    text:'Stáhněte si offline mapy před cestou — zachránilo mě to v Maroku kde byl špatný signál. Funguje lépe než Google Maps offline a je zdarma.',
+    created_at: new Date(Date.now()-10*86400000).toISOString(), users:{name:'Pavel V.', verified:false} },
+];
+
+let recFilter = 'vse';
+let selectedStars = 0;
+
+function setStars(n) {
+  selectedStars = n;
+  document.querySelectorAll('.star-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i < n);
+  });
+}
+
+function recTypLabel(type) {
+  if (type === 'pobyt_efl') return '🌿 Pobyt s Essence for Life';
+  if (type === 'misto') return '📍 Místo';
+  return '💡 Tip';
+}
+
+function starsHtml(n) {
+  return '★'.repeat(n) + '☆'.repeat(5-n);
+}
+
+async function loadRecs() {
+  const feed = document.getElementById('rec-feed');
+  if (!feed) return;
+  feed.innerHTML = '<div class="loading"><span class="spinner"></span>Načítám doporučení…</div>';
+
+  const { data, error } = await db.from('recommendations')
+    .select('*, users(name, verified)')
+    .order('created_at', { ascending: false });
+
+  const real = (data || []);
+  const all = [...real, ...DEMO_RECS];
+  renderRecs(all);
+}
+
+function renderRecs(data) {
+  const feed = document.getElementById('rec-feed');
+  if (!feed) return;
+
+  const filtered = data.filter(r => recFilter === 'vse' || r.type === recFilter);
+
+  if (!filtered.length) {
+    feed.innerHTML = `<div class="empty-state"><div class="es-icon">⭐</div><h3>Žádná doporučení</h3><p>Buď první kdo se podělí o svůj zážitek!</p></div>`;
+    return;
+  }
+
+  feed.innerHTML = filtered.map(r => {
+    const userName = r.users?.name || 'Anonym';
+    const parts = userName.trim().split(' ');
+    const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    const colorIdx = Math.abs(userName.charCodeAt(0)) % COLORS.length;
+    const isMine = currentUser && r.user_id === currentUser.id;
+    const canDelete = isMine || currentUser?.is_admin;
+
+    return `<div class="rec-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
+          <div>
+            <div class="intent-name">${userName}${r.users?.verified ? ' ✅' : ''}</div>
+            <div class="intent-time">${formatTime(r.created_at)}</div>
+          </div>
+        </div>
+        <span class="rec-type-badge ${r.type}">${recTypLabel(r.type)}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <strong style="color:var(--teal-dark);font-size:.95rem">${r.title}</strong>
+        <span class="rec-stars" style="color:#E9C46A">${starsHtml(r.stars||0)}</span>
+      </div>
+      <div class="intent-body" style="margin-bottom:.75rem">${r.text}</div>
+      ${canDelete ? `<div style="display:flex;gap:.5rem;padding-top:.6rem;border-top:1px solid var(--border)">
+        ${isMine ? `<button class="action-btn" onclick="editRec('${r.id}')">✏️ Upravit</button>` : ''}
+        <button class="action-btn" onclick="deleteRec('${r.id}')">🗑️ Smazat</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterRecs(f, btn) {
+  recFilter = f;
+  document.querySelectorAll('#doporuceni-section .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadRecs();
+}
+
+async function postRec() {
+  if (!currentUser) return;
+  const title = document.getElementById('rec-title').value.trim();
+  const text = document.getElementById('rec-text').value.trim();
+  const type = document.getElementById('rec-type').value;
+  if (!title || !text) { showToast('Vyplň prosím název a popis'); return; }
+  if (!selectedStars) { showToast('Vyber prosím hodnocení ★'); return; }
+
+  const { error } = await db.from('recommendations').insert({
+    user_id: currentUser.id, title, text, type, stars: selectedStars
+  });
+  if (error) { showToast('Chyba při ukládání'); return; }
+
+  document.getElementById('rec-title').value = '';
+  document.getElementById('rec-text').value = '';
+  selectedStars = 0;
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+  loadRecs();
+  showToast('Doporučení sdíleno! ⭐');
+}
+
+async function editRec(id) {
+  const newText = prompt('Uprav doporučení:');
+  if (!newText) return;
+  await db.from('recommendations').update({ text: newText }).eq('id', id);
+  loadRecs();
+  showToast('Doporučení upraveno ✏️');
+}
+
+async function deleteRec(id) {
+  if (!confirm('Smazat toto doporučení?')) return;
+  await db.from('recommendations').delete().eq('id', id);
+  loadRecs();
+  showToast('Doporučení smazáno 🗑️');
+}
+
 async function editComment(commentId, intentId) {
   const textEl = document.getElementById(`comment-text-${commentId}`);
   const currentText = textEl.textContent;
@@ -1305,6 +1493,7 @@ function showSection(name, btn) {
   btn.classList.add('active');
   if (name === 'map') setTimeout(() => { if (!svgMap) initMap(); }, 100);
   if (name === 'mine') renderMineFeed();
+  if (name === 'doporuceni') loadRecs();
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
