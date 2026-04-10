@@ -1013,16 +1013,25 @@ async function toggleComments(intentId) {
   }
 
   const { data } = await db.from('comments').select(`*, users(name, verified)`).eq('intent_id', intentId).order('created_at');
-  const commHtml = (data || []).map(c => `
-    <div class="comment">
+  const commHtml = (data || []).map(c => {
+    const isMine = currentUser && c.user_id === currentUser.id;
+    const canDelete = isMine || currentUser?.is_admin;
+    return `<div class="comment" id="comment-row-${c.id}">
       <div class="intent-avatar" style="background:${c.users?.verified ? '#1A6B6E' : COLORS[2]};width:28px;height:28px;font-size:.65rem;flex-shrink:0">
         ${(c.users?.name || 'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
       </div>
-      <div class="comment-bubble">
-        <div class="comment-author">${c.users?.name || 'Anonym'}${c.users?.verified ? ' ✅' : ''}</div>
-        ${c.text}
+      <div class="comment-bubble" style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.15rem">
+          <span class="comment-author" style="margin:0">${c.users?.name || 'Anonym'}${c.users?.verified ? ' ✅' : ''}</span>
+          <span style="display:flex;gap:.3rem">
+            ${isMine ? `<button onclick="editComment('${c.id}','${intentId}')" style="background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--muted);padding:0" title="Upravit">✏️</button>` : ''}
+            ${canDelete ? `<button onclick="deleteComment('${c.id}','${intentId}')" style="background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--muted);padding:0" title="Smazat">🗑️</button>` : ''}
+          </span>
+        </div>
+        <div id="comment-text-${c.id}">${c.text}</div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 
   el.innerHTML = `${commHtml}
     <div class="comment-input-row">
@@ -1270,6 +1279,25 @@ async function addPlace() {
 function removePlace(type, idx) { places[type].splice(idx, 1); renderDots(); renderPlaceList(); updateMapStats(); }
 
 // ── NAVIGACE ──────────────────────────────────────────────────────────────────
+async function editComment(commentId, intentId) {
+  const textEl = document.getElementById(`comment-text-${commentId}`);
+  const currentText = textEl.textContent;
+  const newText = prompt('Upravit komentář:', currentText);
+  if (!newText || newText === currentText) return;
+  const { error } = await db.from('comments').update({ text: newText }).eq('id', commentId);
+  if (error) { showToast('Chyba při úpravě'); return; }
+  textEl.textContent = newText;
+  showToast('Komentář upraven ✏️');
+}
+
+async function deleteComment(commentId, intentId) {
+  if (!confirm('Smazat tento komentář?')) return;
+  const { error } = await db.from('comments').delete().eq('id', commentId);
+  if (error) { showToast('Chyba při mazání'); return; }
+  document.getElementById(`comment-row-${commentId}`)?.remove();
+  showToast('Komentář smazán 🗑️');
+}
+
 function showSection(name, btn) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
