@@ -540,6 +540,51 @@
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
 <script>
+// ── MAILERLITE PROPOJENÍ ────────────────────────────────────────────────────
+const ML_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiMzgwZjk2NmY3NGMzZjI1MTRlZGNkNGUyZGZiZGZiMDc3MTE0YzUzYmQxMzljZTBjMDMyMDBjOTg3ZmU2MzRiMGFjZjJkNDNhYTk3NjcyMzEiLCJpYXQiOjE3NzYwMjc5MDYuMzUzODU1LCJuYmYiOjE3NzYwMjc5MDYuMzUzODU4LCJleHAiOjQ5MzE3MDE1MDYuMzQ5NTUzLCJzdWIiOiI4MTI2NDkiLCJzY29wZXMiOltdfQ.GRwq_mYR3iwzrgFeWwD1lKq_IcGrzq8nSeSPhoY2GnvknIssA8lDru7ZqBi3B-T2JzfbT6UO7iA18q5MhrTzVmCmvaxDuRSya-yo2JY15gnZA_Qtw02mgLk8YFZM1KQR6j0ZVst7K-c2kdzj0wMzyPCitUC8QM1NR6L6z_JNJZDm81lvlnktqhGQu1KYYpE3SUa2giE_kKq6gQIP2fmabPyZ33hFJX7BnHDW4hKGzcGZ6wcVYBbbndkiZGEZzJLI3AnfUhPSIGe7_r6-5aZKtR1GbWyzN4HPY7Jqat1tZpzIvqwW1YLjmxQwy08j50jDjzsSpOniYmqfHXhx3CWzhwyVNz5bqmCFqkRhy6JVctX2vsk8r-WYt6UNgEQzHXi599VqI7v5HHUdLD0b6HS_8oyWjNUYe_tAFbbjQYiQt0u6CmMeyHbjAAnAzH1Ql_C4xRnBFgdI6fO51h6PGs-ptPHxUsLWRURmfSIWtn6qNORoF_vYaVXRuzdGYdSgT09AUV_OTwvlZkZKi41D8-L6XCdyKy4qWak5Mwf9dPzI9ljIhFcUxjoJXWnKykirJEyn9ZXV-bmun--T3tIxvnCN889QT2R1rspSBC3ojGugZnEG29sipUdaYGBCzGN7ALF4s0cadtBnzrEFI_vPL4usfUZEA37VRyybXTg6wU7dRpY';
+const ML_GROUP_KLIENTI = '183932696541529328';
+const ML_GROUP_KOMUNITA = '114101246009280377';
+
+async function addToMailerLite(email, name, verified) {
+  try {
+    // Přidat nebo aktualizovat subscriber
+    const subRes = await fetch('https://api.mailerlite.com/api/v2/subscribers', {
+      method: 'POST',
+      headers: {
+        'X-MailerLite-ApiKey': ML_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        name,
+        fields: {
+          komunita_member: '1',
+          komunita_verified: verified ? '1' : '0',
+          komunita_joined: new Date().toISOString().split('T')[0]
+        }
+      })
+    });
+
+    if (!subRes.ok) return;
+    const sub = await subRes.json();
+    const subId = sub.id;
+
+    // Přidat do skupiny Cestovatelský klub (všichni členové komunity)
+    await fetch(`https://api.mailerlite.com/api/v2/groups/${ML_GROUP_KOMUNITA}/subscribers`, {
+      method: 'POST',
+      headers: {
+        'X-MailerLite-ApiKey': ML_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+
+    console.log(`✅ MailerLite: ${email} přidán do komunity`);
+  } catch(e) {
+    console.error('MailerLite chyba:', e);
+  }
+}
+
 // ── RESEND NOTIFIKACE ───────────────────────────────────────────────────────
 const RESEND_KEY = 're_PNq3NswJ_FGxUAioR6BWL9Vzsm9CCy9gx';
 const ADMIN_EMAILS = ['adela@essenceforlife.cz', 'honza@essenceforlife.cz', 'darja@essenceforlife.cz'];
