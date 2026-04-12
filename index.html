@@ -350,21 +350,26 @@
     <img src="https://essenceforlife.cz/wp-content/uploads/2024/03/EFL-logo.png" alt="EFL" class="logo-img"
          onerror="this.style.display='none';document.getElementById('lf').style.display='block'">
     <span id="lf" style="display:none;font-family:'Playfair Display',serif;color:var(--efl);font-size:1.1rem;font-style:italic">Essence for Life</span>
-    <div class="logo-divider"></div>
-    <div class="logo-sub">Cestovní komunita</div>
+    <div class="logo-divider" id="logo-div"></div>
+    <div class="logo-sub" id="logo-sub-text">Cestovní komunita</div>
   </div>
-  <nav id="desktop-nav" style="display:flex">
+  <nav id="desktop-nav">
     <button class="active" onclick="showSection('community',this)">✈ Sny</button>
     <button onclick="showSection('mine',this)">📌 Moje</button>
     <button onclick="showSection('doporuceni',this)">⭐ Doporučení</button>
     <button onclick="showSection('map',this)">🗺 Mapa</button>
     <button id="admin-nav-btn" onclick="showSection('admin',this)" style="display:none">👑 Admin</button>
   </nav>
-  <!-- Hamburger pro mobil -->
-  <button id="hamburger-btn" onclick="toggleMobileMenu()" style="display:none;background:none;border:none;cursor:pointer;color:var(--efl);font-size:1.5rem;padding:.25rem .5rem;line-height:1">☰</button>
-  <div class="user-badge" onclick="openProfile()">
-    <div class="avatar" id="nav-avatar">?</div>
-    <span id="nav-name">...</span>
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <div class="user-badge" onclick="openProfile()">
+      <div class="avatar" id="nav-avatar">?</div>
+      <span id="nav-name">...</span>
+    </div>
+    <!-- Hamburger — vždy přítomný, viditelný jen na mobilu přes JS -->
+    <button id="hamburger-btn" onclick="toggleMobileMenu()"
+      style="display:none;background:rgba(255,255,255,.1);border:none;cursor:pointer;color:var(--efl);font-size:1.4rem;width:38px;height:38px;border-radius:8px;align-items:center;justify-content:center;flex-shrink:0">
+      ☰
+    </button>
   </div>
 </header>
 
@@ -2257,7 +2262,31 @@ function closeMobileMenu() {
 }
 
 function initMobileNav() {
-  // Hamburger se zobrazí přes CSS media query
+  function applyMobileLayout() {
+    const isMobile = window.innerWidth <= 600;
+    const hamburger = document.getElementById('hamburger-btn');
+    const desktopNav = document.getElementById('desktop-nav');
+    const logoDiv = document.getElementById('logo-div');
+    const logoSub = document.getElementById('logo-sub-text');
+    const navName = document.getElementById('nav-name');
+
+    if (isMobile) {
+      hamburger.style.display = 'flex';
+      desktopNav.style.display = 'none';
+      if (logoDiv) logoDiv.style.display = 'none';
+      if (logoSub) logoSub.style.display = 'none';
+      if (navName) navName.style.display = 'none';
+      document.body.style.overflowX = 'hidden';
+    } else {
+      hamburger.style.display = 'none';
+      desktopNav.style.display = 'flex';
+      if (logoDiv) logoDiv.style.display = 'block';
+      if (logoSub) logoSub.style.display = 'block';
+      if (navName) navName.style.display = 'inline';
+    }
+  }
+  applyMobileLayout();
+  window.addEventListener('resize', applyMobileLayout);
 }
 
 window.addEventListener('resize', () => {
