@@ -3,8 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Komunita Essence for Life</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script>
+// Okamžité skrytí desktop nav na mobilu - spustí se před vykreslením
+(function() {
+  if (window.innerWidth <= 600) {
+    document.addEventListener('DOMContentLoaded', function() {
+      var nav = document.getElementById('desktop-nav');
+      var ham = document.getElementById('hamburger-btn');
+      var logodiv = document.getElementById('logo-div');
+      var logosub = document.getElementById('logo-sub-text');
+      var navname = document.getElementById('nav-name');
+      if (nav) nav.style.display = 'none';
+      if (ham) { ham.style.display = 'flex'; }
+      if (logodiv) logodiv.style.display = 'none';
+      if (logosub) logosub.style.display = 'none';
+      if (navname) navname.style.display = 'none';
+      document.body.style.overflowX = 'hidden';
+    });
+  }
+})();
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
