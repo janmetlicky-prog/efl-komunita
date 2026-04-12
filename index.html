@@ -573,7 +573,7 @@ async function sendMilestoneNotification(intent, count) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'Komunita Essence for Life <onboarding@resend.dev>',
+        from: 'Komunita Essence for Life <komunita@essenceforlife.cz>',
         to: ADMIN_EMAILS,
         subject: `🔥 ${intent.destination} — ${count} zájemců v komunitě!`,
         html
@@ -1283,7 +1283,7 @@ async function postIntent() {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'Komunita Essence for Life <onboarding@resend.dev>',
+        from: 'Komunita Essence for Life <komunita@essenceforlife.cz>',
         to: ADMIN_EMAILS,
         subject: `✈️ Nový sen v komunitě: ${dest}`,
         html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:2rem">
