@@ -214,6 +214,14 @@
   .empty-state h3 { font-family:'Playfair Display',serif; color:var(--teal-dark); margin-bottom:.5rem; }
   .empty-state p { font-size:.88rem; font-weight:300; }
 
+  /* ADMIN */
+  #admin-section .stats-card { cursor:default; }
+  .admin-dest-row { display:flex; align-items:center; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.85rem; }
+  .admin-dest-row:last-child { border:none; }
+  .admin-dest-bar { height:6px; background:var(--efl); border-radius:3px; margin-top:.25rem; }
+  .admin-user-row { display:flex; align-items:center; gap:.75rem; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.83rem; }
+  .admin-user-row:last-child { border:none; }
+
   /* LOADING */
   .loading { text-align:center; padding:2rem; color:var(--muted); font-size:.88rem; }
   .spinner { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spin .8s linear infinite; margin-right:.5rem; vertical-align:middle; }
@@ -273,6 +281,7 @@
     <button onclick="showSection('mine',this)">📌 Moje</button>
     <button onclick="showSection('doporuceni',this)">⭐ Doporučení</button>
     <button onclick="showSection('map',this)">🗺 Mapa</button>
+    <button id="admin-nav-btn" onclick="showSection('admin',this)" style="display:none">👑 Admin</button>
   </nav>
   <div class="user-badge" onclick="openProfile()">
     <div class="avatar" id="nav-avatar">?</div>
@@ -431,6 +440,72 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- ADMIN DASHBOARD -->
+  <section id="admin-section" class="section">
+    <div class="page-header">
+      <h1>👑 Admin dashboard</h1>
+      <p>Přehled komunity v reálném čase — jen pro administrátory Essence for Life</p>
+    </div>
+
+    <!-- STATS ROW -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem" id="admin-stats-grid">
+      <div class="stats-card"><h3>Členů celkem</h3><div class="stat-num" id="admin-total-users">…</div></div>
+      <div class="stats-card"><h3>Ověřených klientů</h3><div class="stat-num" id="admin-verified">…</div></div>
+      <div class="stats-card"><h3>Cestovatelských snů</h3><div class="stat-num" id="admin-intents">…</div></div>
+      <div class="stats-card"><h3>Doporučení</h3><div class="stat-num" id="admin-recs">…</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+
+      <!-- TOP DESTINACE -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">🌍 Nejžádanější destinace</h3>
+        <div id="admin-top-destinations"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+      <!-- NOVÍ ČLENOVÉ -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">👥 Poslední registrace</h3>
+        <div id="admin-new-users"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+      <!-- NEJAKTIVNĚJŠÍ ČLENOVÉ -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">🔥 Nejaktivnější členové</h3>
+        <div id="admin-active-users"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+      <!-- POSLEDNÍ SNY -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">✈ Poslední sny</h3>
+        <div id="admin-last-intents"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+    </div>
+
+    <!-- VŠICHNI UŽIVATELÉ -->
+    <div class="add-place-card" style="margin-top:1.5rem">
+      <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">📋 Všichni členové</h3>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem" id="admin-users-table">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);color:var(--muted);text-align:left">
+              <th style="padding:.5rem .75rem">Jméno</th>
+              <th style="padding:.5rem .75rem">Email</th>
+              <th style="padding:.5rem .75rem">Typ</th>
+              <th style="padding:.5rem .75rem">Registrace</th>
+              <th style="padding:.5rem .75rem">Sny</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody">
+            <tr><td colspan="5" style="padding:1rem;color:var(--muted);text-align:center"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </section>
 
 </main>
@@ -839,7 +914,10 @@ async function doLogin() {
   document.getElementById('login-screen').classList.add('hidden');
   await loadIntents();
   await loadMyActivity();
-  if (admin) showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
+  if (admin) {
+    showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
+    document.getElementById('admin-nav-btn').style.display = 'block';
+  }
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
   else showToast('🌍 Vítej v komunitě!');
 }
@@ -1467,6 +1545,115 @@ async function deleteRec(id) {
   showToast('Doporučení smazáno 🗑️');
 }
 
+// ── ADMIN DASHBOARD ────────────────────────────────────────────────────────
+async function loadAdminDashboard() {
+  if (!currentUser?.is_admin) return;
+
+  // Zobrazit admin tlačítko v nav
+  document.getElementById('admin-nav-btn').style.display = 'block';
+
+  try {
+    // Paralelní načtení všech dat
+    const [usersRes, intentsRes, recsRes, interestsRes] = await Promise.all([
+      db.from('users').select('*').order('created_at', { ascending: false }),
+      db.from('intents').select('*, users(name, verified)').order('created_at', { ascending: false }),
+      db.from('recommendations').select('id'),
+      db.from('interests').select('intent_id, intents(destination)')
+    ]);
+
+    const users = usersRes.data || [];
+    const intents = intentsRes.data || [];
+    const recs = recsRes.data || [];
+    const interests = interestsRes.data || [];
+
+    // STATS
+    document.getElementById('admin-total-users').textContent = users.length;
+    document.getElementById('admin-verified').textContent = users.filter(u => u.verified).length;
+    document.getElementById('admin-intents').textContent = intents.length;
+    document.getElementById('admin-recs').textContent = recs.length;
+
+    // TOP DESTINACE
+    const destCount = {};
+    intents.forEach(i => {
+      const d = i.destination;
+      destCount[d] = (destCount[d] || 0) + 1;
+    });
+    // Přidat zájem
+    interests.forEach(i => {
+      const d = i.intents?.destination;
+      if (d) destCount[d] = (destCount[d] || 0) + 0.5;
+    });
+    const topDests = Object.entries(destCount).sort((a,b) => b[1]-a[1]).slice(0, 6);
+    const maxDest = topDests[0]?.[1] || 1;
+    document.getElementById('admin-top-destinations').innerHTML = topDests.length
+      ? topDests.map(([dest, cnt]) => `
+        <div class="admin-dest-row">
+          <div>
+            <span style="font-weight:500;color:var(--teal-dark)">${dest}</span>
+            <div class="admin-dest-bar" style="width:${Math.round(cnt/maxDest*100)}%;background:var(--teal)"></div>
+          </div>
+          <span style="color:var(--muted);font-size:.78rem">${Math.round(cnt)} zájem</span>
+        </div>`).join('')
+      : '<p style="color:var(--muted);font-size:.85rem">Zatím žádná data</p>';
+
+    // NOVÍ ČLENOVÉ
+    document.getElementById('admin-new-users').innerHTML = users.slice(0, 6).map(u => `
+      <div class="admin-user-row">
+        <div class="intent-avatar" style="background:${u.is_admin?'#1A6B6E':u.verified?'#E8773A':'#6B9497'};width:32px;height:32px;font-size:.72rem;flex-shrink:0">
+          ${(u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:500;color:var(--teal-dark)">${u.name||'—'}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${formatTime(u.created_at)}</div>
+        </div>
+        <span style="font-size:.72rem;padding:.15rem .5rem;border-radius:10px;background:${u.is_admin?'rgba(26,107,110,.1)':u.verified?'rgba(232,119,58,.08)':'rgba(107,148,151,.08)'};color:${u.is_admin?'var(--teal-dark)':u.verified?'#B85A1E':'var(--muted)'}">
+          ${u.is_admin?'👑 Admin':u.verified?'✅ Klient':'🌍 Člen'}
+        </span>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:.85rem">Zatím žádní členové</p>';
+
+    // NEJAKTIVNĚJŠÍ — podle počtu snů
+    const userIntentCount = {};
+    intents.forEach(i => { userIntentCount[i.user_id] = (userIntentCount[i.user_id] || 0) + 1; });
+    const activeUsers = users.filter(u => userIntentCount[u.id]).sort((a,b) => (userIntentCount[b.id]||0)-(userIntentCount[a.id]||0)).slice(0,5);
+    document.getElementById('admin-active-users').innerHTML = activeUsers.length
+      ? activeUsers.map(u => `
+        <div class="admin-user-row">
+          <div class="intent-avatar" style="background:var(--teal);width:32px;height:32px;font-size:.72rem;flex-shrink:0">
+            ${(u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+          </div>
+          <div style="flex:1;font-weight:500;color:var(--teal-dark)">${u.name||'—'}</div>
+          <span style="color:var(--muted);font-size:.78rem">${userIntentCount[u.id]} snů</span>
+        </div>`).join('')
+      : '<p style="color:var(--muted);font-size:.85rem">Zatím žádná aktivita</p>';
+
+    // POSLEDNÍ SNY
+    document.getElementById('admin-last-intents').innerHTML = intents.slice(0,5).map(i => `
+      <div class="admin-user-row">
+        <div style="flex:1">
+          <div style="font-weight:500;color:var(--teal-dark)">${i.destination}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${i.users?.name||'—'} · ${formatTime(i.created_at)}</div>
+        </div>
+        ${i.looking_for_partner ? '<span style="font-size:.7rem;color:var(--orange)">👥 Parťák</span>' : ''}
+      </div>`).join('') || '<p style="color:var(--muted);font-size:.85rem">Zatím žádné sny</p>';
+
+    // TABULKA VŠECH UŽIVATELŮ
+    const tbody = document.getElementById('admin-users-tbody');
+    const userIntents = {};
+    intents.forEach(i => { userIntents[i.user_id] = (userIntents[i.user_id]||0)+1; });
+    tbody.innerHTML = users.map(u => `
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:.5rem .75rem;font-weight:500;color:var(--teal-dark)">${u.name||'—'}</td>
+        <td style="padding:.5rem .75rem;color:var(--muted);font-size:.78rem">${u.email}</td>
+        <td style="padding:.5rem .75rem">${u.is_admin?'👑 Admin':u.verified?'✅ Klient':'🌍 Člen'}</td>
+        <td style="padding:.5rem .75rem;color:var(--muted);font-size:.78rem">${formatTime(u.created_at)}</td>
+        <td style="padding:.5rem .75rem;text-align:center">${userIntents[u.id]||0}</td>
+      </tr>`).join('') || '<tr><td colspan="5" style="padding:1rem;color:var(--muted);text-align:center">Zatím žádní členové</td></tr>';
+
+  } catch(e) {
+    console.error('Admin dashboard error:', e);
+  }
+}
+
 async function editComment(commentId, intentId) {
   const textEl = document.getElementById(`comment-text-${commentId}`);
   const currentText = textEl.textContent;
@@ -1494,6 +1681,7 @@ function showSection(name, btn) {
   if (name === 'map') setTimeout(() => { if (!svgMap) initMap(); }, 100);
   if (name === 'mine') renderMineFeed();
   if (name === 'doporuceni') loadRecs();
+  if (name === 'admin') loadAdminDashboard();
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -1523,6 +1711,7 @@ document.getElementById('country-input').addEventListener('keydown', e => { if (
     currentUser = JSON.parse(saved);
     updateUserUI();
     document.getElementById('login-screen').classList.add('hidden');
+    if (currentUser.is_admin) document.getElementById('admin-nav-btn').style.display = 'block';
     await loadIntents();
     await loadMyActivity();
   }
