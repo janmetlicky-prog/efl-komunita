@@ -654,15 +654,16 @@
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
 <!-- MOBILNÍ DROPDOWN MENU -->
-<div id="mobile-menu" style="display:none;position:fixed;top:54px;left:0;right:0;background:var(--teal-dark);z-index:1500;box-shadow:0 8px 32px rgba(0,0,0,.3);border-radius:0 0 20px 20px;overflow:hidden">
-  <button class="mob-menu-item" id="mm-community" onclick="showSection('community',this);closeMobileMenu()">✈️ &nbsp; Cestovatelské sny</button>
-  <button class="mob-menu-item" id="mm-doporuceni" onclick="showSection('doporuceni',this);closeMobileMenu()">⭐ &nbsp; Doporučení</button>
-  <button class="mob-menu-item" id="mm-mine" onclick="showSection('mine',this);closeMobileMenu()">📌 &nbsp; Moje záznamy</button>
-  <button class="mob-menu-item" id="mm-map" onclick="showSection('map',this);closeMobileMenu()">🗺️ &nbsp; Cestovatelská mapa</button>
-  <button class="mob-menu-item" id="mm-profile" onclick="openProfile();closeMobileMenu()">👤 &nbsp; Můj profil</button>
-  <button class="mob-menu-item" id="mm-admin" style="display:none" onclick="showSection('admin',this);closeMobileMenu()">👑 &nbsp; Admin dashboard</button>
-  <div style="height:1px;background:rgba(192,224,225,.12);margin:0 1.5rem"></div>
-  <button class="mob-menu-item" onclick="doLogout();closeMobileMenu()" style="color:rgba(192,224,225,.5)">↩️ &nbsp; Odhlásit se</button>
+<div id="mobile-menu" style="display:none;position:fixed;top:54px;left:0;right:0;background:#1A6B6E;z-index:1500;box-shadow:0 8px 32px rgba(0,0,0,.3);border-radius:0 0 20px 20px">
+  <div style="display:flex;flex-direction:column;width:100%">
+    <button onclick="showSection('community',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">✈️&nbsp;&nbsp;Cestovatelské sny</button>
+    <button onclick="showSection('doporuceni',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">⭐&nbsp;&nbsp;Doporučení</button>
+    <button onclick="showSection('mine',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">📌&nbsp;&nbsp;Moje záznamy</button>
+    <button onclick="showSection('map',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">🗺️&nbsp;&nbsp;Cestovatelská mapa</button>
+    <button onclick="openProfile();closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">👤&nbsp;&nbsp;Můj profil</button>
+    <button id="mm-admin" style="display:none;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left" onclick="showSection('admin',this);closeMobileMenu()">👑&nbsp;&nbsp;Admin dashboard</button>
+    <button onclick="doLogout();closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;cursor:pointer;color:rgba(192,224,225,.45);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:400;text-align:left">↩️&nbsp;&nbsp;Odhlásit se</button>
+  </div>
 </div>
 <div id="mobile-menu-overlay" onclick="closeMobileMenu()" style="display:none;position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,.35)"></div>
 
