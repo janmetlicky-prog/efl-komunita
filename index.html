@@ -910,6 +910,126 @@ function isAdmin(email) {
   return ADMINS.includes(email.toLowerCase().trim());
 }
 
+// ── CESTY KLIENTŮ — předvyplněná mapa ──────────────────────────────────────
+const CLIENT_TRIPS = {
+  "adelka.egerova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "alabra@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "kotrnochova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "aachsova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "bbrestovska@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "dasa.houdkova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "dasahrus@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "dana.hochmannova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "chmelarova@fnpz.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "danapincova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "dana.pruhova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "danielacizecek@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "dseckarova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "dadis.z@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "diana.valeckova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "dominika.peroutkova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "elentrbolova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "kalinova-e@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "evaschreierova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "gabika76@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "gabrielachropuvkova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "fantovah@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "krcalovahana@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "hannah.lih@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hana.linek@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "hanamrkackova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "hankasandova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "hann.ka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hankahalasova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "merit@centrum.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "i.step@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "nektarinka.i@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "ijanickova@post.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "ivasipova@email.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "ivana.pichnarcikova@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "novackovai@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hanzlikova-iveta@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "jana.bloeslova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "bodyna2@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "janinauslunce@sesnam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "sadilkova.jana1@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "jananemeckova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "jana.rysankova@domovterezin.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "jana@jh-comp.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "stancl.jaroslav@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "jarka.davidova@centrum.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "hamanova.v@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "dzitka1@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "mrazkova.jitka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "jratajova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "julierytirova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "k.horynova@atlas.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "kamila.lac@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "mudr.malacova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "karla.maresova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "kstudnickova@email.cz": [{"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "kacaba.elza@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "kackastuchlik@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "kata.skopkova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "vybiralovak@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "ing.klara.nova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "chotenovska@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "lenkahrazdirova@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "lenka.peroutkova63@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "libuseknapova@centrum.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "libuse.tranova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "lucie.andrlikova@idemia.com": [{"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "lida.kadlec@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "milerova@alfaarena.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "info@akpp.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "marcelabalkova@sntcz.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "strbianka@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "marieholovska@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "khaki70@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "info@marta.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "smejkal.zednik@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "gasparovic.martina@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "slovakova.martina@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "martina.lomberska@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "stredohori.renn@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "slovakovama@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "zalesakova.m@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "smolakova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "rychovam@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "m.r.zizkova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "mirinovakova@outlook.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "monika.lulisova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hofmannova.monika@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "machackova@avalon.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "o.albrechtova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "pavla.matyasova@seznam.cz": [{"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "pavla.stejskal@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "pavlina.sandrova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "petrahudeckova@icloud.com": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "machichi@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "petra.schleissova@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "romanahruskova69@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "sabinamachacek@gmail.com": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "jitkaslovakova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "dornova.s@email.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "leitlova.sarka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "sarka.vodolanova@centrum.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "horcickova@vhquality.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "vfijala@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "info@prolepsizivot.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "zdenek.brestovsky@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "kahounovazdenka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "z.rampirova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "krasnejsi@email.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "zina.cihalova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "hrdlickova.zuz@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "zannat83@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+};
+
+function getClientTrips(email) {
+  return CLIENT_TRIPS[email.toLowerCase().trim()] || [];
+}
+
 // ── STAV APLIKACE ───────────────────────────────────────────────────────────
 const COLORS = ['#2A9CA0','#E8773A','#264653','#E9C46A','#6D6875','#457B9D','#2A9D8F'];
 const MILESTONE = 5;
@@ -957,12 +1077,25 @@ async function doLogin() {
   localStorage.setItem('efl_user', JSON.stringify(currentUser));
   updateUserUI();
   document.getElementById('login-screen').classList.add('hidden');
+
+  // Předvyplnit mapu cestami klienta
+  const clientTrips = getClientTrips(email);
+  if (clientTrips.length > 0) {
+    clientTrips.forEach(dest => {
+      if (!places.efl.find(p => p.name === dest.name)) {
+        places.efl.push(dest);
+      }
+    });
+    localStorage.setItem('efl_map_' + email, JSON.stringify(clientTrips));
+  }
+
   await loadIntents();
   await loadMyActivity();
   if (admin) {
     showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
     document.getElementById('admin-nav-btn').style.display = 'block';
   }
+  else if (verified && clientTrips.length > 0) showToast(`✅ Vítej zpět! Našli jsme tvoje ${clientTrips.length} cest${clientTrips.length > 4 ? 'í' : clientTrips.length > 1 ? 'y' : 'u'} s Essence for Life na mapě 🗺`);
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
   else showToast('🌍 Vítej v komunitě!');
 }
@@ -1790,6 +1923,26 @@ document.getElementById('country-input').addEventListener('keydown', e => { if (
     updateUserUI();
     document.getElementById('login-screen').classList.add('hidden');
     if (currentUser.is_admin) document.getElementById('admin-nav-btn').style.display = 'block';
+
+    // Obnovit cesty z mapy
+    const savedTrips = localStorage.getItem('efl_map_' + currentUser.email);
+    if (savedTrips) {
+      const trips = JSON.parse(savedTrips);
+      trips.forEach(dest => {
+        if (!places.efl.find(p => p.name === dest.name)) {
+          places.efl.push(dest);
+        }
+      });
+    } else {
+      // Zkusit načíst z CLIENT_TRIPS
+      const clientTrips = getClientTrips(currentUser.email);
+      clientTrips.forEach(dest => {
+        if (!places.efl.find(p => p.name === dest.name)) {
+          places.efl.push(dest);
+        }
+      });
+    }
+
     await loadIntents();
     await loadMyActivity();
   }
