@@ -540,6 +540,51 @@
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
 <script>
+// ── RESEND NOTIFIKACE ───────────────────────────────────────────────────────
+const RESEND_KEY = 're_PNq3NswJ_FGxUAioR6BWL9Vzsm9CCy9gx';
+const ADMIN_EMAILS = ['adela@essenceforlife.cz', 'honza@essenceforlife.cz', 'darja@essenceforlife.cz'];
+
+async function sendMilestoneNotification(intent, count) {
+  const html = `
+    <div style="font-family:'DM Sans',sans-serif;max-width:600px;margin:0 auto;padding:2rem">
+      <div style="background:#1A6B6E;padding:1.5rem 2rem;border-radius:12px 12px 0 0">
+        <h2 style="color:#C0E0E1;margin:0;font-size:1.2rem">🔥 Milestone v komunitě!</h2>
+      </div>
+      <div style="background:#f9f9f9;padding:1.5rem 2rem;border-radius:0 0 12px 12px;border:1px solid #e2eff0">
+        <p style="color:#1C3A3C;font-size:1rem">Sen o <strong>${intent.destination}</strong> dosáhl <strong>${count} zájemců</strong>!</p>
+        <div style="background:white;border:1px solid #e2eff0;border-radius:8px;padding:1rem;margin:1rem 0">
+          <p style="margin:0;color:#6B9497;font-size:.85rem">📅 ${intent.travel_date || 'termín neurčen'}</p>
+          <p style="margin:.5rem 0 0;color:#1C3A3C;font-size:.9rem">${intent.description || ''}</p>
+        </div>
+        <p style="color:#6B9497;font-size:.85rem">Čas připravit skupinovou nabídku! 🚀</p>
+        <a href="https://janmetlicky-prog.github.io/efl-komunita/" 
+           style="display:inline-block;background:#1A6B6E;color:white;padding:.75rem 1.5rem;border-radius:8px;text-decoration:none;font-size:.9rem;margin-top:.5rem">
+          Otevřít komunitu →
+        </a>
+      </div>
+      <p style="color:#aaa;font-size:.75rem;margin-top:1rem;text-align:center">Essence for Life — Cestovní komunita</p>
+    </div>`;
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Komunita Essence for Life <onboarding@resend.dev>',
+        to: ADMIN_EMAILS,
+        subject: `🔥 ${intent.destination} — ${count} zájemců v komunitě!`,
+        html
+      })
+    });
+    console.log('Notifikace odeslána');
+  } catch(e) {
+    console.error('Chyba notifikace:', e);
+  }
+}
+
 // ── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPA_URL = 'https://zpsqeytpddpmggshydwe.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc3FleXRwZGRwbWdnc2h5ZHdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDc0MjksImV4cCI6MjA5MTMyMzQyOX0.upzALn9Q6flsayNL9QHt7XhXBOBg-2NG75ANaomLExQ';
@@ -1096,7 +1141,16 @@ async function toggleInterest(intentId, btn) {
     myInterests.add(intentId);
     btn.classList.add('interested');
     btn.textContent = '✓ Mám zájem';
-    showToast('Zájem zaznamenán!');
+
+    // Zkontrolovat milník
+    const { count } = await db.from('interests').select('*', { count: 'exact', head: true }).eq('intent_id', intentId);
+    const intent = allIntents.find(i => i.id === intentId);
+    if (count === MILESTONE && intent) {
+      showToast(`🔥 "${intent.destination}" dosáhl ${MILESTONE} zájemců! Essence for Life připravuje nabídku.`);
+      await sendMilestoneNotification(intent, count);
+    } else {
+      showToast('Zájem zaznamenán!');
+    }
   }
   await loadMyActivity();
 }
@@ -1221,6 +1275,30 @@ async function postIntent() {
   await loadIntents();
   await loadMyActivity();
   showToast('Sen sdílen! ✈️');
+
+  // Notifikace adminům o novém snu
+  const newIntent = { destination: dest, travel_date: date, description: desc };
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Komunita Essence for Life <onboarding@resend.dev>',
+        to: ADMIN_EMAILS,
+        subject: `✈️ Nový sen v komunitě: ${dest}`,
+        html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:2rem">
+          <h2 style="color:#1A6B6E">✈️ Nový cestovatelský sen</h2>
+          <p><strong>${currentUser.name}</strong> sdílel/a nový sen:</p>
+          <div style="background:#f9f9f9;border:1px solid #e2eff0;border-radius:8px;padding:1rem;margin:1rem 0">
+            <h3 style="color:#1A6B6E;margin:0 0 .5rem">${dest}</h3>
+            ${date ? `<p style="color:#6B9497;font-size:.85rem;margin:.25rem 0">📅 ${date}</p>` : ''}
+            <p style="color:#1C3A3C;font-size:.9rem;margin:.5rem 0 0">${desc}</p>
+          </div>
+          <a href="https://janmetlicky-prog.github.io/efl-komunita/" style="display:inline-block;background:#1A6B6E;color:white;padding:.75rem 1.5rem;border-radius:8px;text-decoration:none">Otevřít komunitu →</a>
+        </div>`
+      })
+    });
+  } catch(e) { console.error('Notifikace selhala:', e); }
 }
 
 // ── MOJE ZÁLOŽKA ─────────────────────────────────────────────────────────────
