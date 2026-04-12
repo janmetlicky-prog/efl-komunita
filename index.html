@@ -360,12 +360,8 @@
     <button onclick="showSection('map',this)">🗺 Mapa</button>
     <button id="admin-nav-btn" onclick="showSection('admin',this)" style="display:none">👑 Admin</button>
   </nav>
-  <script>
-    // Skrýt desktop nav okamžitě na mobilu — před načtením CSS
-    if (window.innerWidth <= 600) {
-      document.getElementById('desktop-nav') && (document.getElementById('desktop-nav').style.display = 'none');
-    }
-  </script>
+  <!-- Hamburger pro mobil -->
+  <button id="hamburger-btn" onclick="toggleMobileMenu()" style="display:none;background:none;border:none;cursor:pointer;color:var(--efl);font-size:1.5rem;padding:.25rem .5rem;line-height:1">☰</button>
   <div class="user-badge" onclick="openProfile()">
     <div class="avatar" id="nav-avatar">?</div>
     <span id="nav-name">...</span>
@@ -628,6 +624,33 @@
 </div>
 
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
+
+<!-- MOBILNÍ DROPDOWN MENU -->
+<div id="mobile-menu" style="display:none;position:fixed;top:54px;left:0;right:0;background:var(--teal-dark);z-index:1500;box-shadow:0 8px 24px rgba(0,0,0,.25);border-radius:0 0 16px 16px;overflow:hidden">
+  <button class="mob-menu-item active" id="mm-community" onclick="showSection('community',this);closeMobileMenu()">
+    <span>✈️</span> Cestovatelské sny
+  </button>
+  <button class="mob-menu-item" id="mm-doporuceni" onclick="showSection('doporuceni',this);closeMobileMenu()">
+    <span>⭐</span> Doporučení
+  </button>
+  <button class="mob-menu-item" id="mm-mine" onclick="showSection('mine',this);closeMobileMenu()">
+    <span>📌</span> Moje záznamy
+  </button>
+  <button class="mob-menu-item" id="mm-map" onclick="showSection('map',this);closeMobileMenu()">
+    <span>🗺️</span> Cestovatelská mapa
+  </button>
+  <button class="mob-menu-item" id="mm-profile" onclick="openProfile();closeMobileMenu()">
+    <span>👤</span> Můj profil
+  </button>
+  <button class="mob-menu-item" id="mm-admin" style="display:none" onclick="showSection('admin',this);closeMobileMenu()">
+    <span>👑</span> Admin dashboard
+  </button>
+  <div style="height:1px;background:rgba(192,224,225,.1);margin:0 1rem"></div>
+  <button class="mob-menu-item" onclick="doLogout();closeMobileMenu()" style="color:rgba(192,224,225,.5)">
+    <span>↩️</span> Odhlásit se
+  </button>
+</div>
+<div id="mobile-menu-overlay" onclick="closeMobileMenu()" style="display:none;position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,.3)"></div>
 
 <!-- MOBILNÍ NAVIGACE -->
 <nav class="mobile-nav" id="mobile-nav" style="display:none">
@@ -1399,8 +1422,8 @@ async function doLogin() {
   if (admin) {
     showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
     document.getElementById('admin-nav-btn').style.display = 'block';
-    const adminMobileBtn = document.getElementById('admin-mobile-btn');
-    if (adminMobileBtn) adminMobileBtn.style.display = 'flex';
+    const mmAdmin = document.getElementById('mm-admin');
+    if (mmAdmin) mmAdmin.style.display = 'flex';
   }
   else if (verified && clientTrips.length > 0) showToast(`✅ Vítej zpět! Našli jsme tvoje ${clientTrips.length} cest${clientTrips.length > 4 ? 'í' : clientTrips.length > 1 ? 'y' : 'u'} s Essence for Life na mapě 🗺`);
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
@@ -2216,21 +2239,29 @@ function formatTime(ts) {
   return new Date(ts).toLocaleDateString('cs-CZ');
 }
 
-// ── MOBILNÍ NAV ──────────────────────────────────────────────────────────────
-function initMobileNav() {
-  if (window.innerWidth <= 600) {
-    document.getElementById('mobile-nav').style.display = 'flex';
-  }
+// ── HAMBURGER MENU ────────────────────────────────────────────────────────────
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const overlay = document.getElementById('mobile-menu-overlay');
+  const btn = document.getElementById('hamburger-btn');
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  overlay.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '☰' : '✕';
 }
 
-function syncMobileNav(btn) {
-  // Synchronizovat desktop nav s mobilní nav
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+function closeMobileMenu() {
+  document.getElementById('mobile-menu').style.display = 'none';
+  document.getElementById('mobile-menu-overlay').style.display = 'none';
+  document.getElementById('hamburger-btn').textContent = '☰';
+}
+
+function initMobileNav() {
+  // Hamburger se zobrazí přes CSS media query
 }
 
 window.addEventListener('resize', () => {
-  const nav = document.getElementById('mobile-nav');
-  nav.style.display = window.innerWidth <= 600 ? 'flex' : 'none';
+  if (window.innerWidth > 600) closeMobileMenu();
 });
 
 function showToast(msg) {
