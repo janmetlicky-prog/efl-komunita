@@ -754,6 +754,18 @@ async function sendMilestoneNotification(intent, count) {
   }
 }
 
+// ── SECURITY ─────────────────────────────────────────────────────────────────
+function sanitize(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
 // ── SUPABASE ────────────────────────────────────────────────────────────────
 const SUPA_URL = 'https://zpsqeytpddpmggshydwe.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc3FleXRwZGRwbWdnc2h5ZHdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDc0MjksImV4cCI6MjA5MTMyMzQyOX0.upzALn9Q6flsayNL9QHt7XhXBOBg-2NG75ANaomLExQ';
@@ -1515,7 +1527,7 @@ async function renderFeed() {
     const cnt = intent._demo_interests !== undefined ? intent._demo_interests : (interestCounts[intent.id] || 0);
     const commentCnt = intent._demo_comments !== undefined ? intent._demo_comments.length : (commentCounts[intent.id] || 0);
     const milestone = cnt >= MILESTONE;
-    const userName = intent.users?.name || 'Anonym';
+    const userName = sanitize(intent.users?.name || 'Anonym');
     const verified = intent.users?.verified;
     const parts = userName.trim().split(' ');
     const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
@@ -1533,14 +1545,14 @@ async function renderFeed() {
             <div class="intent-time">${timeAgo}</div>
           </div>
         </div>
-        <div class="destination-badge">✈ ${intent.destination}</div>
+        <div class="destination-badge">✈ ${sanitize(intent.destination)}</div>
       </div>
       <div class="intent-meta">
         ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
         ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
         ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců — Essence for Life připravuje nabídku!</span>` : ''}
       </div>
-      <div class="intent-body">${intent.description || ''}</div>
+      <div class="intent-body">${sanitize(intent.description || '')}</div>
       <div class="intent-actions">
         <button class="action-btn ${isInterested ? 'interested' : ''}" onclick="toggleInterest('${intent.id}', this)">${isInterested ? '✓ Mám zájem' : '✋ Mám zájem'}</button>
         <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${intent.id}', this)">${isLiked ? '❤️' : '🤍'}</button>
@@ -1613,7 +1625,7 @@ async function toggleComments(intentId) {
         </div>
         <div class="comment-bubble">
           <div class="comment-author">${c.author}${c.verified?' ✅':''}</div>
-          ${c.text}
+          ${sanitize(c.text)}
         </div>
       </div>`).join('');
     el.innerHTML = `${commHtml}<div class="comment-input-row">
@@ -1755,13 +1767,13 @@ async function renderMineFeed() {
           <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
           <div><div class="intent-name">${userName}</div><div class="intent-time">${formatTime(intent.created_at)}</div></div>
         </div>
-        <div class="destination-badge">✈ ${intent.destination}</div>
+        <div class="destination-badge">✈ ${sanitize(intent.destination)}</div>
       </div>
       <div class="intent-meta">
         ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
         ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
       </div>
-      <div class="intent-body">${intent.description || ''}</div>
+      <div class="intent-body">${sanitize(intent.description || '')}</div>
       <div class="intent-actions">
         <div class="interest-count">${cnt} zájem · 💬 ${commentCnt}</div>
       </div>
@@ -1973,7 +1985,7 @@ function renderRecs(data) {
   }
 
   feed.innerHTML = filtered.map(r => {
-    const userName = r.users?.name || 'Anonym';
+    const userName = sanitize(r.users?.name || 'Anonym');
     const parts = userName.trim().split(' ');
     const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
     const colorIdx = Math.abs(userName.charCodeAt(0)) % COLORS.length;
@@ -1992,10 +2004,10 @@ function renderRecs(data) {
         <span class="rec-type-badge ${r.type}">${recTypLabel(r.type)}</span>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
-        <strong style="color:var(--teal-dark);font-size:.95rem">${r.title}</strong>
+        <strong style="color:var(--teal-dark);font-size:.95rem">${sanitize(r.title)}</strong>
         <span class="rec-stars" style="color:#E9C46A">${starsHtml(r.stars||0)}</span>
       </div>
-      <div class="intent-body" style="margin-bottom:.75rem">${r.text}</div>
+      <div class="intent-body" style="margin-bottom:.75rem">${sanitize(r.text)}</div>
       ${canDelete ? `<div style="display:flex;gap:.5rem;padding-top:.6rem;border-top:1px solid var(--border)">
         ${isMine ? `<button class="action-btn" onclick="editRec('${r.id}')">✏️ Upravit</button>` : ''}
         <button class="action-btn" onclick="deleteRec('${r.id}')">🗑️ Smazat</button>
