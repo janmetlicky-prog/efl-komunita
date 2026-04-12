@@ -654,71 +654,17 @@
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
 <!-- MOBILNÍ DROPDOWN MENU -->
-<div id="mobile-menu" style="display:none;position:fixed;top:54px;left:0;right:0;background:var(--teal-dark);z-index:1500;box-shadow:0 12px 40px rgba(0,0,0,.35);border-radius:0 0 24px 24px;overflow:hidden;padding:.5rem 0 .75rem">
-
-  <div style="padding:.75rem 1.5rem .5rem;border-bottom:1px solid rgba(192,224,225,.1);margin-bottom:.5rem">
-    <div style="font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:rgba(192,224,225,.45);font-family:'DM Sans',sans-serif">Navigace</div>
-  </div>
-
-  <button class="mob-menu-item" id="mm-community" onclick="showSection('community',this);closeMobileMenu()">
-    <span class="mob-icon">✈️</span>
-    <div class="mob-label">
-      <div class="mob-title">Cestovatelské sny</div>
-      <div class="mob-desc">Sdílej sny a hledej parťáky</div>
-    </div>
-  </button>
-
-  <button class="mob-menu-item" id="mm-doporuceni" onclick="showSection('doporuceni',this);closeMobileMenu()">
-    <span class="mob-icon">⭐</span>
-    <div class="mob-label">
-      <div class="mob-title">Doporučení</div>
-      <div class="mob-desc">Tipy na místa a pobyty</div>
-    </div>
-  </button>
-
-  <button class="mob-menu-item" id="mm-mine" onclick="showSection('mine',this);closeMobileMenu()">
-    <span class="mob-icon">📌</span>
-    <div class="mob-label">
-      <div class="mob-title">Moje záznamy</div>
-      <div class="mob-desc">Tvoje sny a oblíbené</div>
-    </div>
-  </button>
-
-  <button class="mob-menu-item" id="mm-map" onclick="showSection('map',this);closeMobileMenu()">
-    <span class="mob-icon">🗺️</span>
-    <div class="mob-label">
-      <div class="mob-title">Cestovatelská mapa</div>
-      <div class="mob-desc">Kde jsi byla s Essence for Life</div>
-    </div>
-  </button>
-
-  <button class="mob-menu-item" id="mm-profile" onclick="openProfile();closeMobileMenu()">
-    <span class="mob-icon">👤</span>
-    <div class="mob-label">
-      <div class="mob-title">Můj profil</div>
-      <div class="mob-desc">Nastavení a e-book ke stažení</div>
-    </div>
-  </button>
-
-  <button class="mob-menu-item" id="mm-admin" style="display:none" onclick="showSection('admin',this);closeMobileMenu()">
-    <span class="mob-icon">👑</span>
-    <div class="mob-label">
-      <div class="mob-title">Admin dashboard</div>
-      <div class="mob-desc">Statistiky komunity</div>
-    </div>
-  </button>
-
-  <div style="height:1px;background:rgba(192,224,225,.1);margin:.5rem 1.5rem"></div>
-
-  <button class="mob-menu-item" onclick="doLogout();closeMobileMenu()" style="opacity:.6">
-    <span class="mob-icon">↩️</span>
-    <div class="mob-label">
-      <div class="mob-title">Odhlásit se</div>
-    </div>
-  </button>
-
+<div id="mobile-menu" style="display:none;position:fixed;top:54px;left:0;right:0;background:var(--teal-dark);z-index:1500;box-shadow:0 8px 32px rgba(0,0,0,.3);border-radius:0 0 20px 20px;overflow:hidden">
+  <button class="mob-menu-item" id="mm-community" onclick="showSection('community',this);closeMobileMenu()">✈️ &nbsp; Cestovatelské sny</button>
+  <button class="mob-menu-item" id="mm-doporuceni" onclick="showSection('doporuceni',this);closeMobileMenu()">⭐ &nbsp; Doporučení</button>
+  <button class="mob-menu-item" id="mm-mine" onclick="showSection('mine',this);closeMobileMenu()">📌 &nbsp; Moje záznamy</button>
+  <button class="mob-menu-item" id="mm-map" onclick="showSection('map',this);closeMobileMenu()">🗺️ &nbsp; Cestovatelská mapa</button>
+  <button class="mob-menu-item" id="mm-profile" onclick="openProfile();closeMobileMenu()">👤 &nbsp; Můj profil</button>
+  <button class="mob-menu-item" id="mm-admin" style="display:none" onclick="showSection('admin',this);closeMobileMenu()">👑 &nbsp; Admin dashboard</button>
+  <div style="height:1px;background:rgba(192,224,225,.12);margin:0 1.5rem"></div>
+  <button class="mob-menu-item" onclick="doLogout();closeMobileMenu()" style="color:rgba(192,224,225,.5)">↩️ &nbsp; Odhlásit se</button>
 </div>
-<div id="mobile-menu-overlay" onclick="closeMobileMenu()" style="display:none;position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,.4);backdrop-filter:blur(2px)"></div>
+<div id="mobile-menu-overlay" onclick="closeMobileMenu()" style="display:none;position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,.35)"></div>
 
 <!-- MOBILNÍ NAVIGACE -->
 <nav class="mobile-nav" id="mobile-nav" style="display:none">
