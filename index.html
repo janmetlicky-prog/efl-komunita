@@ -222,6 +222,56 @@
   .admin-user-row { display:flex; align-items:center; gap:.75rem; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.83rem; }
   .admin-user-row:last-child { border:none; }
 
+  /* EBOOK BANNER */
+  .ebook-banner {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,107,110,0.6);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .ebook-banner.show { display: flex; }
+  .ebook-box {
+    background: white;
+    border-radius: 20px;
+    padding: 0;
+    width: 460px;
+    max-width: 95vw;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+    animation: popIn .3s ease;
+  }
+  @keyframes popIn { from{transform:scale(.9);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .ebook-header {
+    background: linear-gradient(135deg, var(--teal-dark), var(--teal));
+    padding: 2rem 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+  }
+  .ebook-gift { font-size: 3rem; margin-bottom: .5rem; }
+  .ebook-header h2 { font-family:'Playfair Display',serif; color:white; font-size:1.4rem; margin-bottom:.35rem; }
+  .ebook-header p { color:rgba(255,255,255,.75); font-size:.85rem; font-weight:300; }
+  .ebook-body { padding: 1.75rem 2rem 2rem; text-align:center; }
+  .ebook-body p { color:var(--muted); font-size:.88rem; line-height:1.7; margin-bottom:1.5rem; font-weight:300; }
+  .btn-download {
+    display: inline-flex; align-items:center; gap:.6rem;
+    background: var(--teal-dark); color: white;
+    border: none; border-radius: 10px;
+    padding: .9rem 2rem; font-family:'DM Sans',sans-serif;
+    font-size:.95rem; font-weight:500; cursor:pointer;
+    text-decoration:none; transition:background .2s;
+    margin-bottom: 1rem; width:100%; justify-content:center;
+  }
+  .btn-download:hover { background: var(--teal); }
+  .btn-skip { background:none; border:none; color:var(--muted); font-size:.8rem; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .btn-skip:hover { color:var(--teal-dark); }
+  .ebook-author { display:flex; align-items:center; justify-content:center; gap:.6rem; margin-bottom:1.25rem; }
+  .ebook-author-avatar { width:36px; height:36px; border-radius:50%; background:var(--teal); display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:.8rem; border:2px solid var(--efl); }
+  .ebook-author-name { font-size:.82rem; color:var(--teal-dark); font-weight:500; }
+
   /* LOADING */
   .loading { text-align:center; padding:2rem; color:var(--muted); font-size:.88rem; }
   .spinner { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spin .8s linear infinite; margin-right:.5rem; vertical-align:middle; }
@@ -239,6 +289,30 @@
 </style>
 </head>
 <body>
+
+<!-- EBOOK BANNER -->
+<div class="ebook-banner" id="ebook-banner">
+  <div class="ebook-box">
+    <div class="ebook-header">
+      <div class="ebook-gift">🎁</div>
+      <h2>Dárek od Adély pro vás</h2>
+      <p>E-book který vás podpoří na cestách</p>
+    </div>
+    <div class="ebook-body">
+      <div class="ebook-author">
+        <div class="ebook-author-avatar">AM</div>
+        <span class="ebook-author-name">Adéla Metlická Lustyková</span>
+      </div>
+      <p>Rozhodla jsem se obdarovat všechny, kteří už s námi někdy cestovali. Darovala jsem vám můj e-book, který vás může podpořit na cestách — ať už těch do světa, nebo zpátky k sobě.</p>
+      <a href="https://drive.google.com/file/d/1cj-0KFzzoajzxtV0pAAxr4Xy3x5zcW_K/view?usp=drive_link" 
+         target="_blank" class="btn-download" onclick="ebookDownloaded()">
+        📖 Otevřít e-book zdarma
+      </a>
+      <br>
+      <button class="btn-skip" onclick="closeEbook()">Pokračovat do komunity →</button>
+    </div>
+  </div>
+</div>
 
 <!-- LOGIN SCREEN -->
 <div class="login-screen" id="login-screen">
@@ -540,6 +614,25 @@
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
 <script>
+// ── EBOOK BANNER ─────────────────────────────────────────────────────────────
+function showEbook() {
+  // Zobrazit jen jednou — při prvním přihlášení
+  const seen = localStorage.getItem('efl_ebook_seen_' + (currentUser?.email || ''));
+  if (!seen) {
+    document.getElementById('ebook-banner').classList.add('show');
+  }
+}
+
+function ebookDownloaded() {
+  localStorage.setItem('efl_ebook_seen_' + (currentUser?.email || ''), '1');
+  setTimeout(closeEbook, 500);
+}
+
+function closeEbook() {
+  document.getElementById('ebook-banner').classList.remove('show');
+  localStorage.setItem('efl_ebook_seen_' + (currentUser?.email || ''), '1');
+}
+
 // ── MAILERLITE PROPOJENÍ ────────────────────────────────────────────────────
 const ML_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiMzgwZjk2NmY3NGMzZjI1MTRlZGNkNGUyZGZiZGZiMDc3MTE0YzUzYmQxMzljZTBjMDMyMDBjOTg3ZmU2MzRiMGFjZjJkNDNhYTk3NjcyMzEiLCJpYXQiOjE3NzYwMjc5MDYuMzUzODU1LCJuYmYiOjE3NzYwMjc5MDYuMzUzODU4LCJleHAiOjQ5MzE3MDE1MDYuMzQ5NTUzLCJzdWIiOiI4MTI2NDkiLCJzY29wZXMiOltdfQ.GRwq_mYR3iwzrgFeWwD1lKq_IcGrzq8nSeSPhoY2GnvknIssA8lDru7ZqBi3B-T2JzfbT6UO7iA18q5MhrTzVmCmvaxDuRSya-yo2JY15gnZA_Qtw02mgLk8YFZM1KQR6j0ZVst7K-c2kdzj0wMzyPCitUC8QM1NR6L6z_JNJZDm81lvlnktqhGQu1KYYpE3SUa2giE_kKq6gQIP2fmabPyZ33hFJX7BnHDW4hKGzcGZ6wcVYBbbndkiZGEZzJLI3AnfUhPSIGe7_r6-5aZKtR1GbWyzN4HPY7Jqat1tZpzIvqwW1YLjmxQwy08j50jDjzsSpOniYmqfHXhx3CWzhwyVNz5bqmCFqkRhy6JVctX2vsk8r-WYt6UNgEQzHXi599VqI7v5HHUdLD0b6HS_8oyWjNUYe_tAFbbjQYiQt0u6CmMeyHbjAAnAzH1Ql_C4xRnBFgdI6fO51h6PGs-ptPHxUsLWRURmfSIWtn6qNORoF_vYaVXRuzdGYdSgT09AUV_OTwvlZkZKi41D8-L6XCdyKy4qWak5Mwf9dPzI9ljIhFcUxjoJXWnKykirJEyn9ZXV-bmun--T3tIxvnCN889QT2R1rspSBC3ojGugZnEG29sipUdaYGBCzGN7ALF4s0cadtBnzrEFI_vPL4usfUZEA37VRyybXTg6wU7dRpY';
 const ML_GROUP_KLIENTI = '183932696541529328';
@@ -1260,6 +1353,9 @@ async function doLogin() {
   else if (verified && clientTrips.length > 0) showToast(`✅ Vítej zpět! Našli jsme tvoje ${clientTrips.length} cest${clientTrips.length > 4 ? 'í' : clientTrips.length > 1 ? 'y' : 'u'} s Essence for Life na mapě 🗺`);
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
   else showToast('🌍 Vítej v komunitě!');
+
+  // Zobrazit ebook banner ověřeným klientům
+  if (verified && !admin) setTimeout(showEbook, 1000);
 }
 
 function doLogout() {
