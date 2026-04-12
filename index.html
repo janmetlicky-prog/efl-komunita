@@ -352,13 +352,19 @@
     <div class="logo-divider"></div>
     <div class="logo-sub">Cestovní komunita</div>
   </div>
-  <nav>
+  <nav id="desktop-nav" style="display:flex">
     <button class="active" onclick="showSection('community',this)">✈ Sny</button>
     <button onclick="showSection('mine',this)">📌 Moje</button>
     <button onclick="showSection('doporuceni',this)">⭐ Doporučení</button>
     <button onclick="showSection('map',this)">🗺 Mapa</button>
     <button id="admin-nav-btn" onclick="showSection('admin',this)" style="display:none">👑 Admin</button>
   </nav>
+  <script>
+    // Skrýt desktop nav okamžitě na mobilu — před načtením CSS
+    if (window.innerWidth <= 600) {
+      document.getElementById('desktop-nav') && (document.getElementById('desktop-nav').style.display = 'none');
+    }
+  </script>
   <div class="user-badge" onclick="openProfile()">
     <div class="avatar" id="nav-avatar">?</div>
     <span id="nav-name">...</span>
