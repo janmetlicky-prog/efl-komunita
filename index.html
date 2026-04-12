@@ -622,6 +622,28 @@
 
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
+<!-- MOBILNÍ NAVIGACE -->
+<nav class="mobile-nav" id="mobile-nav" style="display:none">
+  <button class="mobile-nav-btn active" onclick="showSection('community',this);syncMobileNav(this)" id="mob-community">
+    <span class="nav-icon">✈️</span>Sny
+  </button>
+  <button class="mobile-nav-btn" onclick="showSection('doporuceni',this);syncMobileNav(this)" id="mob-doporuceni">
+    <span class="nav-icon">⭐</span>Doporučení
+  </button>
+  <button class="mobile-nav-btn" onclick="showSection('mine',this);syncMobileNav(this)" id="mob-mine">
+    <span class="nav-icon">📌</span>Moje
+  </button>
+  <button class="mobile-nav-btn" onclick="showSection('map',this);syncMobileNav(this)" id="mob-map">
+    <span class="nav-icon">🗺️</span>Mapa
+  </button>
+  <button class="mobile-nav-btn" onclick="openProfile()" id="mob-profile">
+    <span class="nav-icon">👤</span>Profil
+  </button>
+  <button class="mobile-nav-btn" id="admin-mobile-btn" onclick="showSection('admin',this);syncMobileNav(this)">
+    <span class="nav-icon">👑</span>Admin
+  </button>
+</nav>
+
 <script>
 // ── EBOOK BANNER ─────────────────────────────────────────────────────────────
 function showEbook() {
@@ -1358,6 +1380,8 @@ async function doLogin() {
   if (admin) {
     showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
     document.getElementById('admin-nav-btn').style.display = 'block';
+    const adminMobileBtn = document.getElementById('admin-mobile-btn');
+    if (adminMobileBtn) adminMobileBtn.style.display = 'flex';
   }
   else if (verified && clientTrips.length > 0) showToast(`✅ Vítej zpět! Našli jsme tvoje ${clientTrips.length} cest${clientTrips.length > 4 ? 'í' : clientTrips.length > 1 ? 'y' : 'u'} s Essence for Life na mapě 🗺`);
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
@@ -2172,6 +2196,23 @@ function formatTime(ts) {
   if (diff < 604800) return `před ${Math.floor(diff/86400)} dny`;
   return new Date(ts).toLocaleDateString('cs-CZ');
 }
+
+// ── MOBILNÍ NAV ──────────────────────────────────────────────────────────────
+function initMobileNav() {
+  if (window.innerWidth <= 600) {
+    document.getElementById('mobile-nav').style.display = 'flex';
+  }
+}
+
+function syncMobileNav(btn) {
+  // Synchronizovat desktop nav s mobilní nav
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+}
+
+window.addEventListener('resize', () => {
+  const nav = document.getElementById('mobile-nav');
+  nav.style.display = window.innerWidth <= 600 ? 'flex' : 'none';
+});
 
 function showToast(msg) {
   const t = document.getElementById('toast');
