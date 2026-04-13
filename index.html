@@ -1628,7 +1628,7 @@ async function renderFeed() {
       <div class="intent-meta">
         ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
         ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
-        ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců — Essence for Life připravuje nabídku!</span>` : ''}
+        ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců</span>` : ''}
       </div>
       <div class="intent-body">${sanitize(intent.description || '')}</div>
       <div class="intent-actions">
@@ -1660,7 +1660,7 @@ async function toggleInterest(intentId, btn) {
     const { count } = await db.from('interests').select('*', { count: 'exact', head: true }).eq('intent_id', intentId);
     const intent = allIntents.find(i => i.id === intentId);
     if (count === MILESTONE && intent) {
-      showToast(`🔥 "${intent.destination}" dosáhl ${MILESTONE} zájemců! Essence for Life připravuje nabídku.`);
+      showToast(`🔥 "${intent.destination}" dosáhl ${MILESTONE} zájemců!`);
       await sendMilestoneNotification(intent, count);
     } else {
       showToast('Zájem zaznamenán!');
