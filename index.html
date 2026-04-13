@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776100365 -->
+<!DOCTYPE html><!-- build:1776100383 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -1690,9 +1690,9 @@ async function renderFeed() {
 
   });
 
-  // Onclick na smazat
-  document.querySelectorAll('[data-delid]').forEach(btn => {
-    const id = btn.getAttribute('data-delid');
+  // Onclick na smazat - spustí se AŽ po vykreslení všech karet
+  document.querySelectorAll('.delete-intent-btn').forEach(btn => {
+    const id = btn.getAttribute('data-id');
     btn.onclick = () => deleteIntent(id);
   });
 }
