@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776069789 -->
+<!DOCTYPE html><!-- build:1776069954 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -1521,8 +1521,8 @@ async function doLogin() {
     if (fab) fab.style.display = 'flex';
   }
 
-  // Zobrazit ebook banner ověřeným klientům
-  if (verified && !admin) setTimeout(showEbook, 1000);
+  // Zobrazit ebook banner všem novým členům (ne adminům)
+  if (!admin) setTimeout(showEbook, 1000);
 }
 
 function doLogout() {
