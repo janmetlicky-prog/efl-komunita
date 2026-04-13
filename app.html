@@ -2521,9 +2521,17 @@ document.getElementById('country-input').addEventListener('keydown', e => { if (
   const saved = localStorage.getItem('efl_user');
   if (saved) {
     currentUser = JSON.parse(saved);
+    // Vždy zkontrolovat admin status z lokálního seznamu (ne jen z DB)
+    if (isAdmin(currentUser.email)) {
+      currentUser.is_admin = true;
+    }
     updateUserUI();
     document.getElementById('login-screen').classList.add('hidden');
-    if (currentUser.is_admin) document.getElementById('admin-nav-btn').style.display = 'block';
+    if (currentUser.is_admin) {
+      document.getElementById('admin-nav-btn').style.display = 'block';
+      const mmAdmin = document.getElementById('mm-admin');
+      if (mmAdmin) mmAdmin.style.display = 'block';
+    }
 
     // Obnovit cesty z mapy
     const savedTrips = localStorage.getItem('efl_map_' + currentUser.email);
