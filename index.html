@@ -2291,8 +2291,15 @@ async function loadAdminDashboard() {
 }
 
 async function deleteIntent(intentId) {
-  if (intentId.startsWith('demo-')) { showToast('Demo sny nelze smazat'); return; }
   if (!confirm('Opravdu smazat tento sen?')) return;
+  // Demo sny - smazat jen z lokálního pole
+  if (intentId.startsWith('demo-')) {
+    const idx = DEMO_INTENTS.findIndex(i => i.id === intentId);
+    if (idx > -1) DEMO_INTENTS.splice(idx, 1);
+    await loadIntents();
+    showToast('Sen smazán 🗑️');
+    return;
+  }
   const { error } = await db.from('intents').delete().eq('id', intentId);
   if (error) { showToast('Chyba při mazání'); return; }
   // Smazat i související zájem a komentáře
