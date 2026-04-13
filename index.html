@@ -653,6 +653,43 @@
 
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
+<!-- MODAL Nové doporučení pro mobil -->
+<div id="new-rec-modal" style="display:none;position:fixed;inset:0;z-index:2500;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4)">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:1.5rem 1.5rem 2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#1A6B6E;font-style:italic">Sdílet doporučení</h3>
+      <button onclick="closeNewRecModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6B9497;padding:.25rem">×</button>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Typ</label>
+      <select id="mob-rec-type" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C;background:white">
+        <option value="pobyt_efl">🌿 Pobyt s Essence for Life</option>
+        <option value="misto">📍 Místo / destinace</option>
+        <option value="tip">💡 Cestovatelský tip</option>
+      </select>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Název místa nebo pobytu</label>
+      <input type="text" id="mob-rec-title" placeholder="Bali Reset Week, Kjóto…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C"/>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Hodnocení</label>
+      <div style="display:flex;gap:.5rem" id="mob-rec-stars">
+        <button onclick="setMobStars(1)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(2)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(3)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(4)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(5)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+      </div>
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Tvůj zážitek</label>
+      <textarea id="mob-rec-text" placeholder="Co tě nejvíc zaujalo? Co bys doporučila ostatním?" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C;resize:none;height:100px"></textarea>
+    </div>
+    <button onclick="postRecMobile()" style="width:100%;background:#2A9CA0;color:white;border:none;border-radius:12px;padding:.9rem;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;cursor:pointer">Sdílet doporučení →</button>
+  </div>
+</div>
+
 <!-- FAB tlačítko pro mobil -->
 <button id="fab-btn" onclick="openNewSenModal()"
   style="display:none;position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;background:#1A6B6E;color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(26,107,110,.45);z-index:900;align-items:center;justify-content:center;line-height:1">
@@ -2290,10 +2327,16 @@ function showSection(name, btn) {
   document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
   document.getElementById(name + '-section').classList.add('active');
   btn.classList.add('active');
+  currentSection = name;
   if (name === 'map') setTimeout(() => { if (!svgMap) initMap(); }, 100);
   if (name === 'mine') renderMineFeed();
   if (name === 'doporuceni') loadRecs();
   if (name === 'admin') loadAdminDashboard();
+  // Skrýt FAB na sekcích kde není potřeba
+  const fab = document.getElementById('fab-btn');
+  if (fab && window.innerWidth <= 600) {
+    fab.style.display = (name === 'community' || name === 'doporuceni') ? 'flex' : 'none';
+  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -2359,10 +2402,60 @@ window.addEventListener('resize', () => {
   if (window.innerWidth > 600) closeMobileMenu();
 });
 
-// ── FAB & NOVÝ SEN MODAL ─────────────────────────────────────────────────────
+// ── FAB & MODALY ─────────────────────────────────────────────────────────────
+let currentSection = 'community';
+
 function openNewSenModal() {
-  const modal = document.getElementById('new-sen-modal');
-  modal.style.display = 'flex';
+  document.getElementById('new-sen-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('mob-new-dest').focus(), 100);
+}
+
+function openNewRecModal() {
+  document.getElementById('new-rec-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('mob-rec-title').focus(), 100);
+}
+
+function closeNewRecModal() {
+  document.getElementById('new-rec-modal').style.display = 'none';
+  document.getElementById('mob-rec-title').value = '';
+  document.getElementById('mob-rec-text').value = '';
+  mobSelectedStars = 0;
+  document.querySelectorAll('.mob-star').forEach(s => s.style.opacity = '.3');
+}
+
+let mobSelectedStars = 0;
+function setMobStars(n) {
+  mobSelectedStars = n;
+  document.querySelectorAll('.mob-star').forEach((s, i) => {
+    s.style.opacity = i < n ? '1' : '.3';
+    s.style.color = i < n ? '#E9C46A' : 'inherit';
+  });
+}
+
+async function postRecMobile() {
+  const title = document.getElementById('mob-rec-title').value.trim();
+  const text = document.getElementById('mob-rec-text').value.trim();
+  const type = document.getElementById('mob-rec-type').value;
+  if (!title || !text) { showToast('Vyplň prosím název a popis'); return; }
+  if (!mobSelectedStars) { showToast('Vyber prosím hodnocení ★'); return; }
+  if (!currentUser) return;
+  const { error } = await db.from('recommendations').insert({
+    user_id: currentUser.id, title, text, type, stars: mobSelectedStars
+  });
+  if (error) { showToast('Chyba při ukládání'); return; }
+  closeNewRecModal();
+  loadRecs();
+  showToast('Doporučení sdíleno! ⭐');
+}
+
+// FAB kontextové tlačítko
+function onFabClick() {
+  if (currentSection === 'doporuceni') openNewRecModal();
+  else openNewSenModal();
+}
+
+function openNewSenModal() {
+  document.getElementById('new-sen-modal').style.display = 'flex';
   setTimeout(() => document.getElementById('mob-new-dest').focus(), 100);
 }
 
