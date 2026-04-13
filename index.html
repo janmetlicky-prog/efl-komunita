@@ -653,6 +653,39 @@
 
 <div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
 
+<!-- FAB tlačítko pro mobil -->
+<button id="fab-btn" onclick="openNewSenModal()"
+  style="display:none;position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;background:#1A6B6E;color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(26,107,110,.45);z-index:900;align-items:center;justify-content:center;line-height:1">
+  +
+</button>
+
+<!-- MODAL Nový sen pro mobil -->
+<div id="new-sen-modal" style="display:none;position:fixed;inset:0;z-index:2500;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4)">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:1.5rem 1.5rem 2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#1A6B6E;font-style:italic">Plánuješ cestu?</h3>
+      <button onclick="closeNewSenModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6B9497;padding:.25rem">×</button>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Kam chceš jet</label>
+      <input type="text" id="mob-new-dest" placeholder="Japonsko, Patagonie…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C"/>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Termín</label>
+      <input type="text" id="mob-new-date" placeholder="podzim 2027, červen 2026…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C"/>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Řekni nám víc</label>
+      <textarea id="mob-new-desc" placeholder="Styl cesty, co chceš zažít, jak velká skupina…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C;resize:none;height:100px"></textarea>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem">
+      <button id="mob-partner-toggle" onclick="this.classList.toggle('on')" style="width:44px;height:24px;background:rgba(0,0,0,.1);border-radius:12px;position:relative;cursor:pointer;border:none;flex-shrink:0;transition:background .2s"></button>
+      <span style="font-size:.95rem;color:#6B9497">Hledám parťáka na cestu</span>
+    </div>
+    <button onclick="postIntentMobile()" style="width:100%;background:#2A9CA0;color:white;border:none;border-radius:12px;padding:.9rem;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;cursor:pointer">Sdílet sen →</button>
+  </div>
+</div>
+
 <!-- MOBILNÍ DROPDOWN MENU -->
 <div id="mobile-menu" style="display:none;position:fixed;top:54px;left:0;right:0;background:#1A6B6E;z-index:1500;box-shadow:0 8px 32px rgba(0,0,0,.3);border-radius:0 0 20px 20px">
   <div style="display:flex;flex-direction:column;width:100%">
@@ -1438,7 +1471,7 @@ async function doLogin() {
     showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
     document.getElementById('admin-nav-btn').style.display = 'block';
     const mmAdmin = document.getElementById('mm-admin');
-    if (mmAdmin) mmAdmin.style.display = 'flex';
+    if (mmAdmin) mmAdmin.style.display = 'block';
   }
   else if (verified && clientTrips.length > 0) showToast(`✅ Vítej zpět! Našli jsme tvoje ${clientTrips.length} cest${clientTrips.length > 4 ? 'í' : clientTrips.length > 1 ? 'y' : 'u'} s Essence for Life na mapě 🗺`);
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
@@ -2279,6 +2312,7 @@ function initMobileNav() {
     const logoDiv = document.getElementById('logo-div');
     const logoSub = document.getElementById('logo-sub-text');
     const navName = document.getElementById('nav-name');
+    const fab = document.getElementById('fab-btn');
 
     if (isMobile) {
       hamburger.style.display = 'flex';
@@ -2286,6 +2320,7 @@ function initMobileNav() {
       if (logoDiv) logoDiv.style.display = 'none';
       if (logoSub) logoSub.style.display = 'none';
       if (navName) navName.style.display = 'none';
+      if (fab) fab.style.display = 'flex';
       document.body.style.overflowX = 'hidden';
     } else {
       hamburger.style.display = 'none';
@@ -2293,6 +2328,7 @@ function initMobileNav() {
       if (logoDiv) logoDiv.style.display = 'block';
       if (logoSub) logoSub.style.display = 'block';
       if (navName) navName.style.display = 'inline';
+      if (fab) fab.style.display = 'none';
     }
   }
   applyMobileLayout();
@@ -2302,6 +2338,54 @@ function initMobileNav() {
 window.addEventListener('resize', () => {
   if (window.innerWidth > 600) closeMobileMenu();
 });
+
+// ── FAB & NOVÝ SEN MODAL ─────────────────────────────────────────────────────
+function openNewSenModal() {
+  const modal = document.getElementById('new-sen-modal');
+  modal.style.display = 'flex';
+  setTimeout(() => document.getElementById('mob-new-dest').focus(), 100);
+}
+
+function closeNewSenModal() {
+  document.getElementById('new-sen-modal').style.display = 'none';
+  document.getElementById('mob-new-dest').value = '';
+  document.getElementById('mob-new-date').value = '';
+  document.getElementById('mob-new-desc').value = '';
+  document.getElementById('mob-partner-toggle').classList.remove('on');
+}
+
+async function postIntentMobile() {
+  const dest = document.getElementById('mob-new-dest').value.trim();
+  const date = document.getElementById('mob-new-date').value.trim();
+  const desc = document.getElementById('mob-new-desc').value.trim();
+  const partner = document.getElementById('mob-partner-toggle').classList.contains('on');
+  if (!dest || !desc) { showToast('Vyplň prosím destinaci a popis'); return; }
+
+  if (!currentUser) return;
+  const { error } = await db.from('intents').insert({
+    user_id: currentUser.id, destination: dest,
+    travel_date: date || null, description: desc, looking_for_partner: partner
+  });
+  if (error) { showToast('Chyba při ukládání'); return; }
+  closeNewSenModal();
+  await loadIntents();
+  await loadMyActivity();
+  showToast('Sen sdílen! ✈️');
+
+  // Notifikace
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${RESEND_KEY}`,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        from:'Komunita Essence for Life <komunita@essenceforlife.cz>',
+        to:ADMIN_EMAILS,
+        subject:`✈️ Nový sen v komunitě: ${dest}`,
+        html:`<p><strong>${currentUser.name}</strong> sdílel/a nový sen: <strong>${dest}</strong></p>${date?`<p>Termín: ${date}</p>`:''}<p>${desc}</p>`
+      })
+    });
+  } catch(e) {}
+}
 
 function showToast(msg) {
   const t = document.getElementById('toast');
