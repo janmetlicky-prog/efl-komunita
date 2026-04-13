@@ -2253,6 +2253,19 @@ async function loadAdminDashboard() {
   }
 }
 
+async function deleteIntent(intentId) {
+  if (intentId.startsWith('demo-')) { showToast('Demo sny nelze smazat'); return; }
+  if (!confirm('Opravdu smazat tento sen?')) return;
+  const { error } = await db.from('intents').delete().eq('id', intentId);
+  if (error) { showToast('Chyba při mazání'); return; }
+  // Smazat i související zájem a komentáře
+  await db.from('interests').delete().eq('intent_id', intentId);
+  await db.from('comments').delete().eq('intent_id', intentId);
+  await loadIntents();
+  await loadMyActivity();
+  showToast('Sen smazán 🗑️');
+}
+
 async function editComment(commentId, intentId) {
   const textEl = document.getElementById(`comment-text-${commentId}`);
   const currentText = textEl.textContent;
