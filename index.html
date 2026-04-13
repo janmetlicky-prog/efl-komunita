@@ -678,10 +678,11 @@
       <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Řekni nám víc</label>
       <textarea id="mob-new-desc" placeholder="Styl cesty, co chceš zažít, jak velká skupina…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C;resize:none;height:100px"></textarea>
     </div>
-    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem">
-      <button id="mob-partner-toggle" onclick="this.classList.toggle('on')" style="width:44px;height:24px;background:rgba(0,0,0,.1);border-radius:12px;position:relative;cursor:pointer;border:none;flex-shrink:0;transition:background .2s"></button>
-      <span style="font-size:.95rem;color:#6B9497">Hledám parťáka na cestu</span>
-    </div>
+    <label style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;cursor:pointer">
+      <input type="checkbox" id="mob-partner-toggle"
+        style="width:22px;height:22px;cursor:pointer;accent-color:#2A9CA0;flex-shrink:0">
+      <span style="font-size:1rem;color:#5A8587">Hledám parťáka na cestu</span>
+    </label>
     <button onclick="postIntentMobile()" style="width:100%;background:#2A9CA0;color:white;border:none;border-radius:12px;padding:.9rem;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;cursor:pointer">Sdílet sen →</button>
   </div>
 </div>
@@ -2357,14 +2358,14 @@ function closeNewSenModal() {
   document.getElementById('mob-new-dest').value = '';
   document.getElementById('mob-new-date').value = '';
   document.getElementById('mob-new-desc').value = '';
-  document.getElementById('mob-partner-toggle').classList.remove('on');
+  document.getElementById('mob-partner-toggle').checked = false;
 }
 
 async function postIntentMobile() {
   const dest = document.getElementById('mob-new-dest').value.trim();
   const date = document.getElementById('mob-new-date').value.trim();
   const desc = document.getElementById('mob-new-desc').value.trim();
-  const partner = document.getElementById('mob-partner-toggle').classList.contains('on');
+  const partner = document.getElementById('mob-partner-toggle').checked;
   if (!dest || !desc) { showToast('Vyplň prosím destinaci a popis'); return; }
 
   if (!currentUser) return;
