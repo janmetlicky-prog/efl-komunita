@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776100383 -->
+<!DOCTYPE html><!-- build:1776100556 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -1908,9 +1908,12 @@ async function renderMineFeed() {
       <div class="intent-body">${sanitize(intent.description || '')}</div>
       <div class="intent-actions">
         <div class="interest-count">${cnt} zájem · 💬 ${commentCnt}</div>
+        <button class="action-btn delete-intent-btn" data-id="${intent.id}" style="color:#e57373;border-color:#e57373;margin-left:auto">🗑️ Smazat</button>
       </div>
     </div>`;
   });
+
+  document.querySelectorAll(".delete-intent-btn").forEach(function(b){var id=b.getAttribute("data-id");b.onclick=function(){deleteIntent(id);};});
 }
 
 function switchMineTab(tab, btn) {
