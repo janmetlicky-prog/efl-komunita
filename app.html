@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776105950 -->
+<!DOCTYPE html><!-- build:1776110035 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -1657,7 +1657,9 @@ async function renderFeed() {
     const timeAgo = formatTime(intent.created_at);
     const isInterested = myInterests.has(intent.id);
     const isLiked = myLikes.has(intent.id);
-    const canDelete = currentUser && (intent.user_id === currentUser.id || currentUser.is_admin === true);
+    const isAdmin = currentUser && ADMINS.includes((currentUser.email||'').toLowerCase().trim());
+    const isOwner = currentUser && intent.user_id && (intent.user_id === currentUser.id || intent.user_id === currentUser.user_id);
+    const canDelete = isAdmin || isOwner;
     const deleteBtn = canDelete ? '<button class="action-btn" onclick="deleteIntent(&#39;' + intent.id + '&#39;)" style="color:#e57373;border-color:#e57373">🗑️</button>' : '';
 
     feed.innerHTML += `<div class="intent-card">
