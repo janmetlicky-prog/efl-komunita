@@ -1468,7 +1468,7 @@ async function doLogin() {
   if (!email || !email.includes('@')) { errEl.textContent = 'Zadej platnou emailovou adresu.'; errEl.style.display = 'block'; return; }
 
   const verified = isEFLClient(email);
-  const admin = isAdmin(email);
+  const admin = ADMINS.includes(email.toLowerCase().trim());
 
   // Zkontroluj jestli uživatel existuje
   const { data: existing } = await db.from('users').select('*').eq('email', email).maybeSingle();
@@ -2521,10 +2521,9 @@ document.getElementById('country-input').addEventListener('keydown', e => { if (
   const saved = localStorage.getItem('efl_user');
   if (saved) {
     currentUser = JSON.parse(saved);
-    // Vždy zkontrolovat admin status z lokálního seznamu (ne jen z DB)
-    if (isAdmin(currentUser.email)) {
-      currentUser.is_admin = true;
-    }
+    // Vždy zkontrolovat admin status z lokálního seznamu
+    const emailLower = (currentUser.email || '').toLowerCase().trim();
+    currentUser.is_admin = ADMINS.includes(emailLower);
     updateUserUI();
     document.getElementById('login-screen').classList.add('hidden');
     if (currentUser.is_admin) {
