@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776110035 -->
+<!DOCTYPE html><!-- build:1776111305 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -2306,7 +2306,11 @@ async function loadAdminDashboard() {
 }
 
 async function deleteIntent(intentId) {
-  if (!confirm('Opravdu smazat tento sen?')) return;
+  const intent = allIntents.find(i => i.id === intentId);
+  const debugInfo = intent ? 
+    'intent.user_id: ' + intent.user_id + '\ncurrentUser.id: ' + currentUser?.id + '\nmatch: ' + (intent.user_id === currentUser?.id) : 
+    'intent nenalezen';
+  if (!confirm('Smazat sen?\n\n' + debugInfo)) return;
   // Demo sny - smazat jen z lokálního pole
   if (intentId.startsWith('demo-')) {
     const idx = DEMO_INTENTS.findIndex(i => i.id === intentId);
