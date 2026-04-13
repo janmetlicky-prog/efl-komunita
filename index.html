@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776066699 -->
+<!DOCTYPE html><!-- build:1776069641 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -1680,7 +1680,8 @@ async function renderFeed() {
         <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${intent.id}', this)">${isLiked ? '❤️' : '🤍'}</button>
         <button class="action-btn" onclick="toggleComments('${intent.id}')">💬 ${commentCnt}</button>
         <button class="action-btn" onclick="shareIntent('${intent.id}', '${intent.destination}')">🔗</button>
-        <div class="interest-count">${cnt} zájem</div>
+        ${(currentUser && (intent.user_id === currentUser.id || currentUser.is_admin === true)) ? '<button class=\"action-btn\" onclick=\"deleteIntent(\'' + intent.id + '\');\" style=\"color:#e57373;border-color:#e57373\">🗑️</button>' : ''}
+        <div class="interest-count" style="margin-left:auto">${cnt} zájem</div>
       </div>
       <div class="comments" id="comments-${intent.id}"></div>
     </div>`;
