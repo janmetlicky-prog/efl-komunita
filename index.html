@@ -1477,6 +1477,12 @@ async function doLogin() {
   else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
   else showToast('🌍 Vítej v komunitě!');
 
+  // Zobrazit FAB na mobilu pro všechny přihlášené
+  if (window.innerWidth <= 600) {
+    const fab = document.getElementById('fab-btn');
+    if (fab) fab.style.display = 'flex';
+  }
+
   // Zobrazit ebook banner ověřeným klientům
   if (verified && !admin) setTimeout(showEbook, 1000);
 }
@@ -2426,6 +2432,12 @@ document.getElementById('country-input').addEventListener('keydown', e => { if (
 
     await loadIntents();
     await loadMyActivity();
+
+    // FAB na mobilu
+    if (window.innerWidth <= 600) {
+      const fab = document.getElementById('fab-btn');
+      if (fab) fab.style.display = 'flex';
+    }
   }
 })();
 </script>
