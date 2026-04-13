@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776082558 -->
+<!DOCTYPE html><!-- build:1776082821 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -1657,6 +1657,8 @@ async function renderFeed() {
     const timeAgo = formatTime(intent.created_at);
     const isInterested = myInterests.has(intent.id);
     const isLiked = myLikes.has(intent.id);
+    const canDelete = currentUser && (intent.user_id === currentUser.id || currentUser.is_admin === true);
+    const deleteBtn = canDelete ? `<button class="action-btn" id="del-${intent.id}" style="color:#e57373;border-color:#e57373">🗑️</button>` : '';
 
     feed.innerHTML += `<div class="intent-card">
       <div class="intent-header">
@@ -1680,7 +1682,7 @@ async function renderFeed() {
         <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${intent.id}', this)">${isLiked ? '❤️' : '🤍'}</button>
         <button class="action-btn" onclick="toggleComments('${intent.id}')">💬 ${commentCnt}</button>
         <button class="action-btn" onclick="shareIntent('${intent.id}', '${intent.destination}')">🔗</button>
-        ${(currentUser && (intent.user_id === currentUser.id || currentUser.is_admin === true)) ? `<button class="action-btn" onclick="deleteIntent('${intent.id}')" style="color:#e57373;border-color:#e57373">🗑️</button>` : ''}
+        ${deleteBtn}
         <div class="interest-count" style="margin-left:auto">${cnt} zájem</div>
       </div>
       <div class="comments" id="comments-${intent.id}"></div>
