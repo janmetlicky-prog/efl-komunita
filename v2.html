@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776082821 -->
+<!DOCTYPE html><!-- build:1776098359 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -1658,7 +1658,7 @@ async function renderFeed() {
     const isInterested = myInterests.has(intent.id);
     const isLiked = myLikes.has(intent.id);
     const canDelete = currentUser && (intent.user_id === currentUser.id || currentUser.is_admin === true);
-    const deleteBtn = canDelete ? `<button class="action-btn" id="del-${intent.id}" style="color:#e57373;border-color:#e57373">🗑️</button>` : '';
+    const deleteBtn = canDelete ? `<button class="action-btn delete-intent-btn" data-id="${intent.id}" style="color:#e57373;border-color:#e57373">🗑️</button>` : '';
 
     feed.innerHTML += `<div class="intent-card">
       <div class="intent-header">
@@ -1687,6 +1687,12 @@ async function renderFeed() {
       </div>
       <div class="comments" id="comments-${intent.id}"></div>
     </div>`;
+
+  // Onclick na smazat
+  document.querySelectorAll('[id^="del-"]').forEach(btn => {
+    const id = btn.id.replace('del-', '');
+    btn.onclick = () => deleteIntent(id);
+  });
   });
 }
 
