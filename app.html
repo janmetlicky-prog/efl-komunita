@@ -1,4 +1,4 @@
-<!DOCTYPE html><!-- build:1776153312 -->
+<!DOCTYPE html><!-- build:1776185686 -->
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
@@ -2314,11 +2314,13 @@ async function deleteIntent(intentId) {
     showToast('Sen smazán 🗑️');
     return;
   }
-  const { error } = await db.from('intents').delete().eq('id', intentId);
-  if (error) { showToast('Chyba při mazání'); return; }
-  // Smazat i související zájem a komentáře
+  // Nejdřív smazat závislé záznamy (foreign key constraint)
+  await db.from('likes').delete().eq('intent_id', intentId);
   await db.from('interests').delete().eq('intent_id', intentId);
   await db.from('comments').delete().eq('intent_id', intentId);
+  // Pak smazat intent
+  const { error } = await db.from('intents').delete().eq('id', intentId);
+  if (error) { showToast('Chyba při mazání'); return; }
   await loadIntents();
   await loadMyActivity();
   showToast('Sen smazán 🗑️');
