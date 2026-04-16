@@ -311,6 +311,20 @@
 
   @media (max-width:900px) {
     .map-layout, .community-layout { grid-template-columns:1fr; }
+
+    /* Admin dashboard na mobilu — vše pod sebe */
+    #admin-stats-grid { grid-template-columns: 1fr 1fr !important; gap:.75rem !important; }
+    #admin-section .stats-card { padding:1rem !important; }
+    #admin-section .stats-card h3 { font-size:.75rem !important; }
+    #admin-section .stat-num { font-size:1.6rem !important; }
+    #admin-section > div { padding:0 !important; }
+    #admin-section table { font-size:.72rem !important; }
+    #admin-section table td, #admin-section table th { padding:.35rem .4rem !important; }
+    /* Admin boxy — 2 sloupce na mobilu */
+    #admin-section .admin-grid-2col { grid-template-columns:1fr !important; }
+    /* Tabulka na mobilu — skrýt méně důležité sloupce */
+    #admin-section table th:nth-child(4),
+    #admin-section table td:nth-child(4) { display:none !important; }
     #essence-trips-panel { order:-1; margin-top:0; margin-bottom:1rem; }
     .community-layout > div:first-child { order:2; }
     .community-layout > div:last-child { order:1; }
