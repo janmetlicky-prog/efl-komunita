@@ -1845,6 +1845,18 @@ async function addComment(intentId) {
   if (!currentUser) return;
   const inp = document.getElementById(`cinput-${intentId}`);
   const text = inp.value.trim(); if (!text) return;
+
+  // Rate limiting: max 10 komentářů za hodinu
+  const sinceHour = new Date(Date.now() - 60*60*1000).toISOString();
+  const { count: commentCount } = await db.from('comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', currentUser.id)
+    .gte('created_at', sinceHour);
+  if (commentCount >= 10) {
+    showToast('⏳ Maximálně 10 komentářů za hodinu.');
+    return;
+  }
+
   await db.from('comments').insert({ intent_id: intentId, user_id: currentUser.id, text });
   showToast('Komentář přidán');
   await toggleComments(intentId);
