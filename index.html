@@ -1871,6 +1871,17 @@ async function postIntent() {
   const partner = document.getElementById('partner-toggle').classList.contains('on');
   if (!dest || !desc) { showToast('Vyplň prosím destinaci a popis'); return; }
 
+  // Rate limiting: max 3 sny za 24 hodin
+  const since = new Date(Date.now() - 24*60*60*1000).toISOString();
+  const { count } = await db.from('intents')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', currentUser.id)
+    .gte('created_at', since);
+  if (count >= 3) {
+    showToast('⏳ Maximálně 3 sny za 24 hodin. Zkus to zítra!');
+    return;
+  }
+
   const { error } = await db.from('intents').insert({
     user_id: currentUser.id,
     destination: dest,
