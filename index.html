@@ -921,7 +921,14 @@ function sanitize(str) {
 const SUPA_URL = 'https://zpsqeytpddpmggshydwe.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc3FleXRwZGRwbWdnc2h5ZHdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDc0MjksImV4cCI6MjA5MTMyMzQyOX0.upzALn9Q6flsayNL9QHt7XhXBOBg-2NG75ANaomLExQ';
 const { createClient } = supabase;
-const db = createClient(SUPA_URL, SUPA_KEY);
+const db = createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    storageKey: 'efl-auth-token'
+  }
+});
 
 // ── OVĚŘENÍ KLIENTŮ ESSENCE FOR LIFE ─────────────────────────────────────────────────────
 // Sem přidáš emaily z vaší databáze
