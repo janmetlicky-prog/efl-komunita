@@ -2277,8 +2277,8 @@ function renderRecs(data) {
       </div>
       <div class="intent-body" style="margin-bottom:.75rem">${sanitize(r.text)}</div>
       ${canDelete ? `<div style="display:flex;gap:.5rem;padding-top:.6rem;border-top:1px solid var(--border)">
-        ${isMine ? `<button class="action-btn" onclick="editRec('${r.id}')">✏️ Upravit</button>` : ''}
-        <button class="action-btn" onclick="deleteRec('${r.id}')">🗑️ Smazat</button>
+        ${isMine ? `<button class="action-btn" onclick="editRec(this)" data-rid="${r.id}" data-title="${r.title||''}" data-text="${(r.text||'').replace(/"/g,'&quot;')}">✏️ Upravit</button>` : ''}
+        ${canDelete ? `<button class="action-btn" onclick="deleteRec(this)" data-rid="${r.id}">🗑️ Smazat</button>` : ''}
       </div>` : ''}
     </div>`;
   }).join('');
@@ -2312,11 +2312,21 @@ async function postRec() {
   showToast('Doporučení sdíleno! ⭐');
 }
 
-async function editRec(id) {
-  const newText = prompt('Uprav doporučení:');
-  if (!newText) return;
-  await db.from('recommendations').update({ text: newText }).eq('id', id);
-  loadRecs();
+async function async function editRec(btn) {
+  const id = typeof btn === 'string' ? btn : btn.getAttribute('data-rid');
+  const currentTitle = btn.getAttribute ? (btn.getAttribute('data-title') || '') : '';
+  const currentText = btn.getAttribute ? (btn.getAttribute('data-text') || '') : '';
+
+  const newTitle = prompt('Název místa / zážitku:', currentTitle);
+  if (newTitle === null) return;
+  const newText = prompt('Tvůj popis / zážitek:', currentText);
+  if (newText === null) return;
+
+  const { error } = await db.from('recommendations')
+    .update({ title: newTitle, text: newText })
+    .eq('id', id);
+  if (error) { showToast('Chyba při úpravě'); return; }
+  await loadRecs();
   showToast('Doporučení upraveno ✏️');
 }
 
