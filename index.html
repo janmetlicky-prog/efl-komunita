@@ -2320,7 +2320,7 @@ async function editRec(id) {
   showToast('Doporučení upraveno ✏️');
 }
 
-async function async function deleteRec(id) {
+async function deleteRec(id) {
   if (!confirm('Smazat toto doporučení?')) return;
   await db.from('recommendations').delete().eq('id', id);
   await loadRecs();
