@@ -2431,9 +2431,7 @@ async function loadAdminDashboard() {
         <td style="padding:.5rem .75rem;color:var(--muted);font-size:.78rem">${formatTime(u.created_at)}</td>
         <td style="padding:.5rem .75rem;text-align:center">${userIntents[u.id]||0}</td>
         <td style="padding:.5rem .75rem;text-align:center">
-          ${!u.is_admin ? `<button onclick="adminDeleteUser('${u.id}','${u.email}')"
-            style="background:#ffebee;border:none;border-radius:6px;padding:.2rem .6rem;cursor:pointer;color:#e57373;font-size:.75rem">
-            🗑️ Smazat</button>` : ''}
+          ${!u.is_admin ? `<button onclick="adminDeleteUser(this)" data-uid="${u.id}" data-email="${u.email}" style="background:#ffebee;border:none;border-radius:6px;padding:.2rem .6rem;cursor:pointer;color:#e57373;font-size:.75rem">Smazat</button>` : ''}
         </td>
       </tr>`).join('') || '<tr><td colspan="5" style="padding:1rem;color:var(--muted);text-align:center">Zatím žádní členové</td></tr>';
 
