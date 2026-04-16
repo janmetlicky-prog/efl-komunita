@@ -240,6 +240,10 @@
 
   /* ADMIN */
   #admin-section .stats-card { cursor:default; }
+  @media (max-width:900px) {
+    #essence-trips-panel .essence-trip-card:nth-child(n+3) { display:none; }
+    #essence-trips-panel { margin-bottom:.75rem; }
+  }
   .admin-dest-row { display:flex; align-items:center; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.85rem; }
   .admin-dest-row:last-child { border:none; }
   .admin-dest-bar { height:6px; background:var(--efl); border-radius:3px; margin-top:.25rem; }
@@ -307,6 +311,9 @@
 
   @media (max-width:900px) {
     .map-layout, .community-layout { grid-template-columns:1fr; }
+    #essence-trips-panel { order:-1; margin-top:0; margin-bottom:1rem; }
+    .community-layout > div:first-child { order:2; }
+    .community-layout > div:last-child { order:1; }
     .new-intent-card { position:static; }
     nav button { font-size:.7rem; padding:.45rem .6rem; }
   }
@@ -2686,3 +2693,4 @@ async function loadEssenceTrips() {
 </script>
 </body>
 </html>
+
