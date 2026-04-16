@@ -2442,9 +2442,11 @@ async function loadAdminDashboard() {
   }
 }
 
-async function adminDeleteUser(userId, email) {
+async function adminDeleteUser(btn) {
   if (!currentUser?.is_admin) return;
-  const confirmed = confirm(`Smazat uživatele ${email}? Odstraní se všechna jeho data.`);
+  const userId = btn.getAttribute('data-uid');
+  const email = btn.getAttribute('data-email');
+  const confirmed = confirm('Smazat uzivatele ' + email + '? Odstrani se vsechna jeho data.');
   if (!confirmed) return;
   try {
     await db.from('likes').delete().eq('user_id', userId);
