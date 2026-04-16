@@ -682,6 +682,20 @@
         📖 Stáhnout e-book od Adély
       </a>
       <button style="width:100%;margin-top:.5rem;padding:.6rem;border:1px solid var(--border);border-radius:8px;background:none;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.82rem;" onclick="doLogout()">Odhlásit se</button>
+
+      <!-- Kontaktovat Essence -->
+      <a href="mailto:info@essenceforlife.cz?subject=Dotaz z komunity&body=Ahoj Adélo, mám dotaz ohledně komunity Essence for Life."
+         style="display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;margin-top:.5rem;padding:.6rem;border:1px solid var(--teal);border-radius:8px;background:rgba(42,156,160,.06);cursor:pointer;color:var(--teal);font-family:'DM Sans',sans-serif;font-size:.82rem;text-decoration:none;font-weight:500"
+         onmouseover="this.style.background='rgba(42,156,160,.12)'"
+         onmouseout="this.style.background='rgba(42,156,160,.06)'">
+        ✉️ Napsat Essence for Life
+      </a>
+
+      <!-- Smazat účet -->
+      <button style="width:100%;margin-top:.5rem;padding:.6rem;border:1px solid #ffcdd2;border-radius:8px;background:none;cursor:pointer;color:#e57373;font-family:'DM Sans',sans-serif;font-size:.82rem;"
+              onclick="deleteMyAccount()">
+        🗑️ Smazat můj účet
+      </button>
     </div>
   </div>
 </div>
@@ -1576,6 +1590,36 @@ async function doLogin() {
   if (!admin) setTimeout(showEbook, 1000);
 }
 
+function deleteMyAccount() {
+  if (!currentUser) return;
+  const confirmed = confirm('Opravdu chceš smazat svůj účet? Tato akce je nevratná — odstraní všechna tvoje data, sny a komentáře.');
+  if (!confirmed) return;
+  (async () => {
+    try {
+      const uid = currentUser.id;
+      const email = currentUser.email;
+      // Smaž všechna data uživatele
+      await db.from('likes').delete().eq('user_id', uid);
+      await db.from('interests').delete().eq('user_id', uid);
+      await db.from('comments').delete().eq('user_id', uid);
+      await db.from('intents').delete().eq('user_id', uid);
+      await db.from('users').delete().eq('id', uid);
+      // Odhlásit
+      await db.auth.signOut();
+      localStorage.removeItem('efl_user');
+      localStorage.removeItem('efl_map_' + email);
+      currentUser = null;
+      document.getElementById('profile-modal').classList.remove('open');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-name').value = '';
+      document.getElementById('login-email').value = '';
+      showToast('Účet byl smazán. Na shledanou!');
+    } catch(e) {
+      showToast('Chyba: kontaktuj info@essenceforlife.cz');
+    }
+  })();
+}
+
 function doLogout() {
   localStorage.removeItem('efl_user');
   currentUser = null;
@@ -2372,10 +2416,32 @@ async function loadAdminDashboard() {
         <td style="padding:.5rem .75rem">${u.is_admin?'👑 Admin':u.verified?'✅ Klient':'🌍 Člen'}</td>
         <td style="padding:.5rem .75rem;color:var(--muted);font-size:.78rem">${formatTime(u.created_at)}</td>
         <td style="padding:.5rem .75rem;text-align:center">${userIntents[u.id]||0}</td>
+        <td style="padding:.5rem .75rem;text-align:center">
+          ${!u.is_admin ? `<button onclick="adminDeleteUser('${u.id}','${u.email}')"
+            style="background:#ffebee;border:none;border-radius:6px;padding:.2rem .6rem;cursor:pointer;color:#e57373;font-size:.75rem">
+            🗑️ Smazat</button>` : ''}
+        </td>
       </tr>`).join('') || '<tr><td colspan="5" style="padding:1rem;color:var(--muted);text-align:center">Zatím žádní členové</td></tr>';
 
   } catch(e) {
     console.error('Admin dashboard error:', e);
+  }
+}
+
+async function adminDeleteUser(userId, email) {
+  if (!currentUser?.is_admin) return;
+  const confirmed = confirm(`Smazat uživatele ${email}? Odstraní se všechna jeho data.`);
+  if (!confirmed) return;
+  try {
+    await db.from('likes').delete().eq('user_id', userId);
+    await db.from('interests').delete().eq('user_id', userId);
+    await db.from('comments').delete().eq('user_id', userId);
+    await db.from('intents').delete().eq('user_id', userId);
+    await db.from('users').delete().eq('id', userId);
+    showToast('Uživatel ' + email + ' smazán ✅');
+    loadAdminDashboard();
+  } catch(e) {
+    showToast('Chyba při mazání: ' + e.message);
   }
 }
 
