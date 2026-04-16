@@ -438,7 +438,7 @@
         <div id="essence-trips-panel" style="margin-top:1.25rem;background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;">
           <div style="background:var(--teal-dark);padding:.85rem 1.1rem;display:flex;align-items:center;gap:.5rem">
             <span style="font-size:1rem">✈️</span>
-            <span style="color:white;font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic">Připravované cesty Essence</span>
+            <span style="color:white;font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic">Připravované cesty Essence for Life</span>
           </div>
           <div id="essence-trips-list" style="padding:.75rem .9rem;display:flex;flex-direction:column;gap:.7rem">
             <!-- Načítá se dynamicky -->
@@ -2613,9 +2613,9 @@ async function loadEssenceTrips() {
        onmouseover="this.style.background='var(--efl)'" onmouseout="this.style.background='var(--chip-bg)'">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem">
         <span style="font-size:.82rem;font-weight:500;color:var(--teal-dark)">${t.label || t.dest}</span>
-        ${t.spots ? `<span style="font-size:.72rem;background:var(--orange);color:white;padding:.1rem .45rem;border-radius:20px">${t.spots} míst</span>` : ''}
+        
       </div>
-      <div style="font-size:.75rem;color:var(--muted)">📅 ${t.date || ''} &nbsp;·&nbsp; max 10–12 osob</div>
+      <div style="font-size:.75rem;color:var(--muted)">📅 ${t.date || ''}</div>
     </a>
   `).join('');
 }
