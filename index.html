@@ -1696,9 +1696,8 @@ async function loadIntents() {
     .order('created_at', { ascending: false });
 
   if (error) { console.error(error); }
-  // Zobrazit demo sny + reálná data dohromady
-  const real = (data || []);
-  allIntents = [...real, ...DEMO_INTENTS];
+  // Zobrazit jen reálná data
+  allIntents = (data || []);
   renderFeed();
 }
 
@@ -2321,10 +2320,10 @@ async function editRec(id) {
   showToast('Doporučení upraveno ✏️');
 }
 
-async function deleteRec(id) {
+async function async function deleteRec(id) {
   if (!confirm('Smazat toto doporučení?')) return;
   await db.from('recommendations').delete().eq('id', id);
-  loadRecs();
+  await loadRecs();
   showToast('Doporučení smazáno 🗑️');
 }
 
