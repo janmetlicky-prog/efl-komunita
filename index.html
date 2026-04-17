@@ -2771,7 +2771,7 @@ async function loadEssenceTrips() {
 
 // ── AUTH HANDLER — zpracuj magic link po návratu ─────────────────────────────
 db.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user && !currentUser) {
     const email = session.user.email.toLowerCase().trim();
     const pendingName = localStorage.getItem('efl_pending_name') || email.split('@')[0];
     const pendingSource = localStorage.getItem('efl_pending_source') || '';
