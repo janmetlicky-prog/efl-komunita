@@ -1603,20 +1603,6 @@ async function doLogin() {
 
   // Zobrazit ebook banner jen ověřeným EFL klientům
   if (!admin && verified) setTimeout(showEbook, 2000);
-
-  // Pokud uživatel nemá hezké jméno - zeptej se
-  if (currentUser && (currentUser.name === currentUser.email.split('@')[0] || currentUser.name.includes('.'))) {
-    setTimeout(async () => {
-      const newName = prompt('Jak ti máme říkat v komunitě? Zadej své jméno:', '');
-      if (newName && newName.trim().length > 1) {
-        await db.from('users').update({ name: newName.trim() }).eq('id', currentUser.id);
-        currentUser.name = newName.trim();
-        localStorage.setItem('efl_user', JSON.stringify(currentUser));
-        updateUserUI();
-        showToast('Jméno uloženo ✅');
-      }
-    }, 1200);
-  }
 }
 
 function deleteMyAccount() {
@@ -2723,10 +2709,13 @@ async function loadEssenceTrips() {
 db.auth.onAuthStateChange(async (event, session) => {
   if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user && !currentUser) {
     const email = session.user.email.toLowerCase().trim();
-    const pendingName = localStorage.getItem('efl_pending_name') || email.split('@')[0];
+    const pendingName = localStorage.getItem('efl_pending_name') || '';
     const pendingSource = localStorage.getItem('efl_pending_source') || '';
     const verified = isEFLClient(email);
     const admin = ADMINS.includes(email);
+
+    // Supabase auth může posílat jméno v user_metadata
+    const metaName = session.user.user_metadata?.name || '';
 
     const { data: existing } = await db.from('users').select('*').eq('email', email).maybeSingle();
     if (existing) {
@@ -2736,8 +2725,19 @@ db.auth.onAuthStateChange(async (event, session) => {
         currentUser.is_admin = true; currentUser.verified = true;
       }
     } else {
-      // Nový uživatel - vlož do DB
-      const insertName = pendingName || email.split('@')[0];
+      // Nový uživatel — zjistit jméno
+      let insertName = pendingName || metaName || '';
+
+      // Pokud nemáme jméno z localStorage ani metadata, zeptáme se hned
+      if (!insertName || insertName === email.split('@')[0] || insertName.includes('.') || insertName.includes('@')) {
+        const asked = prompt('Vítej v komunitě Essence for Life! Jak ti máme říkat?', '');
+        if (asked && asked.trim().length > 1) {
+          insertName = asked.trim();
+        } else {
+          insertName = email.split('@')[0];
+        }
+      }
+
       const { data: newUser, error: insertError } = await db.from('users').insert({
         email, name: insertName, verified, is_admin: admin, source: pendingSource
       }).select().single();
@@ -2745,6 +2745,7 @@ db.auth.onAuthStateChange(async (event, session) => {
       if (newUser) {
         currentUser = newUser;
       } else {
+        console.error('Insert user failed:', insertError);
         // Insert selhal (race condition?) - zkus znovu načíst
         const { data: retryUser } = await db.from('users').select('*').eq('email', email).maybeSingle();
         if (retryUser) currentUser = { ...retryUser, is_admin: admin };
@@ -2754,10 +2755,28 @@ db.auth.onAuthStateChange(async (event, session) => {
     localStorage.removeItem('efl_pending_name');
     localStorage.removeItem('efl_pending_source');
 
-    // Pokud stale nemame currentUser, vytvor minimalni objekt
+    // Pokud stále nemáme currentUser, poslední záchrana — vytvoř záznam
     if (!currentUser) {
-      currentUser = { email, name: email.split('@')[0], verified, is_admin: admin };
+      const fallbackName = prompt('Jak ti máme říkat v komunitě?', '') || email.split('@')[0];
+      const { data: lastTry } = await db.from('users').insert({
+        email, name: fallbackName.trim(), verified, is_admin: admin
+      }).select().single();
+      currentUser = lastTry || { email, name: fallbackName.trim(), verified, is_admin: admin };
     }
+
+    // Kontrola: pokud existující uživatel má špatné jméno, oprav ho
+    if (currentUser && currentUser.id && !admin) {
+      const name = currentUser.name || '';
+      const emailPrefix = email.split('@')[0];
+      if (!name || name === emailPrefix || name.includes('.') || name.includes('@')) {
+        const newName = prompt('Jak ti máme říkat v komunitě?', '');
+        if (newName && newName.trim().length > 1) {
+          await db.from('users').update({ name: newName.trim() }).eq('id', currentUser.id);
+          currentUser.name = newName.trim();
+        }
+      }
+    }
+
     localStorage.setItem('efl_user', JSON.stringify(currentUser));
     updateUserUI();
     document.getElementById('login-screen').classList.add('hidden');
@@ -2782,24 +2801,6 @@ db.auth.onAuthStateChange(async (event, session) => {
       setTimeout(showEbook, 2000);
     } else {
       showToast('🌍 Email ověřen! Vítej v komunitě.');
-    }
-
-    // Prompt na jméno pokud chybí nebo je odvozené z emailu
-    if (currentUser && !admin) {
-      const name = currentUser.name || '';
-      const emailPrefix = email.split('@')[0];
-      if (!name || name === emailPrefix || name.includes('.') || name.includes('@')) {
-        setTimeout(async () => {
-          const newName = prompt('Vítej v komunitě! Jak ti máme říkat?', '');
-          if (newName && newName.trim().length > 1) {
-            await db.from('users').update({ name: newName.trim() }).eq('id', currentUser.id);
-            currentUser.name = newName.trim();
-            localStorage.setItem('efl_user', JSON.stringify(currentUser));
-            updateUserUI();
-            showToast('Jméno uloženo ✅');
-          }
-        }, 1500);
-      }
     }
 
     // FAB na mobilu
