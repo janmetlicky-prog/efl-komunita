@@ -1602,7 +1602,21 @@ async function doLogin() {
   }
 
   // Zobrazit ebook banner všem novým členům (ne adminům)
-  if (!admin) setTimeout(showEbook, 1000);
+  if (!admin) setTimeout(showEbook, 2000);
+
+  // Pokud uživatel nemá hezké jméno - zeptej se
+  if (currentUser && (currentUser.name === currentUser.email.split('@')[0] || currentUser.name.includes('.'))) {
+    setTimeout(async () => {
+      const newName = prompt('Jak ti máme říkat v komunitě? Zadej své jméno:', '');
+      if (newName && newName.trim().length > 1) {
+        await db.from('users').update({ name: newName.trim() }).eq('id', currentUser.id);
+        currentUser.name = newName.trim();
+        localStorage.setItem('efl_user', JSON.stringify(currentUser));
+        updateUserUI();
+        showToast('Jméno uloženo ✅');
+      }
+    }, 1200);
+  }
 }
 
 function deleteMyAccount() {
