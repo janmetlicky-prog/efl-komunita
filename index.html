@@ -1601,8 +1601,8 @@ async function doLogin() {
     if (fab) fab.style.display = 'flex';
   }
 
-  // Zobrazit ebook banner všem novým členům (ne adminům)
-  if (!admin) setTimeout(showEbook, 2000);
+  // Zobrazit ebook banner jen ověřeným EFL klientům
+  if (!admin && verified) setTimeout(showEbook, 2000);
 
   // Pokud uživatel nemá hezké jméno - zeptej se
   if (currentUser && (currentUser.name === currentUser.email.split('@')[0] || currentUser.name.includes('.'))) {
