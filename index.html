@@ -2786,16 +2786,28 @@ db.auth.onAuthStateChange(async (event, session) => {
         currentUser.is_admin = true; currentUser.verified = true;
       }
     } else {
-      const { data: newUser } = await db.from('users').insert({
-        email, name: pendingName, verified, is_admin: admin, source: pendingSource
+      // Nový uživatel - vlož do DB
+      const insertName = pendingName || email.split('@')[0];
+      const { data: newUser, error: insertError } = await db.from('users').insert({
+        email, name: insertName, verified, is_admin: admin, source: pendingSource
       }).select().single();
-      if (newUser) currentUser = newUser;
+
+      if (newUser) {
+        currentUser = newUser;
+      } else {
+        // Insert selhal (race condition?) - zkus znovu načíst
+        const { data: retryUser } = await db.from('users').select('*').eq('email', email).maybeSingle();
+        if (retryUser) currentUser = { ...retryUser, is_admin: admin };
+      }
     }
 
     localStorage.removeItem('efl_pending_name');
     localStorage.removeItem('efl_pending_source');
 
-    if (!currentUser) return;
+    // Pokud stale nemame currentUser, vytvor minimalni objekt
+    if (!currentUser) {
+      currentUser = { email, name: email.split('@')[0], verified, is_admin: admin };
+    }
     localStorage.setItem('efl_user', JSON.stringify(currentUser));
     updateUserUI();
     document.getElementById('login-screen').classList.add('hidden');
