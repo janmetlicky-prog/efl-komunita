@@ -2314,42 +2314,25 @@ async function postRec() {
 
 async function editRec(btn) {
   const id = typeof btn === 'string' ? btn : btn.getAttribute('data-rid');
-  // Načti aktuální data z DB
   const { data } = await db.from('recommendations').select('*').eq('id', id).single();
   if (!data) return;
-  // Předvyplň modal
   document.getElementById('edit-rec-id').value = id;
-  document.getElementById('edit-rec-type').value = data.type || 'misto';
   document.getElementById('edit-rec-title').value = data.title || '';
   document.getElementById('edit-rec-text').value = data.text || '';
-  editSelectedStars = data.stars || 0;
-  setEditStars(editSelectedStars);
-  // Otevři modal
-  const modal = document.getElementById('edit-rec-modal');
-  modal.style.display = 'flex';
+  document.getElementById('edit-rec-modal').style.display = 'flex';
 }
 
 function closeEditRecModal() {
   document.getElementById('edit-rec-modal').style.display = 'none';
 }
 
-let editSelectedStars = 0;
-function setEditStars(n) {
-  editSelectedStars = n;
-  document.querySelectorAll('.edit-star').forEach((b, i) => {
-    b.style.opacity = i < n ? '1' : '.4';
-    b.style.color = i < n ? '#f59e0b' : '';
-  });
-}
-
 async function saveEditRec() {
   const id = document.getElementById('edit-rec-id').value;
   const title = document.getElementById('edit-rec-title').value.trim();
   const text = document.getElementById('edit-rec-text').value.trim();
-  const type = document.getElementById('edit-rec-type').value;
   if (!title || !text) { showToast('Vyplň název i popis'); return; }
   const { error } = await db.from('recommendations')
-    .update({ title, text, type, stars: editSelectedStars })
+    .update({ title, text })
     .eq('id', id);
   if (error) { showToast('Chyba při ukládání'); return; }
   closeEditRecModal();
@@ -2914,36 +2897,18 @@ db.auth.onAuthStateChange(async (event, session) => {
 
 <!-- MODAL Upravit doporučení -->
 <div id="edit-rec-modal" style="display:none;position:fixed;inset:0;z-index:3000;align-items:center;justify-content:center;background:rgba(0,0,0,.5)">
-  <div style="background:white;border-radius:16px;width:90%;max-width:480px;padding:1.5rem;max-height:90vh;overflow-y:auto">
+  <div style="background:white;border-radius:16px;width:90%;max-width:480px;padding:1.5rem">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
       <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#1A6B6E;font-style:italic;margin:0">Upravit doporučení</h3>
       <button onclick="closeEditRecModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6B9497">×</button>
     </div>
     <div style="margin-bottom:.85rem">
-      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.4rem">Typ</label>
-      <select id="edit-rec-type" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif">
-        <option value="pobyt_efl">🌿 Pobyt s Essence for Life</option>
-        <option value="misto">📍 Místo / destinace</option>
-        <option value="tip">💡 Cestovatelský tip</option>
-      </select>
-    </div>
-    <div style="margin-bottom:.85rem">
       <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.4rem">Název místa nebo pobytu</label>
       <input type="text" id="edit-rec-title" placeholder="Bali Reset Week, Kjóto…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;box-sizing:border-box"/>
     </div>
-    <div style="margin-bottom:.85rem">
-      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.4rem">Hodnocení</label>
-      <div style="display:flex;gap:.5rem" id="edit-rec-stars">
-        <button onclick="setEditStars(1)" class="edit-star" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
-        <button onclick="setEditStars(2)" class="edit-star" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
-        <button onclick="setEditStars(3)" class="edit-star" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
-        <button onclick="setEditStars(4)" class="edit-star" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
-        <button onclick="setEditStars(5)" class="edit-star" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
-      </div>
-    </div>
     <div style="margin-bottom:1.25rem">
-      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.4rem">Tvůj zážitek / tip</label>
-      <textarea id="edit-rec-text" rows="4" placeholder="Popiš místo, zážitek nebo tip…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;resize:vertical;box-sizing:border-box"></textarea>
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.4rem">Tvůj zážitek / popis</label>
+      <textarea id="edit-rec-text" rows="5" placeholder="Popiš místo, zážitek nebo tip…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;resize:vertical;box-sizing:border-box"></textarea>
     </div>
     <input type="hidden" id="edit-rec-id"/>
     <button onclick="saveEditRec()" style="width:100%;padding:.85rem;background:#2A9CA0;color:white;border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer">
