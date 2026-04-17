@@ -1676,34 +1676,6 @@ function updateUserUI() {
 }
 
 // ── NAČTENÍ DAT ─────────────────────────────────────────────────────────────
-const DEMO_INTENTS = [
-  { id:'demo-1', user_id:'demo', destination:'Japonsko', travel_date:'podzim 2027',
-    description:'Snila jsem o Japonsku celý život. Chci vidět chrám Fushimi Inari, bambusový les Arashiyama a zůstat jednu noc v rjokanu. Preferuji pomalejší tempo, maximum 8–10 lidí.',
-    looking_for_partner:true, created_at: new Date(Date.now()-2*86400000).toISOString(),
-    users:{ name:'Marie K.', verified:true },
-    _demo_comments:[
-      {author:'Jana N.', verified:false, text:'Já bych šla! Podzim v Japonsku je úžasný, stromy mění barvy.'},
-      {author:'Adéla — Essence for Life', verified:true, text:'Sledujeme zájem, Japonsko podzim je moc hezký termín 🍁'}
-    ], _demo_interests: 3 },
-  { id:'demo-2', user_id:'demo', destination:'Patagonie', travel_date:'únor 2026',
-    description:'Trek W v Torres del Paine. Hledám 2–3 lidi kteří to myslí vážně — fyzicky zdatnější, bez přílišného komfortu, ale s radostí z přírody.',
-    looking_for_partner:true, created_at: new Date(Date.now()-5*86400000).toISOString(),
-    users:{ name:'Pavel V.', verified:true },
-    _demo_comments:[
-      {author:'René S.', verified:false, text:'Mám zájem! Patagonie je sen.'}
-    ], _demo_interests: 5 },
-  { id:'demo-3', user_id:'demo', destination:'Island', travel_date:'září 2026',
-    description:'Chci vidět polární záři a projet celý ostrov v kruhu. Zatím sama, ale klidně i se skupinou přes Essence for Life — záleží co se dá domluvit.',
-    looking_for_partner:false, created_at: new Date(Date.now()-7*86400000).toISOString(),
-    users:{ name:'Kateřina H.', verified:true },
-    _demo_comments:[], _demo_interests: 4 },
-  { id:'demo-4', user_id:'demo', destination:'Vietnam', travel_date:'jaro 2026',
-    description:'Plávím na Ha Long Bay, procházím staré město Hoi An. Ráda bych se připojila k menší skupině — solo cesta je fajn, ale parťáci jsou vítáni.',
-    looking_for_partner:true, created_at: new Date(Date.now()-14*86400000).toISOString(),
-    users:{ name:'Jana N.', verified:false },
-    _demo_comments:[], _demo_interests: 1 },
-];
-
 async function loadIntents() {
   const { data, error } = await db
     .from('intents')
@@ -1769,8 +1741,8 @@ async function renderFeed() {
 
   feed.innerHTML = '';
   filtered.forEach(intent => {
-    const cnt = intent._demo_interests !== undefined ? intent._demo_interests : (interestCounts[intent.id] || 0);
-    const commentCnt = intent._demo_comments !== undefined ? intent._demo_comments.length : (commentCounts[intent.id] || 0);
+    const cnt = interestCounts[intent.id] || 0;
+    const commentCnt = commentCounts[intent.id] || 0;
     const milestone = cnt >= MILESTONE;
     const userName = sanitize(intent.users?.name || 'Anonym');
     const verified = intent.users?.verified;
@@ -1871,26 +1843,6 @@ async function toggleComments(intentId) {
 
   el.classList.add('open');
   el.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
-
-  // Demo komentáře
-  if (intentId.startsWith('demo-')) {
-    const demo = DEMO_INTENTS.find(i => i.id === intentId);
-    const commHtml = (demo?._demo_comments || []).map(c => `
-      <div class="comment">
-        <div class="intent-avatar" style="background:${c.author.includes('Essence')?'#1A6B6E':'#2A9CA0'};width:28px;height:28px;font-size:.65rem;flex-shrink:0">
-          ${c.author.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
-        </div>
-        <div class="comment-bubble">
-          <div class="comment-author">${c.author}${c.verified?' ✅':''}</div>
-          ${sanitize(c.text)}
-        </div>
-      </div>`).join('');
-    el.innerHTML = `${commHtml}<div class="comment-input-row">
-      <input type="text" placeholder="Přidat komentář…" id="cinput-${intentId}" onkeydown="if(event.key==='Enter')addComment('${intentId}')"/>
-      <button onclick="addComment('${intentId}')">→</button>
-    </div>`;
-    return;
-  }
 
   const { data } = await db.from('comments').select(`*, users(name, verified)`).eq('intent_id', intentId).order('created_at');
   const commHtml = (data || []).map(c => {
@@ -2035,8 +1987,8 @@ async function renderMineFeed() {
   }
   feed.innerHTML = '';
   filtered.forEach(intent => {
-    const cnt = intent._demo_interests !== undefined ? intent._demo_interests : (interestCounts[intent.id] || 0);
-    const commentCnt = intent._demo_comments !== undefined ? intent._demo_comments.length : (commentCounts[intent.id] || 0);
+    const cnt = interestCounts[intent.id] || 0;
+    const commentCnt = commentCounts[intent.id] || 0;
     const userName = intent.users?.name || currentUser?.name || 'Ty';
     const parts = userName.trim().split(' ');
     const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
@@ -2210,17 +2162,6 @@ function removePlace(type, idx) { places[type].splice(idx, 1); renderDots(); ren
 
 // ── NAVIGACE ──────────────────────────────────────────────────────────────────
 // ── DOPORUČENÍ ────────────────────────────────────────────────────────────────
-const DEMO_RECS = [
-  { id:'rec-1', user_id:'demo', title:'Reset Week Madeira', type:'pobyt_efl', stars:5,
-    text:'Naprosto úžasný pobyt. Adéla vytvořila bezpečný prostor pro opravdový odpočinek i sebepoznání. Výhledy na oceán, ranní jóga, skvělá skupina lidí. Určitě se vrátím!',
-    created_at: new Date(Date.now()-3*86400000).toISOString(), users:{name:'Kateřina H.', verified:true} },
-  { id:'rec-2', user_id:'demo', title:'Kjóto — čtvrť Higashiyama', type:'misto', stars:5,
-    text:'Jedno z nejkrásnějších míst která jsem kdy viděla. Doporučuji přijít brzy ráno před turisty — úzké uličky s bambusem a chrámy jsou kouzelné. Ubytování v rjokanu je must have.',
-    created_at: new Date(Date.now()-7*86400000).toISOString(), users:{name:'Marie K.', verified:true} },
-  { id:'rec-3', user_id:'demo', title:'Tip: Aplikace Maps.me na offline mapy', type:'tip', stars:4,
-    text:'Stáhněte si offline mapy před cestou — zachránilo mě to v Maroku kde byl špatný signál. Funguje lépe než Google Maps offline a je zdarma.',
-    created_at: new Date(Date.now()-10*86400000).toISOString(), users:{name:'Pavel V.', verified:false} },
-];
 
 let recFilter = 'vse';
 let selectedStars = 0;
@@ -2251,9 +2192,7 @@ async function loadRecs() {
     .select('*, users(name, verified)')
     .order('created_at', { ascending: false });
 
-  const real = (data || []);
-  const all = [...real, ...DEMO_RECS];
-  renderRecs(all);
+  renderRecs(data || []);
 }
 
 function renderRecs(data) {
@@ -2495,14 +2434,6 @@ async function adminDeleteUser(btn) {
 }
 
 async function deleteIntent(intentId) {
-  // Demo sny - smazat jen z lokálního pole
-  if (intentId.startsWith('demo-')) {
-    const idx = DEMO_INTENTS.findIndex(i => i.id === intentId);
-    if (idx > -1) DEMO_INTENTS.splice(idx, 1);
-    await loadIntents();
-    showToast('Sen smazán 🗑️');
-    return;
-  }
   // Nejdřív smazat závislé záznamy (foreign key constraint)
   await db.from('likes').delete().eq('intent_id', intentId);
   await db.from('interests').delete().eq('intent_id', intentId);
@@ -2844,11 +2775,60 @@ db.auth.onAuthStateChange(async (event, session) => {
       if (mmAdmin) mmAdmin.style.display = 'block';
     } else if (verified) {
       showToast('✅ Email ověřen! Vítej, ověřený kliente Essence for Life.');
+      setTimeout(showEbook, 2000);
     } else {
       showToast('🌍 Email ověřen! Vítej v komunitě.');
     }
+
+    // Prompt na jméno pokud chybí nebo je odvozené z emailu
+    if (currentUser && !admin) {
+      const name = currentUser.name || '';
+      const emailPrefix = email.split('@')[0];
+      if (!name || name === emailPrefix || name.includes('.') || name.includes('@')) {
+        setTimeout(async () => {
+          const newName = prompt('Vítej v komunitě! Jak ti máme říkat?', '');
+          if (newName && newName.trim().length > 1) {
+            await db.from('users').update({ name: newName.trim() }).eq('id', currentUser.id);
+            currentUser.name = newName.trim();
+            localStorage.setItem('efl_user', JSON.stringify(currentUser));
+            updateUserUI();
+            showToast('Jméno uloženo ✅');
+          }
+        }, 1500);
+      }
+    }
+
+    // FAB na mobilu
+    if (window.innerWidth <= 600) {
+      const fab = document.getElementById('fab-btn');
+      if (fab) fab.style.display = 'flex';
+    }
   }
 });
+
+// ── DETEKCE CHYB V MAGIC LINKU ──────────────────────────────────────────────
+(function() {
+  const hash = window.location.hash;
+  if (hash && hash.includes('error=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const errorCode = params.get('error_code') || '';
+    const errorDesc = params.get('error_description') || '';
+    let msg = '';
+    if (errorCode === 'otp_expired' || errorDesc.toLowerCase().includes('expired')) {
+      msg = 'Ověřovací odkaz vypršel. Zadej svůj email znovu a pošleme ti nový.';
+    } else if (errorCode === 'access_denied') {
+      msg = 'Přístup zamítnut. Zkus se přihlásit znovu.';
+    } else {
+      msg = 'Při ověřování nastala chyba. Zkus se prosím přihlásit znovu.';
+    }
+    const errEl = document.getElementById('login-error');
+    if (errEl) {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 (async () => {
@@ -2919,8 +2899,6 @@ db.auth.onAuthStateChange(async (event, session) => {
     </div>
   </div>
 </footer>
-
-</script>
 
 <!-- MODAL Upravit doporučení -->
 <div id="edit-rec-modal" style="display:none;position:fixed;inset:0;z-index:3000;align-items:center;justify-content:center;background:rgba(0,0,0,.5)">
