@@ -2277,8 +2277,8 @@ function renderRecs(data) {
       </div>
       <div class="intent-body" style="margin-bottom:.75rem">${sanitize(r.text)}</div>
       ${canDelete ? `<div style="display:flex;gap:.5rem;padding-top:.6rem;border-top:1px solid var(--border)">
-        ${isMine ? `<button class="action-btn" onclick="editRec(this)" data-rid="${r.id}" data-title="${r.title||''}" data-text="${(r.text||'').replace(/"/g,'&quot;')}">✏️ Upravit</button>` : ''}
-        ${canDelete ? `<button class="action-btn" onclick="deleteRec(this)" data-rid="${r.id}">🗑️ Smazat</button>` : ''}
+        ${isMine ? '<button class=\"action-btn\" onclick=\"editRec(this)\" data-rid=\"' + r.id + '\" data-title=\"' + (r.title||'') + '\" data-text=\"' + (r.text||'').replace(/"/g,'&quot;') + '\">✏️ Upravit</button>' : ''}
+        <button class="action-btn" onclick="deleteRec(this)" data-rid="${r.id}">🗑️ Smazat</button>
       </div>` : ''}
     </div>`;
   }).join('');
