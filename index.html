@@ -827,8 +827,9 @@
 // ── EBOOK BANNER ─────────────────────────────────────────────────────────────
 function showEbook() {
   // Zobrazit jen jednou — při prvním přihlášení
-  const seen = localStorage.getItem('efl_ebook_seen_' + (currentUser?.email || ''));
-  if (!seen) {
+  const key = 'efl_ebook_seen_' + (currentUser?.email || currentUser?.id || 'guest');
+  const seen = localStorage.getItem(key);
+  if (!seen && currentUser) {
     document.getElementById('ebook-banner').classList.add('show');
   }
 }
