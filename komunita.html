@@ -1,0 +1,2996 @@
+<!DOCTYPE html><!-- build:1776185686 -->
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Komunita Essence for Life</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script>
+// Okamžité skrytí desktop nav na mobilu - spustí se před vykreslením
+(function() {
+  if (window.innerWidth <= 600) {
+    document.addEventListener('DOMContentLoaded', function() {
+      var nav = document.getElementById('desktop-nav');
+      var ham = document.getElementById('hamburger-btn');
+      var logodiv = document.getElementById('logo-div');
+      var logosub = document.getElementById('logo-sub-text');
+      var navname = document.getElementById('nav-name');
+      if (nav) nav.style.display = 'none';
+      if (ham) { ham.style.display = 'flex'; }
+      if (logodiv) logodiv.style.display = 'none';
+      if (logosub) logosub.style.display = 'none';
+      if (navname) navname.style.display = 'none';
+      document.body.style.overflowX = 'hidden';
+    });
+  }
+})();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --efl:       #C0E0E1;
+    --teal:      #2A9CA0;
+    --teal-dark: #1A6B6E;
+    --orange:    #E8773A;
+    --bg:        #FAFAFA;
+    --card:      #FFFFFF;
+    --border:    #E2EFF0;
+    --text:      #1C3A3C;
+    --muted:     #6B9497;
+    --accent:    #2A9D8F;
+    --chip-bg:   #EEF8F9;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body { overflow-x:hidden; max-width:100vw; }
+  body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* LOGIN SCREEN */
+  .login-screen { position:fixed; inset:0; background:var(--teal-dark); display:flex; align-items:center; justify-content:center; z-index:9000; }
+  .login-screen.hidden { display:none; }
+  .login-box { background:white; border-radius:20px; padding:2.5rem; width:400px; max-width:95vw; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+  .login-logo { text-align:center; margin-bottom:1.75rem; }
+  .login-logo img { height:48px; filter:none; }
+  .login-logo h2 { font-family:'Playfair Display',serif; color:var(--teal-dark); font-size:1.4rem; margin-top:.75rem; }
+  .login-logo p { color:var(--muted); font-size:.85rem; margin-top:.35rem; font-weight:300; }
+  .login-field { margin-bottom:1rem; }
+  .login-field label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.3rem; }
+  .login-field input { width:100%; padding:.65rem .9rem; border:1px solid var(--border); border-radius:10px; font-family:'DM Sans',sans-serif; font-size:.9rem; outline:none; color:var(--text); transition:border-color .2s; }
+  .login-field input:focus { border-color:var(--teal); }
+  .btn-login { width:100%; background:var(--teal-dark); color:white; border:none; border-radius:10px; padding:.8rem; font-family:'DM Sans',sans-serif; font-size:.95rem; font-weight:500; cursor:pointer; transition:background .2s; margin-top:.5rem; }
+  .btn-login:hover { background:var(--teal); }
+  .login-note { text-align:center; font-size:.75rem; color:var(--muted); margin-top:1rem; line-height:1.5; }
+  .badge-preview { display:flex; gap:.75rem; justify-content:center; margin:1.25rem 0; }
+  .badge { display:inline-flex; align-items:center; gap:.4rem; padding:.3rem .8rem; border-radius:20px; font-size:.75rem; font-weight:500; }
+  .badge.verified { background:rgba(232,119,58,.1); color:#B85A1E; border:1px solid rgba(232,119,58,.3); }
+  .badge.member { background:rgba(42,156,160,.1); color:var(--teal-dark); border:1px solid rgba(42,156,160,.3); }
+  .login-error { background:#fee; border:1px solid #fcc; border-radius:8px; padding:.6rem .9rem; font-size:.82rem; color:#c00; margin-top:.75rem; display:none; }
+  .login-success { background:#efe; border:1px solid #cfc; border-radius:8px; padding:.6rem .9rem; font-size:.82rem; color:#060; margin-top:.75rem; display:none; }
+
+  /* HEADER */
+  header { background:var(--teal-dark); padding:0 2rem; display:flex; align-items:center; justify-content:space-between; height:64px; position:sticky; top:0; z-index:1000; box-shadow:0 2px 16px rgba(26,107,110,.2); }
+  .logo-wrap { display:flex; align-items:center; gap:1rem; }
+  .logo-img { height:34px; filter:brightness(0) invert(1); opacity:.95; }
+  .logo-divider { width:1px; height:24px; background:rgba(192,224,225,.25); }
+  .logo-sub { color:var(--efl); font-size:.68rem; letter-spacing:.22em; text-transform:uppercase; }
+  nav { display:flex; gap:.25rem; }
+  nav button { background:none; border:none; color:rgba(192,224,225,.6); padding:.45rem 1rem; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.8rem; letter-spacing:.08em; text-transform:uppercase; border-radius:6px; transition:all .2s; }
+  nav button:hover, nav button.active { color:var(--efl); background:rgba(192,224,225,.12); }
+  .user-badge { display:flex; align-items:center; gap:.7rem; color:rgba(192,224,225,.85); font-size:.83rem; cursor:pointer; }
+  .avatar { width:34px; height:34px; border-radius:50%; background:var(--teal); border:2px solid rgba(192,224,225,.4); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:.8rem; color:white; }
+
+  /* MAIN */
+  main { max-width:1200px; margin:0 auto; padding:2rem 1.5rem; }
+  .section { display:none; } .section.active { display:block; }
+  .page-header { margin-bottom:1.75rem; }
+  .page-header h1 { font-family:'Playfair Display',serif; font-size:1.85rem; color:var(--teal-dark); margin-bottom:.3rem; }
+  .page-header p { color:var(--muted); font-size:.88rem; font-weight:300; }
+
+  /* COMMUNITY */
+  .community-layout { display:grid; grid-template-columns:1fr 330px; gap:1.5rem; align-items:start; }
+  .feed { display:flex; flex-direction:column; gap:1rem; }
+  .filter-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+  .filter-chip { padding:.32rem .85rem; border-radius:20px; border:1px solid var(--border); background:white; font-family:'DM Sans',sans-serif; font-size:.78rem; cursor:pointer; color:var(--muted); transition:all .2s; }
+  .filter-chip.active { background:var(--teal); border-color:var(--teal); color:white; }
+
+  .intent-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; box-shadow:0 1px 8px rgba(0,0,0,.04); transition:box-shadow .2s, transform .2s; }
+  .intent-card:hover { box-shadow:0 6px 24px rgba(42,156,160,.1); transform:translateY(-1px); }
+  .intent-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:.75rem; }
+  .intent-who { display:flex; align-items:center; gap:.75rem; }
+  .intent-avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:.88rem; color:white; flex-shrink:0; }
+  .intent-name { font-weight:500; font-size:.9rem; color:var(--teal-dark); }
+  .intent-time { font-size:.72rem; color:var(--muted); margin-top:.1rem; }
+  .destination-badge { display:flex; align-items:center; gap:.5rem; background:var(--teal-dark); color:var(--efl); padding:.35rem .9rem; border-radius:20px; font-family:'Playfair Display',serif; font-size:.9rem; font-style:italic; white-space:nowrap; }
+  .intent-body { font-size:.88rem; color:var(--text); line-height:1.65; margin-bottom:1rem; font-weight:300; }
+  .intent-meta { display:flex; gap:.6rem; margin-bottom:1rem; flex-wrap:wrap; }
+  .meta-chip { display:flex; align-items:center; gap:.35rem; font-size:.75rem; color:var(--muted); background:var(--chip-bg); padding:.22rem .65rem; border-radius:20px; border:1px solid var(--border); }
+  .meta-chip.partner { color:var(--orange); background:rgba(232,119,58,.08); border-color:rgba(232,119,58,.2); }
+
+  .milestone-badge { display:inline-flex; align-items:center; gap:.35rem; background:linear-gradient(135deg,var(--orange),#f4a261); color:white; padding:.2rem .7rem; border-radius:20px; font-size:.72rem; font-weight:600; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.8;} }
+
+  .intent-actions { display:flex; align-items:center; gap:.5rem; padding-top:.75rem; border-top:1px solid var(--border); flex-wrap:wrap; }
+  .action-btn { display:flex; align-items:center; gap:.4rem; padding:.38rem .85rem; border-radius:8px; border:1px solid var(--border); background:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.8rem; color:var(--muted); transition:all .2s; }
+  .action-btn:hover { border-color:var(--teal); color:var(--teal); }
+  .action-btn.interested { background:var(--teal); border-color:var(--teal); color:white; }
+  .action-btn.liked { color:var(--orange); border-color:var(--orange); background:rgba(232,119,58,.06); }
+  .interest-count { margin-left:auto; font-size:.75rem; color:var(--muted); display:flex; align-items:center; gap:.4rem; }
+  .interest-avatars { display:flex; }
+  .interest-avatars .mini-av { width:22px; height:22px; border-radius:50%; border:2px solid white; margin-left:-6px; font-size:.58rem; display:flex; align-items:center; justify-content:center; color:white; font-weight:600; }
+  .interest-avatars .mini-av:first-child { margin-left:0; }
+
+  .comments { margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--border); display:none; }
+  .comments.open { display:block; }
+  .comment { display:flex; gap:.6rem; margin-bottom:.6rem; align-items:flex-start; }
+  .comment-bubble { background:var(--chip-bg); border-radius:8px 8px 8px 2px; padding:.5rem .75rem; font-size:.82rem; line-height:1.5; color:var(--text); flex:1; border:1px solid var(--border); }
+  .comment-author { font-weight:500; font-size:.72rem; color:var(--teal-dark); margin-bottom:.15rem; }
+  .comment-input-row { display:flex; gap:.5rem; margin-top:.5rem; }
+  .comment-input-row input { flex:1; padding:.5rem .75rem; border:1px solid var(--border); border-radius:8px; font-size:.82rem; font-family:'DM Sans',sans-serif; outline:none; background:white; }
+  .comment-input-row input:focus { border-color:var(--teal); }
+  .comment-input-row button { background:var(--teal-dark); color:var(--efl); border:none; border-radius:8px; padding:.5rem .8rem; cursor:pointer; }
+
+  /* NEW INTENT */
+  .new-intent-card { background:var(--teal-dark); border-radius:14px; padding:1.5rem; position:sticky; top:82px; }
+  .new-intent-card h3 { font-family:'Playfair Display',serif; font-size:1.05rem; color:var(--efl); margin-bottom:1.25rem; font-style:italic; }
+  .form-group { margin-bottom:.85rem; }
+  .form-group label { display:block; font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:rgba(192,224,225,.55); margin-bottom:.3rem; }
+  .form-group input, .form-group textarea { width:100%; padding:.55rem .8rem; border:1px solid rgba(192,224,225,.15); border-radius:8px; background:rgba(255,255,255,.07); color:rgba(240,250,250,.95); font-family:'DM Sans',sans-serif; font-size:.85rem; outline:none; transition:border-color .2s; }
+  .form-group input:focus, .form-group textarea:focus { border-color:var(--efl); }
+  .form-group input::placeholder, .form-group textarea::placeholder { color:rgba(192,224,225,.3); }
+  .form-group textarea { resize:none; height:80px; }
+  .partner-toggle { display:flex; align-items:center; gap:.75rem; margin-bottom:1rem; }
+  .toggle { width:40px; height:22px; background:rgba(255,255,255,.1); border-radius:11px; position:relative; cursor:pointer; transition:background .2s; border:none; flex-shrink:0; }
+  .toggle.on { background:var(--orange); }
+  .toggle::after { content:''; position:absolute; width:16px; height:16px; background:white; border-radius:50%; top:3px; left:3px; transition:left .2s; }
+  .toggle.on::after { left:21px; }
+  .toggle-label { font-size:.8rem; color:rgba(192,224,225,.6); }
+  .btn-post { width:100%; background:var(--teal); color:white; border:none; border-radius:8px; padding:.75rem; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:500; cursor:pointer; transition:background .2s; }
+  .btn-post:hover { background:var(--accent); }
+
+  /* MAP */
+  .map-layout { display:grid; grid-template-columns:1fr 310px; gap:1.5rem; align-items:start; }
+  .map-container { background:var(--card); border-radius:14px; overflow:hidden; border:1px solid var(--border); box-shadow:0 1px 8px rgba(0,0,0,.04); position:relative; }
+  #world-map { width:100%; display:block; cursor:grab; }
+  #world-map:active { cursor:grabbing; }
+  .map-legend { padding:.8rem 1.25rem; border-top:1px solid var(--border); display:flex; gap:2rem; font-size:.8rem; color:var(--muted); }
+  .legend-item { display:flex; align-items:center; gap:.6rem; font-weight:500; }
+  .legend-dot { width:14px; height:14px; border-radius:50%; border:2px solid white; box-shadow:0 1px 4px rgba(0,0,0,.2); }
+  .legend-dot.efl { background:var(--orange); }
+  .legend-dot.personal { background:var(--teal-dark); }
+  .map-tooltip { position:absolute; background:var(--teal-dark); color:var(--efl); padding:.35rem .75rem; border-radius:6px; font-size:.78rem; pointer-events:none; display:none; z-index:100; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  .map-tooltip small { display:block; color:rgba(192,224,225,.55); font-size:.68rem; }
+  .map-sidebar { display:flex; flex-direction:column; gap:1rem; }
+  .stats-card { background:var(--teal-dark); border-radius:14px; padding:1.25rem; }
+  .stats-card h3 { font-family:'Playfair Display',serif; font-size:.95rem; color:var(--efl); margin-bottom:1rem; }
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+  .stat { text-align:center; }
+  .stat-num { font-size:1.8rem; font-weight:600; color:var(--efl); line-height:1; }
+  .stat-label { font-size:.66rem; color:rgba(192,224,225,.55); text-transform:uppercase; letter-spacing:.08em; margin-top:.2rem; }
+  .map-key { display:flex; gap:1rem; margin-bottom:.85rem; }
+  .key-item { display:flex; align-items:center; gap:.4rem; font-size:.73rem; font-weight:500; }
+  .key-dot { width:12px; height:12px; border-radius:50%; border:2px solid white; box-shadow:0 1px 3px rgba(0,0,0,.15); flex-shrink:0; }
+  .key-dot.efl { background:var(--orange); }
+  .key-dot.personal { background:var(--teal-dark); }
+  .add-place-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem; }
+  .add-place-card h3 { font-size:.74rem; font-weight:500; color:var(--teal-dark); margin-bottom:.85rem; text-transform:uppercase; letter-spacing:.1em; }
+  .country-tabs { display:flex; gap:.5rem; margin-bottom:.9rem; }
+  .tab-btn { flex:1; padding:.4rem; border-radius:6px; border:1px solid var(--border); background:none; cursor:pointer; font-size:.75rem; font-family:'DM Sans',sans-serif; transition:all .2s; color:var(--muted); }
+  .tab-btn.active.efl-tab { background:var(--orange); border-color:var(--orange); color:white; }
+  .tab-btn.active.personal-tab { background:var(--teal-dark); border-color:var(--teal-dark); color:white; }
+  .place-inputs { display:flex; flex-direction:column; gap:.45rem; margin-bottom:.6rem; }
+  .place-inputs input { width:100%; padding:.52rem .8rem; border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.82rem; background:white; color:var(--text); outline:none; transition:border-color .2s; }
+  .place-inputs input:focus { border-color:var(--teal); }
+  .place-inputs input::placeholder { color:#aab; }
+  .btn-add { width:100%; background:var(--teal); color:white; border:none; border-radius:8px; padding:.58rem; cursor:pointer; font-size:.83rem; font-family:'DM Sans',sans-serif; transition:background .2s; font-weight:500; }
+  .btn-add:hover { background:var(--teal-dark); }
+  .place-list { margin-top:.9rem; display:flex; flex-direction:column; gap:.3rem; max-height:190px; overflow-y:auto; }
+  .place-tag { display:flex; align-items:center; justify-content:space-between; padding:.28rem .65rem; border-radius:7px; font-size:.77rem; }
+  .place-tag.efl { background:rgba(232,119,58,.1); color:#B85A1E; border:1px solid rgba(232,119,58,.2); }
+  .place-tag.personal { background:rgba(26,107,110,.08); color:var(--teal-dark); border:1px solid rgba(26,107,110,.15); }
+  .place-tag-name { font-weight:500; }
+  .place-tag-country { opacity:.6; margin-left:.3rem; font-size:.7rem; }
+  .remove-tag { background:none; border:none; cursor:pointer; color:inherit; opacity:.35; font-size:1rem; line-height:1; padding:0; transition:opacity .2s; }
+  .remove-tag:hover { opacity:1; }
+
+  /* PROFIL MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(26,107,110,.4); z-index:2000; display:none; align-items:center; justify-content:center; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:white; border-radius:16px; width:440px; max-width:95vw; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,.2); position:relative; }
+  .modal-header { background:var(--teal-dark); padding:1.5rem; display:flex; align-items:center; gap:1rem; }
+  .modal-avatar-lg { width:64px; height:64px; border-radius:50%; background:var(--teal); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:1.4rem; color:white; border:3px solid rgba(192,224,225,.4); flex-shrink:0; }
+  .modal-header-info h2 { font-family:'Playfair Display',serif; color:var(--efl); font-size:1.2rem; }
+  .modal-header-info p { color:rgba(192,224,225,.6); font-size:.78rem; margin-top:.2rem; }
+  .modal-body { padding:1.5rem; }
+  .profile-stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin-bottom:1.25rem; }
+  .profile-stat { text-align:center; background:var(--chip-bg); border-radius:10px; padding:.75rem .5rem; border:1px solid var(--border); }
+  .profile-stat-num { font-size:1.4rem; font-weight:600; color:var(--teal-dark); }
+  .profile-stat-label { font-size:.67rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; margin-top:.15rem; }
+  .profile-field { margin-bottom:.9rem; }
+  .profile-field label { display:block; font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:.3rem; }
+  .profile-field input, .profile-field textarea { width:100%; padding:.55rem .8rem; border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:.85rem; outline:none; color:var(--text); }
+  .profile-field input:focus, .profile-field textarea:focus { border-color:var(--teal); }
+  .profile-field textarea { resize:none; height:70px; }
+  .btn-save { width:100%; background:var(--teal); color:white; border:none; border-radius:8px; padding:.7rem; font-family:'DM Sans',sans-serif; font-size:.88rem; font-weight:500; cursor:pointer; }
+  .btn-save:hover { background:var(--teal-dark); }
+  .modal-close { position:absolute; top:1rem; right:1rem; background:rgba(255,255,255,.1); border:none; color:white; width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:1.1rem; display:flex; align-items:center; justify-content:center; }
+  .user-badge-inline { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .6rem; border-radius:20px; font-size:.72rem; font-weight:500; margin-left:.5rem; }
+  .user-badge-inline.verified { background:rgba(232,119,58,.1); color:#B85A1E; border:1px solid rgba(232,119,58,.2); }
+  .user-badge-inline.member { background:rgba(42,156,160,.1); color:var(--teal-dark); border:1px solid rgba(42,156,160,.2); }
+
+  /* DOPORUČENÍ */
+  .rec-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:1.25rem 1.5rem; box-shadow:0 1px 8px rgba(0,0,0,.04); transition:box-shadow .2s,transform .2s; }
+  .rec-card:hover { box-shadow:0 6px 24px rgba(42,156,160,.1); transform:translateY(-1px); }
+  .rec-stars { color:#E9C46A; font-size:1rem; letter-spacing:.1rem; }
+  .rec-type-badge { display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .65rem; border-radius:20px; font-size:.72rem; font-weight:500; }
+  .rec-type-badge.pobyt_efl { background:rgba(42,156,160,.1); color:var(--teal-dark); border:1px solid rgba(42,156,160,.2); }
+  .rec-type-badge.misto { background:rgba(232,119,58,.08); color:#B85A1E; border:1px solid rgba(232,119,58,.2); }
+  .rec-type-badge.tip { background:rgba(233,196,106,.15); color:#8a6d00; border:1px solid rgba(233,196,106,.3); }
+  .star-btn.active { opacity:1 !important; }
+
+  /* MOJE */
+  .mine-tabs { display:flex; gap:.5rem; margin-bottom:1.25rem; }
+  .empty-state { text-align:center; padding:3rem 1rem; color:var(--muted); }
+  .empty-state .es-icon { font-size:2.5rem; margin-bottom:.75rem; }
+  .empty-state h3 { font-family:'Playfair Display',serif; color:var(--teal-dark); margin-bottom:.5rem; }
+  .empty-state p { font-size:.88rem; font-weight:300; }
+
+  /* ADMIN */
+  #admin-section .stats-card { cursor:default; }
+  @media (max-width:900px) {
+    #essence-trips-panel .essence-trip-card:nth-child(n+3) { display:none; }
+    #essence-trips-panel { margin-bottom:.75rem; }
+  }
+  .admin-dest-row { display:flex; align-items:center; justify-content:space-between; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.85rem; }
+  .admin-dest-row:last-child { border:none; }
+  .admin-dest-bar { height:6px; background:var(--efl); border-radius:3px; margin-top:.25rem; }
+  .admin-user-row { display:flex; align-items:center; gap:.75rem; padding:.5rem 0; border-bottom:1px solid var(--border); font-size:.83rem; }
+  .admin-user-row:last-child { border:none; }
+
+  /* EBOOK BANNER */
+  .ebook-banner {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,107,110,0.6);
+    z-index: 3000;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .ebook-banner.show { display: flex; }
+  .ebook-box {
+    background: white;
+    border-radius: 20px;
+    padding: 0;
+    width: 460px;
+    max-width: 95vw;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.25);
+    animation: popIn .3s ease;
+  }
+  @keyframes popIn { from{transform:scale(.9);opacity:0;} to{transform:scale(1);opacity:1;} }
+  .ebook-header {
+    background: linear-gradient(135deg, var(--teal-dark), var(--teal));
+    padding: 2rem 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+  }
+  .ebook-gift { font-size: 3rem; margin-bottom: .5rem; }
+  .ebook-header h2 { font-family:'Playfair Display',serif; color:white; font-size:1.4rem; margin-bottom:.35rem; }
+  .ebook-header p { color:rgba(255,255,255,.75); font-size:.85rem; font-weight:300; }
+  .ebook-body { padding: 1.75rem 2rem 2rem; text-align:center; }
+  .ebook-body p { color:var(--muted); font-size:.88rem; line-height:1.7; margin-bottom:1.5rem; font-weight:300; }
+  .btn-download {
+    display: inline-flex; align-items:center; gap:.6rem;
+    background: var(--teal-dark); color: white;
+    border: none; border-radius: 10px;
+    padding: .9rem 2rem; font-family:'DM Sans',sans-serif;
+    font-size:.95rem; font-weight:500; cursor:pointer;
+    text-decoration:none; transition:background .2s;
+    margin-bottom: 1rem; width:100%; justify-content:center;
+  }
+  .btn-download:hover { background: var(--teal); }
+  .btn-skip { background:none; border:none; color:var(--muted); font-size:.8rem; cursor:pointer; font-family:'DM Sans',sans-serif; }
+  .btn-skip:hover { color:var(--teal-dark); }
+  .ebook-author { display:flex; align-items:center; justify-content:center; gap:.6rem; margin-bottom:1.25rem; }
+  .ebook-author-avatar { width:36px; height:36px; border-radius:50%; background:var(--teal); display:flex; align-items:center; justify-content:center; color:white; font-weight:600; font-size:.8rem; border:2px solid var(--efl); }
+  .ebook-author-name { font-size:.82rem; color:var(--teal-dark); font-weight:500; }
+
+  /* LOADING */
+  .loading { text-align:center; padding:2rem; color:var(--muted); font-size:.88rem; }
+  .spinner { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--teal); border-radius:50%; animation:spin .8s linear infinite; margin-right:.5rem; vertical-align:middle; }
+  @keyframes spin { to{transform:rotate(360deg);} }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:2rem; right:2rem; background:var(--teal-dark); color:var(--efl); padding:.7rem 1.2rem; border-radius:10px; font-size:.82rem; box-shadow:0 4px 20px rgba(0,0,0,.15); transform:translateY(100px); opacity:0; transition:all .3s; z-index:9999; display:flex; align-items:center; gap:.5rem; max-width:340px; }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  @media (max-width:900px) {
+    .map-layout, .community-layout { grid-template-columns:1fr; }
+
+    /* Admin dashboard na mobilu — vše pod sebe */
+    #admin-stats-grid { grid-template-columns: 1fr 1fr !important; gap:.75rem !important; }
+    #admin-section .stats-card { padding:1rem !important; }
+    #admin-section .stats-card h3 { font-size:.75rem !important; }
+    #admin-section .stat-num { font-size:1.6rem !important; }
+    #admin-section > div { padding:0 !important; }
+    #admin-section table { font-size:.72rem !important; }
+    #admin-section table td, #admin-section table th { padding:.35rem .4rem !important; }
+    /* Admin boxy — 2 sloupce na mobilu */
+    #admin-section .admin-grid-2col { grid-template-columns:1fr !important; }
+    /* Tabulka na mobilu — skrýt méně důležité sloupce */
+    #admin-section table th:nth-child(4),
+    #admin-section table td:nth-child(4) { display:none !important; }
+    #essence-trips-panel { order:-1; margin-top:0; margin-bottom:1rem; }
+    .community-layout > div:first-child { order:2; }
+    .community-layout > div:last-child { order:1; }
+    .new-intent-card { position:static; }
+    nav button { font-size:.7rem; padding:.45rem .6rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- EBOOK BANNER -->
+<div class="ebook-banner" id="ebook-banner">
+  <div class="ebook-box">
+    <div class="ebook-header">
+      <div class="ebook-gift">🎁</div>
+      <h2>Dárek od Adély pro vás</h2>
+      <p>E-book který vás podpoří na cestách</p>
+    </div>
+    <div class="ebook-body">
+      <div class="ebook-author">
+        <div class="ebook-author-avatar">AM</div>
+        <span class="ebook-author-name">Adéla Metlická Lustyková</span>
+      </div>
+      <p>Rozhodla jsem se obdarovat všechny, kteří už s námi někdy cestovali. Darovala jsem vám můj e-book, který vás může podpořit na cestách — ať už těch do světa, nebo zpátky k sobě.</p>
+      <a href="https://janmetlicky-prog.github.io/efl-komunita/ebook.pdf" 
+         target="_blank" class="btn-download" onclick="ebookDownloaded()">
+        📖 Otevřít e-book zdarma
+      </a>
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:.75rem">
+        💡 E-book najdete kdykoliv znovu v <strong>profilu</strong> — klikněte na své jméno vpravo nahoře.
+      </p>
+      <button class="btn-skip" onclick="closeEbook()">Pokračovat do komunity →</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="https://essenceforlife.cz/wp-content/uploads/2024/03/EFL-logo.png" alt="Essence for Life"
+           onerror="this.style.display='none'">
+      <h2>Cestovní komunita</h2>
+      <p>Sdílej sny, najdi parťáky, cestuj s Essence for Life</p>
+    </div>
+    <div class="badge-preview">
+      <span class="badge verified">✅ Ověřený klient Essence for Life</span>
+      <span class="badge member">🌍 Člen komunity</span>
+    </div>
+    <div class="login-field">
+      <label>Tvoje jméno</label>
+      <input type="text" id="login-name" placeholder="Jana Nováková" />
+    </div>
+    <div class="login-field">
+      <label>Emailová adresa</label>
+      <input type="email" id="login-email" placeholder="jana@example.com" />
+    </div>
+    <div class="login-field">
+      <label>Jak jsi na nás narazil/a? <span style="color:var(--muted);font-weight:300">(nepovinné)</span></label>
+      <input type="text" id="login-source" placeholder="FB skupina, od kamarádky, klientka Essence for Life…" />
+    </div>
+    <div style="display:flex;align-items:flex-start;gap:.6rem;margin:.75rem 0 1rem">
+      <input type="checkbox" id="login-gdpr" style="margin-top:.15rem;width:16px;height:16px;flex-shrink:0;accent-color:var(--teal)" />
+      <label for="login-gdpr" style="font-size:.78rem;color:var(--muted);line-height:1.5;cursor:pointer">
+        Souhlasím se <a href="privacy.html" target="_blank" style="color:var(--teal)">zpracováním osobních údajů</a> pro účely členství v komunitě Essence for Life.
+      </label>
+    </div>
+    <button class="btn-login" onclick="doLogin()">Vstoupit do komunity →</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-success" id="login-success"></div>
+    <p class="login-note">Po zadání emailu ti přijde ověřovací odkaz. Klienti Essence for Life získají ověřený odznak.</p>
+  </div>
+</div>
+
+<!-- MODAL: Zadání jména (náhrada za prompt()) -->
+<div id="name-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:10000;display:none;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:1.2rem;padding:2rem;max-width:380px;width:100%;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.2)">
+    <div style="font-size:2rem;margin-bottom:.5rem">👋</div>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:.5rem">Vítej v komunitě!</h3>
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:1.2rem">Jak ti máme říkat?</p>
+    <input type="text" id="name-modal-input" placeholder="Tvoje jméno" style="width:100%;padding:.75rem 1rem;border:2px solid var(--border);border-radius:.75rem;font-size:1rem;font-family:'DM Sans',sans-serif;outline:none;transition:border .2s" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--border)'" />
+    <p id="name-modal-error" style="color:#e57373;font-size:.8rem;margin-top:.4rem;display:none">Zadej prosím své jméno (alespoň 2 znaky)</p>
+    <button id="name-modal-btn" onclick="submitNameModal()" style="margin-top:1rem;width:100%;padding:.85rem;background:var(--teal);color:#fff;border:none;border-radius:.75rem;font-size:1rem;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s">Pokračovat →</button>
+  </div>
+</div>
+
+<header>
+  <div class="logo-wrap">
+    <img src="https://essenceforlife.cz/wp-content/uploads/2024/03/EFL-logo.png" alt="Essence for Life" class="logo-img"
+         onerror="this.style.display='none';document.getElementById('lf').style.display='block'">
+    <span id="lf" style="display:none;font-family:'Playfair Display',serif;color:var(--efl);font-size:1.1rem;font-style:italic">Essence for Life</span>
+    <div class="logo-divider" id="logo-div"></div>
+    <div class="logo-sub" id="logo-sub-text">Cestovní komunita</div>
+  </div>
+  <nav id="desktop-nav">
+    <button class="active" onclick="showSection('community',this)">✈ Sny</button>
+    <button onclick="showSection('mine',this)">📌 Moje</button>
+    <button onclick="showSection('doporuceni',this)">⭐ Doporučení</button>
+    <button onclick="showSection('map',this)">🗺 Mapa</button>
+    <button id="admin-nav-btn" onclick="showSection('admin',this)" style="display:none">👑 Admin</button>
+  </nav>
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <div class="user-badge" onclick="openProfile()">
+      <div class="avatar" id="nav-avatar">?</div>
+      <span id="nav-name">...</span>
+    </div>
+    <!-- Hamburger — vždy přítomný, viditelný jen na mobilu přes JS -->
+    <button id="hamburger-btn" onclick="toggleMobileMenu()"
+      style="display:none;background:rgba(255,255,255,.1);border:none;cursor:pointer;color:var(--efl);font-size:1.4rem;width:38px;height:38px;border-radius:8px;align-items:center;justify-content:center;flex-shrink:0">
+      ☰
+    </button>
+  </div>
+</header>
+
+<main>
+
+  <!-- SYNY -->
+  <section id="community-section" class="section active">
+    <div class="page-header">
+      <h1>Mapa cestovatelských snů</h1>
+      <p>Sdílej svůj sen, najdi parťáky na cestu a nech se inspirovat ostatními.<br>
+      <em style="color:var(--teal-dark);font-style:italic;font-family:'Playfair Display',serif;font-size:.95rem">Tady vznikají skutečné cesty, ne jen plány.</em></p>
+    </div>
+    <div class="community-layout">
+      <div>
+        <div class="filter-bar">
+          <button class="filter-chip active" onclick="filterIntents('vse',this)">Vše</button>
+          <button class="filter-chip" onclick="filterIntents('partner',this)">👥 Hledám parťáka</button>
+          <button class="filter-chip" onclick="filterIntents('oblibene',this)">❤️ Oblíbené</button>
+        </div>
+        <div class="feed" id="feed"><div class="loading"><span class="spinner"></span>Načítám sny…</div></div>
+      </div>
+      <div>
+        <div class="new-intent-card">
+          <h3>Plánuješ cestu?</h3>
+          <div class="form-group"><label>Kam chceš jet</label><input type="text" id="new-dest" placeholder="Japonsko, Patagonie…"/></div>
+          <div class="form-group"><label>Termín</label><input type="text" id="new-date" placeholder="podzim 2027, červen 2026…"/></div>
+          <div class="form-group"><label>Řekni nám víc</label><textarea id="new-desc" placeholder="Styl cesty, co chceš zažít, jak velká skupina…"></textarea></div>
+          <div class="partner-toggle">
+            <button class="toggle" id="partner-toggle" onclick="this.classList.toggle('on')"></button>
+            <span class="toggle-label">Hledám parťáka na cestu</span>
+          </div>
+          <button class="btn-post" onclick="postIntent()">Sdílet sen →</button>
+        </div>
+
+        <!-- ESSENCE TRIPS PANEL -->
+        <div id="essence-trips-panel" style="margin-top:1.25rem;background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;">
+          <div style="background:var(--teal-dark);padding:.85rem 1.1rem;display:flex;align-items:center;gap:.5rem">
+            <span style="font-size:1rem">✈️</span>
+            <span style="color:white;font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic">Připravované cesty Essence for Life</span>
+          </div>
+          <div id="essence-trips-list" style="padding:.75rem .9rem;display:flex;flex-direction:column;gap:.7rem">
+            <!-- Načítá se dynamicky -->
+            <div style="color:var(--muted);font-size:.82rem;text-align:center;padding:.5rem">Načítám cesty…</div>
+          </div>
+          <div style="padding:.6rem .9rem .9rem">
+            <a href="https://essenceforlife.cz/skupinove-cesty/" target="_blank" rel="noopener"
+               style="display:block;text-align:center;color:var(--teal);font-size:.8rem;text-decoration:none;font-weight:500">
+              Všechny cesty Essence → essenceforlife.cz
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MOJE -->
+  <section id="mine-section" class="section">
+    <div class="page-header">
+      <h1>Moje sny</h1>
+      <p>Tvoje sny, zájem a oblíbené na jednom místě</p>
+    </div>
+    <div class="community-layout">
+      <div>
+        <div class="mine-tabs">
+          <button class="filter-chip active" id="mt-my" onclick="switchMineTab('my',this)">📌 Moje sny</button>
+          <button class="filter-chip" id="mt-interest" onclick="switchMineTab('interest',this)">✋ Mám zájem</button>
+          <button class="filter-chip" id="mt-liked" onclick="switchMineTab('liked',this)">❤️ Oblíbené</button>
+        </div>
+        <div class="feed" id="mine-feed"></div>
+      </div>
+      <div>
+        <div class="stats-card">
+          <h3>Tvoje aktivita</h3>
+          <div class="stats-grid">
+            <div class="stat"><div class="stat-num" id="my-posts-count">0</div><div class="stat-label">Snů</div></div>
+            <div class="stat"><div class="stat-num" id="my-interest-count">0</div><div class="stat-label">Zájem</div></div>
+            <div class="stat"><div class="stat-num" id="my-liked-count">0</div><div class="stat-label">Oblíbených</div></div>
+            <div class="stat"><div class="stat-num" id="my-comment-count">0</div><div class="stat-label">Komentářů</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOPORUČENÍ -->
+  <section id="doporuceni-section" class="section">
+    <div class="page-header">
+      <h1>Doporučení</h1>
+      <p>Sdílej své zkušenosti — místa, pobyty s Essence for Life a tipy pro ostatní cestovatele.</p>
+    </div>
+    <div class="community-layout">
+      <div>
+        <div class="filter-bar">
+          <button class="filter-chip active" onclick="filterRecs('vse',this)">Vše</button>
+          <button class="filter-chip" onclick="filterRecs('pobyt_efl',this)">🌿 Pobyt s Essence for Life</button>
+          <button class="filter-chip" onclick="filterRecs('misto',this)">📍 Místo</button>
+          <button class="filter-chip" onclick="filterRecs('tip',this)">💡 Tip</button>
+        </div>
+        <div class="feed" id="rec-feed"><div class="loading"><span class="spinner"></span>Načítám doporučení…</div></div>
+      </div>
+      <div>
+        <div class="new-intent-card">
+          <h3>Sdílej doporučení</h3>
+          <div class="form-group">
+            <label>Typ</label>
+            <select id="rec-type" style="width:100%;padding:.55rem .8rem;border:1px solid rgba(192,224,225,.15);border-radius:8px;background:rgba(255,255,255,.07);color:rgba(240,250,250,.95);font-family:'DM Sans',sans-serif;font-size:.85rem;outline:none;">
+              <option value="pobyt_efl">🌿 Pobyt s Essence for Life</option>
+              <option value="misto">📍 Místo / destinace</option>
+              <option value="tip">💡 Cestovatelský tip</option>
+            </select>
+          </div>
+          <div class="form-group"><label>Název místa nebo pobytu</label><input type="text" id="rec-title" placeholder="Bali Reset Week, Kjóto, Machu Picchu…"/></div>
+          <div class="form-group"><label>Hodnocení</label>
+            <div style="display:flex;gap:.5rem;margin-top:.3rem" id="rec-stars">
+              <button onclick="setStars(1)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(2)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(3)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(4)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+              <button onclick="setStars(5)" class="star-btn" style="background:none;border:none;cursor:pointer;font-size:1.4rem;opacity:.4">★</button>
+            </div>
+          </div>
+          <div class="form-group"><label>Tvůj zážitek</label><textarea id="rec-text" placeholder="Co tě nejvíc zaujalo? Co bys doporučila ostatním?"></textarea></div>
+          <button class="btn-post" onclick="postRec()">Sdílet doporučení →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAPA -->
+  <section id="map-section" class="section">
+    <div class="page-header">
+      <h1>Moje cestovatelská mapa</h1>
+      <p>Kam jsi cestovala s Essence for Life — a kam ještě sama.</p>
+    </div>
+    <div class="map-layout">
+      <div class="map-container">
+        <svg id="world-map"></svg>
+        <div class="map-tooltip" id="map-tooltip"></div>
+        <div class="map-legend">
+          <div class="legend-item"><div class="legend-dot efl"></div> Cesty s Essence for Life</div>
+          <div class="legend-item"><div class="legend-dot personal"></div> Vlastní cesty</div>
+        </div>
+      </div>
+      <div class="map-sidebar">
+        <div class="stats-card">
+          <h3>Tvůj cestovatelský profil</h3>
+          <div class="stats-grid">
+            <div class="stat"><div class="stat-num" id="efl-count">0</div><div class="stat-label">Místa s Essence for Life</div></div>
+            <div class="stat"><div class="stat-num" id="personal-count">0</div><div class="stat-label">Vlastní místa</div></div>
+            <div class="stat"><div class="stat-num" id="country-count">0</div><div class="stat-label">Zemí celkem</div></div>
+            <div class="stat"><div class="stat-num" id="continent-count">0</div><div class="stat-label">Kontinenty</div></div>
+          </div>
+        </div>
+        <div class="add-place-card">
+          <h3>Přidat místo</h3>
+          <div class="map-key">
+            <div class="key-item" style="color:#B85A1E"><div class="key-dot efl"></div> Cesta s Essence for Life</div>
+            <div class="key-item" style="color:var(--teal-dark)"><div class="key-dot personal"></div> Vlastní cesta</div>
+          </div>
+          <div class="country-tabs">
+            <button class="tab-btn personal-tab active" id="tab-personal" onclick="selectTab('personal')">Vlastní cesta</button>
+            <button class="tab-btn efl-tab" id="tab-efl" onclick="selectTab('efl')">S Essence</button>
+          </div>
+          <div class="place-inputs">
+            <input type="text" id="place-input" placeholder="Místo: Řím, Kyoto, Dolomity…"/>
+            <input type="text" id="country-input" placeholder="Země: Itálie, Japonsko… (volitelné)"/>
+          </div>
+          <button class="btn-add" onclick="addPlace()">+ Přidat na mapu</button>
+          <div class="place-list" id="place-list"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADMIN DASHBOARD -->
+  <section id="admin-section" class="section">
+    <div class="page-header">
+      <h1>👑 Admin dashboard</h1>
+      <p>Přehled komunity v reálném čase — jen pro administrátory Essence for Life</p>
+    </div>
+
+    <!-- STATS ROW -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem" id="admin-stats-grid">
+      <div class="stats-card"><h3>Členů celkem</h3><div class="stat-num" id="admin-total-users">…</div></div>
+      <div class="stats-card"><h3>Ověřených klientů</h3><div class="stat-num" id="admin-verified">…</div></div>
+      <div class="stats-card"><h3>Cestovatelských snů</h3><div class="stat-num" id="admin-intents">…</div></div>
+      <div class="stats-card"><h3>Doporučení</h3><div class="stat-num" id="admin-recs">…</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+
+      <!-- TOP DESTINACE -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">🌍 Nejžádanější destinace</h3>
+        <div id="admin-top-destinations"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+      <!-- NOVÍ ČLENOVÉ -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">👥 Poslední registrace</h3>
+        <div id="admin-new-users"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+      <!-- NEJAKTIVNĚJŠÍ ČLENOVÉ -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">🔥 Nejaktivnější členové</h3>
+        <div id="admin-active-users"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+      <!-- POSLEDNÍ SNY -->
+      <div class="add-place-card">
+        <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">✈ Poslední sny</h3>
+        <div id="admin-last-intents"><div class="loading"><span class="spinner"></span></div></div>
+      </div>
+
+    </div>
+
+    <!-- VŠICHNI UŽIVATELÉ -->
+    <div class="add-place-card" style="margin-top:1.5rem">
+      <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">📋 Všichni členové</h3>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.82rem" id="admin-users-table">
+          <thead>
+            <tr style="border-bottom:2px solid var(--border);color:var(--muted);text-align:left">
+              <th style="padding:.5rem .75rem">Jméno</th>
+              <th style="padding:.5rem .75rem">Email</th>
+              <th style="padding:.5rem .75rem">Typ</th>
+              <th style="padding:.5rem .75rem">Registrace</th>
+              <th style="padding:.5rem .75rem">Sny</th>
+            </tr>
+          </thead>
+          <tbody id="admin-users-tbody">
+            <tr><td colspan="5" style="padding:1rem;color:var(--muted);text-align:center"><span class="spinner"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- PROFIL MODAL -->
+<div class="modal-overlay" id="profile-modal" onclick="if(event.target===this)closeProfile()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeProfile()">×</button>
+    <div class="modal-header">
+      <div class="modal-avatar-lg" id="modal-avatar">?</div>
+      <div class="modal-header-info">
+        <h2 id="modal-name">...</h2>
+        <p id="modal-sub">Člen komunity</p>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="profile-stats-grid">
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-intents">0</div><div class="profile-stat-label">Snů</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-interest">0</div><div class="profile-stat-label">Zájem</div></div>
+        <div class="profile-stat"><div class="profile-stat-num" id="ps-liked">0</div><div class="profile-stat-label">Oblíbených</div></div>
+      </div>
+      <div class="profile-field"><label>Jméno</label><input type="text" id="pf-name"/></div>
+      <div class="profile-field"><label>Odkud jsi</label><input type="text" id="pf-city" placeholder="Praha, Brno…"/></div>
+      <div class="profile-field"><label>Styl cestování</label><input type="text" id="pf-style" placeholder="Pomalé cestování, trekking, kultura…"/></div>
+      <div class="profile-field"><label>O mně</label><textarea id="pf-bio" placeholder="Pár slov o sobě…"></textarea></div>
+      <button class="btn-save" onclick="saveProfile()">Uložit profil</button>
+      <a id="profile-ebook-btn" href="https://janmetlicky-prog.github.io/efl-komunita/ebook.pdf"
+         target="_blank"
+         style="display:none;align-items:center;justify-content:center;gap:.5rem;width:100%;margin-top:.5rem;padding:.65rem;border:1px solid var(--teal);border-radius:8px;background:rgba(42,156,160,.06);color:var(--teal-dark);font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:500;text-decoration:none;transition:background .2s;"
+         onmouseover="this.style.background='rgba(42,156,160,.12)'"
+         onmouseout="this.style.background='rgba(42,156,160,.06)'">
+        📖 Stáhnout e-book od Adély
+      </a>
+      <button style="width:100%;margin-top:.5rem;padding:.6rem;border:1px solid var(--border);border-radius:8px;background:none;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:.82rem;" onclick="doLogout()">Odhlásit se</button>
+
+      <!-- Kontaktovat Essence -->
+      <a href="mailto:info@essenceforlife.cz?subject=Dotaz z komunity&body=Ahoj Adélo, mám dotaz ohledně komunity Essence for Life."
+         style="display:flex;align-items:center;justify-content:center;gap:.5rem;width:100%;margin-top:.5rem;padding:.6rem;border:1px solid var(--teal);border-radius:8px;background:rgba(42,156,160,.06);cursor:pointer;color:var(--teal);font-family:'DM Sans',sans-serif;font-size:.82rem;text-decoration:none;font-weight:500"
+         onmouseover="this.style.background='rgba(42,156,160,.12)'"
+         onmouseout="this.style.background='rgba(42,156,160,.06)'">
+        ✉️ Napsat Essence for Life
+      </a>
+
+      <!-- Smazat účet -->
+      <button style="width:100%;margin-top:.5rem;padding:.6rem;border:1px solid #ffcdd2;border-radius:8px;background:none;cursor:pointer;color:#e57373;font-family:'DM Sans',sans-serif;font-size:.82rem;"
+              onclick="deleteMyAccount()">
+        🗑️ Smazat můj účet
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ <span id="toast-msg"></span></div>
+
+<!-- MODAL Nové doporučení pro mobil -->
+<div id="new-rec-modal" style="display:none;position:fixed;inset:0;z-index:2500;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4)">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:1.5rem 1.5rem 2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#1A6B6E;font-style:italic">Sdílet doporučení</h3>
+      <button onclick="closeNewRecModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6B9497;padding:.25rem">×</button>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Typ</label>
+      <select id="mob-rec-type" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C;background:white">
+        <option value="pobyt_efl">🌿 Pobyt s Essence for Life</option>
+        <option value="misto">📍 Místo / destinace</option>
+        <option value="tip">💡 Cestovatelský tip</option>
+      </select>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Název místa nebo pobytu</label>
+      <input type="text" id="mob-rec-title" placeholder="Bali Reset Week, Kjóto…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C"/>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Hodnocení</label>
+      <div style="display:flex;gap:.5rem" id="mob-rec-stars">
+        <button onclick="setMobStars(1)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(2)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(3)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(4)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+        <button onclick="setMobStars(5)" class="mob-star" style="background:none;border:none;cursor:pointer;font-size:1.8rem;opacity:.3">★</button>
+      </div>
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Tvůj zážitek</label>
+      <textarea id="mob-rec-text" placeholder="Co tě nejvíc zaujalo? Co bys doporučila ostatním?" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C;resize:none;height:100px"></textarea>
+    </div>
+    <button onclick="postRecMobile()" style="width:100%;background:#2A9CA0;color:white;border:none;border-radius:12px;padding:.9rem;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;cursor:pointer">Sdílet doporučení →</button>
+  </div>
+</div>
+
+<!-- FAB tlačítko pro mobil -->
+<button id="fab-btn" onclick="onFabClick()"
+  style="display:none;position:fixed;bottom:24px;right:20px;width:58px;height:58px;border-radius:50%;background:#1A6B6E;color:white;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 16px rgba(26,107,110,.45);z-index:900;align-items:center;justify-content:center;line-height:1">
+  +
+</button>
+
+<!-- MODAL Nový sen pro mobil -->
+<div id="new-sen-modal" style="display:none;position:fixed;inset:0;z-index:2500;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.4)">
+  <div style="background:white;border-radius:20px 20px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:1.5rem 1.5rem 2rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:#1A6B6E;font-style:italic">Plánuješ cestu?</h3>
+      <button onclick="closeNewSenModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6B9497;padding:.25rem">×</button>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Kam chceš jet</label>
+      <input type="text" id="mob-new-dest" placeholder="Japonsko, Patagonie…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C"/>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Termín</label>
+      <input type="text" id="mob-new-date" placeholder="podzim 2027, červen 2026…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C"/>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.3rem">Řekni nám víc</label>
+      <textarea id="mob-new-desc" placeholder="Styl cesty, co chceš zažít, jak velká skupina…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;font-size:1rem;outline:none;color:#1C3A3C;resize:none;height:100px"></textarea>
+    </div>
+    <label style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;cursor:pointer">
+      <input type="checkbox" id="mob-partner-toggle"
+        style="width:22px;height:22px;cursor:pointer;accent-color:#2A9CA0;flex-shrink:0">
+      <span style="font-size:1rem;color:#5A8587">Hledám parťáka na cestu</span>
+    </label>
+    <button onclick="postIntentMobile()" style="width:100%;background:#2A9CA0;color:white;border:none;border-radius:12px;padding:.9rem;font-family:'DM Sans',sans-serif;font-size:1rem;font-weight:500;cursor:pointer">Sdílet sen →</button>
+  </div>
+</div>
+
+<!-- MOBILNÍ DROPDOWN MENU -->
+<div id="mobile-menu" style="display:none;position:fixed;top:54px;left:0;right:0;background:#1A6B6E;z-index:1500;box-shadow:0 8px 32px rgba(0,0,0,.3);border-radius:0 0 20px 20px">
+  <div style="display:flex;flex-direction:column;width:100%">
+    <button onclick="showSection('community',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">✈️&nbsp;&nbsp;Cestovatelské sny</button>
+    <button onclick="showSection('doporuceni',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">⭐&nbsp;&nbsp;Doporučení</button>
+    <button onclick="showSection('mine',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">📌&nbsp;&nbsp;Moje záznamy</button>
+    <button onclick="showSection('map',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">🗺️&nbsp;&nbsp;Cestovatelská mapa</button>
+    <button onclick="openProfile();closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">👤&nbsp;&nbsp;Můj profil</button>
+    <button id="mm-admin" style="display:none;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left" onclick="showSection('admin',this);closeMobileMenu()">👑&nbsp;&nbsp;Admin dashboard</button>
+    <button onclick="doLogout();closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;cursor:pointer;color:rgba(192,224,225,.45);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:400;text-align:left">↩️&nbsp;&nbsp;Odhlásit se</button>
+  </div>
+</div>
+<div id="mobile-menu-overlay" onclick="closeMobileMenu()" style="display:none;position:fixed;inset:0;z-index:1400;background:rgba(0,0,0,.35)"></div>
+
+<!-- MOBILNÍ NAVIGACE -->
+<nav class="mobile-nav" id="mobile-nav" style="display:none">
+  <button class="mobile-nav-btn active" onclick="showSection('community',this);syncMobileNav(this)" id="mob-community">
+    <span class="nav-icon">✈️</span>Sny
+  </button>
+  <button class="mobile-nav-btn" onclick="showSection('doporuceni',this);syncMobileNav(this)" id="mob-doporuceni">
+    <span class="nav-icon">⭐</span>Doporučení
+  </button>
+  <button class="mobile-nav-btn" onclick="showSection('mine',this);syncMobileNav(this)" id="mob-mine">
+    <span class="nav-icon">📌</span>Moje
+  </button>
+  <button class="mobile-nav-btn" onclick="showSection('map',this);syncMobileNav(this)" id="mob-map">
+    <span class="nav-icon">🗺️</span>Mapa
+  </button>
+  <button class="mobile-nav-btn" onclick="openProfile()" id="mob-profile">
+    <span class="nav-icon">👤</span>Profil
+  </button>
+  <button class="mobile-nav-btn" id="admin-mobile-btn" onclick="showSection('admin',this);syncMobileNav(this)">
+    <span class="nav-icon">👑</span>Admin
+  </button>
+</nav>
+
+<script>
+// ── EBOOK BANNER ─────────────────────────────────────────────────────────────
+function showEbook() {
+  // Zobrazit jen jednou — při prvním přihlášení
+  const key = 'efl_ebook_seen_' + (currentUser?.email || currentUser?.id || 'guest');
+  const seen = localStorage.getItem(key);
+  if (!seen && currentUser) {
+    document.getElementById('ebook-banner').classList.add('show');
+  }
+}
+
+function ebookDownloaded() {
+  localStorage.setItem('efl_ebook_seen_' + (currentUser?.email || ''), '1');
+  setTimeout(closeEbook, 500);
+}
+
+function closeEbook() {
+  document.getElementById('ebook-banner').classList.remove('show');
+  localStorage.setItem('efl_ebook_seen_' + (currentUser?.email || ''), '1');
+}
+
+// ── MAILERLITE PROPOJENÍ ────────────────────────────────────────────────────
+const ML_KEY = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI0IiwianRpIjoiMzgwZjk2NmY3NGMzZjI1MTRlZGNkNGUyZGZiZGZiMDc3MTE0YzUzYmQxMzljZTBjMDMyMDBjOTg3ZmU2MzRiMGFjZjJkNDNhYTk3NjcyMzEiLCJpYXQiOjE3NzYwMjc5MDYuMzUzODU1LCJuYmYiOjE3NzYwMjc5MDYuMzUzODU4LCJleHAiOjQ5MzE3MDE1MDYuMzQ5NTUzLCJzdWIiOiI4MTI2NDkiLCJzY29wZXMiOltdfQ.GRwq_mYR3iwzrgFeWwD1lKq_IcGrzq8nSeSPhoY2GnvknIssA8lDru7ZqBi3B-T2JzfbT6UO7iA18q5MhrTzVmCmvaxDuRSya-yo2JY15gnZA_Qtw02mgLk8YFZM1KQR6j0ZVst7K-c2kdzj0wMzyPCitUC8QM1NR6L6z_JNJZDm81lvlnktqhGQu1KYYpE3SUa2giE_kKq6gQIP2fmabPyZ33hFJX7BnHDW4hKGzcGZ6wcVYBbbndkiZGEZzJLI3AnfUhPSIGe7_r6-5aZKtR1GbWyzN4HPY7Jqat1tZpzIvqwW1YLjmxQwy08j50jDjzsSpOniYmqfHXhx3CWzhwyVNz5bqmCFqkRhy6JVctX2vsk8r-WYt6UNgEQzHXi599VqI7v5HHUdLD0b6HS_8oyWjNUYe_tAFbbjQYiQt0u6CmMeyHbjAAnAzH1Ql_C4xRnBFgdI6fO51h6PGs-ptPHxUsLWRURmfSIWtn6qNORoF_vYaVXRuzdGYdSgT09AUV_OTwvlZkZKi41D8-L6XCdyKy4qWak5Mwf9dPzI9ljIhFcUxjoJXWnKykirJEyn9ZXV-bmun--T3tIxvnCN889QT2R1rspSBC3ojGugZnEG29sipUdaYGBCzGN7ALF4s0cadtBnzrEFI_vPL4usfUZEA37VRyybXTg6wU7dRpY';
+const ML_GROUP_KLIENTI = '183932696541529328';
+const ML_GROUP_KOMUNITA = '114101246009280377';
+
+async function addToMailerLite(email, name, verified) {
+  try {
+    // Přidat nebo aktualizovat subscriber
+    const subRes = await fetch('https://api.mailerlite.com/api/v2/subscribers', {
+      method: 'POST',
+      headers: {
+        'X-MailerLite-ApiKey': ML_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email,
+        name,
+        fields: {
+          komunita_member: '1',
+          komunita_verified: verified ? '1' : '0',
+          komunita_joined: new Date().toISOString().split('T')[0]
+        }
+      })
+    });
+
+    if (!subRes.ok) return;
+    const sub = await subRes.json();
+    const subId = sub.id;
+
+    // Přidat do skupiny Cestovatelský klub (všichni členové komunity)
+    await fetch(`https://api.mailerlite.com/api/v2/groups/${ML_GROUP_KOMUNITA}/subscribers`, {
+      method: 'POST',
+      headers: {
+        'X-MailerLite-ApiKey': ML_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email })
+    });
+
+    console.log(`✅ MailerLite: ${email} přidán do komunity`);
+  } catch(e) {
+    console.error('MailerLite chyba:', e);
+  }
+}
+
+// ── RESEND NOTIFIKACE ───────────────────────────────────────────────────────
+const RESEND_KEY = 're_PNq3NswJ_FGxUAioR6BWL9Vzsm9CCy9gx';
+const ADMIN_EMAILS = ['adela@essenceforlife.cz', 'honza@essenceforlife.cz', 'darja@essenceforlife.cz'];
+
+async function sendMilestoneNotification(intent, count) {
+  const html = `
+    <div style="font-family:'DM Sans',sans-serif;max-width:600px;margin:0 auto;padding:2rem">
+      <div style="background:#1A6B6E;padding:1.5rem 2rem;border-radius:12px 12px 0 0">
+        <h2 style="color:#C0E0E1;margin:0;font-size:1.2rem">🔥 Milestone v komunitě!</h2>
+      </div>
+      <div style="background:#f9f9f9;padding:1.5rem 2rem;border-radius:0 0 12px 12px;border:1px solid #e2eff0">
+        <p style="color:#1C3A3C;font-size:1rem">Sen o <strong>${intent.destination}</strong> dosáhl <strong>${count} zájemců</strong>!</p>
+        <div style="background:white;border:1px solid #e2eff0;border-radius:8px;padding:1rem;margin:1rem 0">
+          <p style="margin:0;color:#6B9497;font-size:.85rem">📅 ${intent.travel_date || 'termín neurčen'}</p>
+          <p style="margin:.5rem 0 0;color:#1C3A3C;font-size:.9rem">${intent.description || ''}</p>
+        </div>
+        <p style="color:#6B9497;font-size:.85rem">Čas připravit skupinovou nabídku! 🚀</p>
+        <a href="https://janmetlicky-prog.github.io/efl-komunita/" 
+           style="display:inline-block;background:#1A6B6E;color:white;padding:.75rem 1.5rem;border-radius:8px;text-decoration:none;font-size:.9rem;margin-top:.5rem">
+          Otevřít komunitu →
+        </a>
+      </div>
+      <p style="color:#aaa;font-size:.75rem;margin-top:1rem;text-align:center">Essence for Life — Cestovní komunita</p>
+    </div>`;
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Komunita Essence for Life <komunita@essenceforlife.cz>',
+        to: ADMIN_EMAILS,
+        subject: `🔥 ${intent.destination} — ${count} zájemců v komunitě!`,
+        html
+      })
+    });
+    console.log('Notifikace odeslána');
+  } catch(e) {
+    console.error('Chyba notifikace:', e);
+  }
+}
+
+// ── SECURITY ─────────────────────────────────────────────────────────────────
+function sanitize(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
+// ── SUPABASE ────────────────────────────────────────────────────────────────
+const SUPA_URL = 'https://zpsqeytpddpmggshydwe.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpwc3FleXRwZGRwbWdnc2h5ZHdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU3NDc0MjksImV4cCI6MjA5MTMyMzQyOX0.upzALn9Q6flsayNL9QHt7XhXBOBg-2NG75ANaomLExQ';
+const { createClient } = supabase;
+const db = createClient(SUPA_URL, SUPA_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+    storageKey: 'efl-auth-token'
+  }
+});
+
+// ── OVĚŘENÍ KLIENTŮ ESSENCE FOR LIFE ─────────────────────────────────────────────────────
+// Sem přidáš emaily z vaší databáze
+const EFL_CLIENTS = [
+  'jan.metlicky@gmail.com',
+  'adela@essenceforlife.cz',
+  '1cejkovakamila@seznam.cz',
+  'a-points@seznam.cz',
+  'aachsova@seznam.cz',
+  'adelka.egerova@seznam.cz',
+  'adrasteia1988@gmail.com',
+  'alabra@seznam.cz',
+  'alena.novotna@email.cz',
+  'alex.vojtylova@gmail.com',
+  'andreabu@email.cz',
+  'andreazlatohlavkova@seznam.cz',
+  'andsmi@seznam.cz',
+  'anetkaa.kubakova@seznam.cz',
+  'anickajurajdova@gmail.com',
+  'annabruckova@seznam.cz',
+  'b.kozic@seznam.cz',
+  'bartoskova@horejsek.cz',
+  'bbrestovska@seznam.cz',
+  'bebe27@centrum.cz',
+  'bodyna2@seznam.cz',
+  'brezina.bxl@gmail.com',
+  'butikmon69@gmail.com',
+  'cenknerova5@gmail.com',
+  'chladkova.helena@seznam.cz',
+  'chmelarova@fnpz.cz',
+  'chotenovska@centrum.cz',
+  'chvalova@email.cz',
+  'crazybeni@seznam.cz',
+  'dadis.z@seznam.cz',
+  'dagmarab@seznam.cz',
+  'dana.hochmannova@seznam.cz',
+  'dana.pruhova@gmail.com',
+  'danacajkova.louny@seznam.cz',
+  'danapincova@seznam.cz',
+  'danielacizecek@seznam.cz',
+  'danielasch@seznam.cz',
+  'dasa.houdkova@seznam.cz',
+  'dasahrus@seznam.cz',
+  'diana.valeckova@seznam.cz',
+  'dominika.peroutkova@gmail.com',
+  'dornova.s@email.cz',
+  'dseckarova@seznam.cz',
+  'dvlkova91@seznam.cz',
+  'dzitka1@seznam.cz',
+  'elenalachmanova@centrum.cz',
+  'elentrbolova@gmail.com',
+  'eva.chvalovska@seznam.cz',
+  'eva.kneslova@seznam.cz',
+  'eva.ohmova@email.cz',
+  'eva.pokornych@seznam.cz',
+  'evaschreierova@seznam.cz',
+  'evka.z@post.cz',
+  'fantovah@gmail.com',
+  'foha1@email.cz',
+  'gabika76@seznam.cz',
+  'gabina.jalow@seznam.cz',
+  'gabriela.skamenova@seznam.cz',
+  'gabrielachropuvkova@seznam.cz',
+  'gasparovic.martina@seznam.cz',
+  'h.jichova@revel-pex.com',
+  'h.sperlingova@seznam.cz',
+  'h.vitaskova@seznam.cz',
+  'hamanova.v@seznam.cz',
+  'hana.linek@seznam.cz',
+  'hana.mlejnska@seznam.cz',
+  'hanahanzlickova@centrum.cz',
+  'hanamrkackova@seznam.cz',
+  'hanka.starkova1@gmail.com',
+  'hankahalasova@seznam.cz',
+  'hankasandova@seznam.cz',
+  'hann.ka@seznam.cz',
+  'hannah.lih@seznam.cz',
+  'hanzlikova-iveta@seznam.cz',
+  'helena.effenbergerova@seznam.cz',
+  'hlouskova.vera@email.cz',
+  'hofmannova.monika@seznam.cz',
+  'horcickova@vhquality.cz',
+  'houstova.tereza.95@gmail.com',
+  'hrdlickova.zuz@seznam.cz',
+  'hubackova41@seznam.cz',
+  'i.step@seznam.cz',
+  'ijanickova@post.cz',
+  'info@akpp.cz',
+  'info@marta.cz',
+  'info@prolepsizivot.cz',
+  'info@volumen.cz',
+  'ing.klara.nova@gmail.com',
+  'irena.fiserova@centrum.cz',
+  'irena.styrandova@seznam.cz',
+  'iva.strouskova@seznam.cz',
+  'ivana.pichnarcikova@gmail.com',
+  'ivanatrajerova@gmail.com',
+  'ivasipova@email.cz',
+  'ivonamatuskova@seznam.cz',
+  'jan.metlicky@gmail.com',
+  'jana.bloeslova@seznam.cz',
+  'jana.kardova@volny.cz',
+  'jana.rysankova@domovterezin.cz',
+  'jana@jh-comp.cz',
+  'janahrabovsk@seznam.cz',
+  'jananemeckova@seznam.cz',
+  'janavrbca@seznam.cz',
+  'janinauslunce@sesnam.cz',
+  'janouskovajitka01@gmail.com',
+  'jarka.davidova@centrum.cz',
+  'jarkahruba@seznam.cz',
+  'jarmila.leinova@gmail.com',
+  'ji.hajna@seznam.cz',
+  'jindra.bauerova@seznam.cz',
+  'jindra.hlavacova@seznam.cz',
+  'jineli@seznam.cz',
+  'jiri.duchac@seznam.cz',
+  'jitka.kreckova@seznam.cz',
+  'jitka.stein@seznam.cz',
+  'jitkabruckova@email.cz',
+  'jitkaslovakova@seznam.cz',
+  'jolana_vaneckova@centrum.cz',
+  'josef.landa@post.cz',
+  'jratajova@seznam.cz',
+  'julierytirova@seznam.cz',
+  'k.hanny@centrum.cz',
+  'k.horynova@atlas.cz',
+  'k.lorencova@gmail.com',
+  'kacaba.cerna@email.cz',
+  'kacaba.elza@seznam.cz',
+  'kackastuchlik@seznam.cz',
+  'kahounovazdenka@seznam.cz',
+  'kalinova-e@seznam.cz',
+  'kamila.lac@seznam.cz',
+  'karelstejskal@email.cz',
+  'karla.maresova@gmail.com',
+  'kata.skopkova@seznam.cz',
+  'katerina.kozicova@gmail.cz',
+  'khaki70@seznam.cz',
+  'klara.dlouha991@gmail.com',
+  'klara.gasserova@centrum.cz',
+  'kotrnochova@seznam.cz',
+  'kovarikova354@seznam.cz',
+  'kovarska@seznam.cz',
+  'kramplova.monika@gmail.com',
+  'krasnejsi@email.cz',
+  'kratochvil.drom@seznam.cz',
+  'krcalovahana@seznam.cz',
+  'kristarytirova@seznam.cz',
+  'kristyna.tomeckova@gmail.com',
+  'kroupa969@gmail.com',
+  'kstudnickova@email.cz',
+  'kucera@kancelarspravcu.com',
+  'kucerova_petra@seznam.cz',
+  'kynclovajana1@seznam.cz',
+  'l.bittnerova70@gmail.com',
+  'ladislava.bardosova@re-max.cz',
+  'leitlova.sarka@seznam.cz',
+  'lenajaneckova@seznam.cz',
+  'lenka.hrnecek@seznam.cz',
+  'lenka.janciova@gykovy.cz',
+  'lenka.kral@seznam.cz',
+  'lenka.peroutkova63@gmail.com',
+  'lenka.prosecka@ppevents.cz',
+  'lenka0311@seznam.cz',
+  'lenkahrazdirova@centrum.cz',
+  'leona.stepanikova@seznam.cz',
+  'liba.box@seznam.cz',
+  'libuse.tranova@seznam.cz',
+  'libusebruncvikova@seznam.cz',
+  'libuseknapova@centrum.cz',
+  'lida.kadlec@seznam.cz',
+  'lubomir.cervinsky@raeder-falge.cz',
+  'lucahvezdova@seznam.cz',
+  'lucie.andrlikova@idemia.com',
+  'lucie.cikrtova@gmail.com',
+  'lucie.krepelkova@gmail.com',
+  'luciecapek@seznam.cz',
+  'lucieslivka@seznam.cz',
+  'ludvikat@seznam.cz',
+  'm.r.zizkova@seznam.cz',
+  'm.vagnerova@zsletnipolce.cz',
+  'machackova@avalon.cz',
+  'machichi@centrum.cz',
+  'macku.jitka@email.cz',
+  'magda.radostova@gmail.com',
+  'magdalena.calova@gmail.com',
+  'magdalipsova@gmail.com',
+  'magdikb@seznam.cz',
+  'magerova.monika@gmail.com',
+  'mar.altmanova@seznam.cz',
+  'marcelabalkova@sntcz.cz',
+  'marcelavoz@email.cz',
+  'marek.drahorad@seznam.cz',
+  'marie.fleglova@gmail.com',
+  'marie@lime.cz',
+  'marieholovska@seznam.cz',
+  'marketa.hejnova@seznam.cz',
+  'marketa.prochy@seznam.cz',
+  'marketa.tulackova@gmail.com',
+  'martakodesova@seznam.cz',
+  'martina.lomberska@gmail.com',
+  'martinafirtova@seznam.cz',
+  'martinakrejcova@seznam.cz',
+  'martinanuslova@gmail.com',
+  'martinazim@hotmail.com',
+  'matouskoval@email.cz',
+  'matusovalucie1@gmail.com',
+  'mddr.denti.sta@gmail.com',
+  'merit@centrum.cz',
+  'mhdomu@gmail.com',
+  'michaela.kaliankova@mze.cz',
+  'milerova@alfaarena.cz',
+  'milusekuckova@seznam.cz',
+  'mirinovakova@outlook.cz',
+  'mirka.bartova@centrum.cz',
+  'mirka.vorisek@seznam.cz',
+  'moccam@seznam.cz',
+  'monika.cs@centrum.cz',
+  'monika.lulisova@seznam.cz',
+  'motycka.petr@centrum.cz',
+  'mrazkova.jitka@seznam.cz',
+  'mudr.malacova@seznam.cz',
+  'nada.kahounova@seznam.cz',
+  'nektarinka.i@seznam.cz',
+  'novackovai@seznam.cz',
+  'novotna.ivet@post.cz',
+  'o.albrechtova@seznam.cz',
+  'odnohova@seznam.cz',
+  'oplistilova.hana@seznam.cz',
+  'osztenyijana@seznam.cz',
+  'pa.skulinova@seznam.cz',
+  'patricieholasova@seznam.cz',
+  'pavla.matyasova@seznam.cz',
+  'pavla.stejskal@seznam.cz',
+  'pavli.vonkova@seznam.cz',
+  'pavlina.sandrova@seznam.cz',
+  'pavlinajanova@gmail.com',
+  'petra.schleissova@centrum.cz',
+  'petrahudeckova@icloud.com',
+  'pitrs85@seznam.cz',
+  'pkrajickova@atlas.cz',
+  'postacka.marse@seznam.cz',
+  'ptacnikovakarla@seznam.cz',
+  'r.tizkova@spectech.cz',
+  'r.votrubova@volny.cz',
+  'rada.jitka@seznam.cz',
+  'rasmaja@seznam.cz',
+  'rb@mokaflor.cz',
+  'renata.jamy@seznam.cz',
+  'rohanovanadezda@seznam.cz',
+  'rolova.jana@post.cz',
+  'romanahruskova69@seznam.cz',
+  'ruza.skamenova@seznam.cz',
+  'rychovam@seznam.cz',
+  'sabinamachacek@gmail.com',
+  'sadilkova.jana1@seznam.cz',
+  'salavovajana@seznam.cz',
+  'sarka.vodolanova@centrum.cz',
+  'secka.lucka@seznam.cz',
+  'sehnalovavera@gmail.com',
+  'sildu140@gmail.com',
+  'skalca79@seznam.cz',
+  'slovakova.martina@seznam.cz',
+  'slovakovama@seznam.cz',
+  'smejkal.zednik@seznam.cz',
+  'smidzarovaj@seznam.cz',
+  'smolakova@seznam.cz',
+  'sonalunakova@seznam.cz',
+  'spacek@l2s.cz',
+  'sprnova@centrum.cz',
+  'stancl.jaroslav@seznam.cz',
+  'strbianka@gmail.com',
+  'stredohori.renn@seznam.cz',
+  'stuchalovaa@seznam.cz',
+  'surkova@ezh-as.cz',
+  'sylva.pulkova@emma.cz',
+  'tereza.kratochvilova9@seznam.cz',
+  'tichajanina27.08@gmail.com',
+  'trabe@seznam.cz',
+  'ucimi@seznam.cz',
+  'v.bulchakova@seznam.cz',
+  'v.tatana@seznam.cz',
+  'vanurova.jana@seznam.cz',
+  'vcelkamajka1@seznam.cz',
+  'vendula.krejcova@ceskatelevize.cz',
+  'vera.breckova@post.cz',
+  'vera.plskova@email.cz',
+  'verkamalerova@seznam.cz',
+  'veterina.jarka@seznam.cz',
+  'vfijala@gmail.com',
+  'vkubes@seznam.cz',
+  'vladaflorianova@seznam.cz',
+  'vojtkova.m1@seznam.cz',
+  'vybiralovak@seznam.cz',
+  'wehrichova.martina@seznam.cz',
+  'z.rampirova@seznam.cz',
+  'zalesakova.m@seznam.cz',
+  'zannat83@gmail.com',
+  'zboranova@seznam.cz',
+  'zd.janousova@seznam.cz',
+  'zdenala2@seznam.cz',
+  'zdenek.brestovsky@seznam.cz',
+  'zdenka.stipkova@generaliceska.cz',
+  'zina.cihalova@seznam.cz',
+  'zuz.han@centrum.cz',
+  'zuzana.petrikova@oetker.com',
+  'zuzanagadasova@seznam.cz',
+];
+
+const ADMINS = ['jan.metlicky@gmail.com', 'adela@essenceforlife.cz', 'darja@essenceforlife.cz'];
+
+function isEFLClient(email) {
+  return EFL_CLIENTS.includes(email.toLowerCase().trim());
+}
+
+function isAdmin(email) {
+  return ADMINS.includes(email.toLowerCase().trim());
+}
+
+// ── CESTY KLIENTŮ — předvyplněná mapa ──────────────────────────────────────
+const CLIENT_TRIPS = {
+  "adelka.egerova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "bartoskova@horejsek.cz": [{"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "alabra@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "stuchalovaa@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "kotrnochova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "mddr.denti.sta@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "cenknerova5@gmail.com": [{"name": "Zanzibar", "country": "Tanzanie", "lat": -6.16, "lng": 39.2}, {"name": "Mauricius", "country": "Mauricius", "lat": -20.35, "lng": 57.55}],
+  "andreazlatohlavkova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "anetkaa.kubakova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "aachsova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "anickajurajdova@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "l.bittnerova70@gmail.com": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "bbrestovska@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "b.kozic@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "dagmarab@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "dasa.houdkova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "dasahrus@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "danacajkova.louny@seznam.cz": [{"name": "Mauricius", "country": "Mauricius", "lat": -20.35, "lng": 57.55}],
+  "dana.hochmannova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "chmelarova@fnpz.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "danapincova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "dana.pruhova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "danielasch@seznam.cz": [{"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "danielacizecek@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "dseckarova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "dadis.z@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "diana.valeckova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "dominika.peroutkova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "elentrbolova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "elenalachmanova@centrum.cz": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "trabe@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "evka.z@post.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "kalinova-e@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "eva.kneslova@seznam.cz": [{"name": "Albánie", "country": "Albánie", "lat": 41.15, "lng": 20.17}],
+  "eva.pokornych@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "evaschreierova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "gabika76@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "gabriela.skamenova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "gabrielachropuvkova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "gabina.jalow@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "fantovah@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "foha1@email.cz": [{"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "hanahanzlickova@centrum.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "krcalovahana@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "butikmon69@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "k.hanny@centrum.cz": [{"name": "Zanzibar", "country": "Tanzanie", "lat": -6.16, "lng": 39.2}, {"name": "Mauricius", "country": "Mauricius", "lat": -20.35, "lng": 57.55}],
+  "hannah.lih@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hana.linek@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "hanamrkackova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "hankasandova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "hann.ka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hankahalasova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "helena.effenbergerova@seznam.cz": [{"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "merit@centrum.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "h.sperlingova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "i.step@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "jarkahruba@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "r.tizkova@spectech.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "sildu140@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "nektarinka.i@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "irena.fiserova@centrum.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "ijanickova@post.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "iva.strouskova@seznam.cz": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "ivasipova@email.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "kovarska@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "ivana.pichnarcikova@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Albánie", "country": "Albánie", "lat": 41.15, "lng": 20.17}],
+  "ivanatrajerova@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "novackovai@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hanzlikova-iveta@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "jana.bloeslova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "bodyna2@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "janinauslunce@sesnam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "janahrabovsk@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "hubackova41@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "sadilkova.jana1@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "jananemeckova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "rolova.jana@post.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "jana.rysankova@domovterezin.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "tichajanina27.08@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "vanurova.jana@seznam.cz": [{"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "janavrbca@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "jana@jh-comp.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "jarmila.leinova@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "stancl.jaroslav@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "jarka.davidova@centrum.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "chvalova@email.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "jindra.bauerova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "hamanova.v@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "jiri.duchac@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "dzitka1@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "janouskovajitka01@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "macku.jitka@email.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "mrazkova.jitka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "jineli@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "jratajova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "rada.jitka@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "jitka.stein@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "jolana_vaneckova@centrum.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "josef.landa@post.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "julierytirova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "1cejkovakamila@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "k.horynova@atlas.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "kamila.lac@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "mudr.malacova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "karelstejskal@email.cz": [{"name": "Thajsko", "country": "Thajsko", "lat": 15.87, "lng": 100.99}, {"name": "Koh Lanta", "country": "Thajsko", "lat": 7.63, "lng": 99.04}],
+  "karla.maresova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "ptacnikovakarla@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "kstudnickova@email.cz": [{"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "kacaba.elza@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "katerina.kozicova@gmail.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "k.lorencova@gmail.com": [{"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "kackastuchlik@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "kata.skopkova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "vybiralovak@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "klara.dlouha991@gmail.com": [{"name": "Albánie", "country": "Albánie", "lat": 41.15, "lng": 20.17}],
+  "klara.gasserova@centrum.cz": [{"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "ing.klara.nova@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "chotenovska@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "ladislava.bardosova@re-max.cz": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "crazybeni@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "lenka0311@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "lenkahrazdirova@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "lenka.hrnecek@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "kovarikova354@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "matouskoval@email.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "lenka.peroutkova63@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}, {"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "lenka.prosecka@ppevents.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "leona.stepanikova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "libusebruncvikova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "libuseknapova@centrum.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "libuse.tranova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "lubomir.cervinsky@raeder-falge.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "lucie.andrlikova@idemia.com": [{"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "luciecapek@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "lucahvezdova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "matusovalucie1@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "lucieslivka@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "lida.kadlec@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "milerova@alfaarena.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "spacek@l2s.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "magdikb@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "magdalipsova@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "info@akpp.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "rasmaja@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "magda.radostova@gmail.com": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "marcelabalkova@sntcz.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "postacka.marse@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "marcelavoz@email.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "strbianka@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "marieholovska@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "vcelkamajka1@seznam.cz": [{"name": "Albánie", "country": "Albánie", "lat": 41.15, "lng": 20.17}],
+  "vojtkova.m1@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "marketa.hejnova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "marketa.prochy@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "marketa.tulackova@gmail.com": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "khaki70@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "info@marta.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "smejkal.zednik@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "gasparovic.martina@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "slovakova.martina@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "martina.lomberska@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "stredohori.renn@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "slovakovama@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "info@volumen.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "wehrichova.martina@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}, {"name": "Albánie", "country": "Albánie", "lat": 41.15, "lng": 20.17}],
+  "zalesakova.m@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "martinazim@hotmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "eva.chvalovska@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "kroupa969@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Nusa Penida", "country": "Indonésie", "lat": -8.73, "lng": 115.54}],
+  "michaela.kaliankova@mze.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "smolakova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "kratochvil.drom@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "mhdomu@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "rychovam@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "ucimi@seznam.cz": [{"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "m.r.zizkova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "mirka.bartova@centrum.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "mirinovakova@outlook.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "monika.lulisova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "hofmannova.monika@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "monika.cs@centrum.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}],
+  "kramplova.monika@gmail.com": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "moccam@seznam.cz": [{"name": "Albánie", "country": "Albánie", "lat": 41.15, "lng": 20.17}],
+  "magerova.monika@gmail.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "nada.kahounova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "machackova@avalon.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "o.albrechtova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "patricieholasova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "pavla.matyasova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "pavla.stejskal@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "pavlina.sandrova@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "pa.skulinova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "motycka.petr@centrum.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Jáva", "country": "Indonésie", "lat": -7.61, "lng": 110.01}],
+  "petrahudeckova@icloud.com": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "machichi@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}, {"name": "Jordánsko", "country": "Jordánsko", "lat": 30.59, "lng": 36.24}],
+  "kucerova_petra@seznam.cz": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "petra.schleissova@centrum.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "vera.plskova@email.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "renata.jamy@seznam.cz": [{"name": "Albánie", "country": "Albánie", "lat": 41.15, "lng": 20.17}],
+  "r.votrubova@volny.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "rb@mokaflor.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "romanahruskova69@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "ruza.skamenova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "sabinamachacek@gmail.com": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "jitkaslovakova@seznam.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "dornova.s@email.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "sylva.pulkova@emma.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "leitlova.sarka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}, {"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "sarka.vodolanova@centrum.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "v.tatana@seznam.cz": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "tereza.kratochvilova9@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "vera.breckova@post.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "horcickova@vhquality.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "verkamalerova@seznam.cz": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Nusa Penida", "country": "Indonésie", "lat": -8.73, "lng": 115.54}],
+  "vfijala@gmail.com": [{"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}],
+  "info@prolepsizivot.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "zdenek.brestovsky@seznam.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "zboranova@seznam.cz": [{"name": "Mallorca", "country": "Španělsko", "lat": 39.7, "lng": 2.98}],
+  "kahounovazdenka@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "z.rampirova@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}, {"name": "Bali", "country": "Indonésie", "lat": -8.34, "lng": 115.09}, {"name": "Gili", "country": "Indonésie", "lat": -8.35, "lng": 116.04}, {"name": "Vietnam", "country": "Vietnam", "lat": 14.06, "lng": 108.27}],
+  "zdenka.stipkova@generaliceska.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "krasnejsi@email.cz": [{"name": "Keňa", "country": "Keňa", "lat": -0.02, "lng": 37.91}],
+  "zina.cihalova@seznam.cz": [{"name": "Malta", "country": "Malta", "lat": 35.9, "lng": 14.51}],
+  "bebe27@centrum.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "zuzanagadasova@seznam.cz": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "hrdlickova.zuz@seznam.cz": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+  "zuzana.petrikova@oetker.com": [{"name": "Ischia", "country": "Itálie", "lat": 40.73, "lng": 13.9}],
+  "surkova@ezh-as.cz": [{"name": "Azory", "country": "Portugalsko", "lat": 37.74, "lng": -25.67}],
+  "zannat83@gmail.com": [{"name": "Madeira", "country": "Portugalsko", "lat": 32.76, "lng": -16.95}],
+};
+
+function getClientTrips(email) {
+  return CLIENT_TRIPS[email.toLowerCase().trim()] || [];
+}
+
+// ── STAV APLIKACE ───────────────────────────────────────────────────────────
+const COLORS = ['#2A9CA0','#E8773A','#264653','#E9C46A','#6D6875','#457B9D','#2A9D8F'];
+const MILESTONE = 5;
+let currentUser = null;
+let allIntents = [];
+let _nameModalResolve = null; // pro async name modal
+
+function askNameModal() {
+  return new Promise(resolve => {
+    _nameModalResolve = resolve;
+    const overlay = document.getElementById('name-modal-overlay');
+    const input = document.getElementById('name-modal-input');
+    const errEl = document.getElementById('name-modal-error');
+    input.value = '';
+    errEl.style.display = 'none';
+    overlay.style.display = 'flex';
+    setTimeout(() => input.focus(), 100);
+    // Enter key
+    input.onkeydown = (e) => { if (e.key === 'Enter') submitNameModal(); };
+  });
+}
+
+function submitNameModal() {
+  const input = document.getElementById('name-modal-input');
+  const errEl = document.getElementById('name-modal-error');
+  const val = (input.value || '').trim();
+  if (val.length < 2) {
+    errEl.style.display = 'block';
+    input.style.borderColor = '#e57373';
+    return;
+  }
+  document.getElementById('name-modal-overlay').style.display = 'none';
+  if (_nameModalResolve) { _nameModalResolve(val); _nameModalResolve = null; }
+}
+let myInterests = new Set();
+let myLikes = new Set();
+let activeFilter = 'vse';
+let mineTab = 'my';
+
+// ── LOGIN ───────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const errEl = document.getElementById('login-error');
+  const okEl = document.getElementById('login-success');
+
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Vyplň prosím své jméno.'; errEl.style.display = 'block'; return; }
+  if (!email || !email.includes('@')) { errEl.textContent = 'Zadej platnou emailovou adresu.'; errEl.style.display = 'block'; return; }
+  const gdpr = document.getElementById('login-gdpr')?.checked;
+  if (!gdpr) { errEl.textContent = 'Pro vstup je nutný souhlas se zpracováním osobních údajů.'; errEl.style.display = 'block'; return; }
+
+  const source = document.getElementById('login-source')?.value.trim() || '';
+  const verified = isEFLClient(email);
+  const admin = ADMINS.includes(email.toLowerCase().trim());
+
+  // Ulož pending data pro po-verifikaci
+  localStorage.setItem('efl_pending_name', name);
+  localStorage.setItem('efl_pending_source', source);
+
+  // Pošli magic link
+  const btnEl = document.querySelector('.btn-login');
+  btnEl.textContent = 'Odesílám…'; btnEl.disabled = true;
+
+  const { error: otpError } = await db.auth.signInWithOtp({
+    email,
+    options: {
+      emailRedirectTo: window.location.href,
+      data: { name, source }
+    }
+  });
+
+  btnEl.textContent = 'Vstoupit do komunity →'; btnEl.disabled = false;
+
+  if (otpError) {
+    console.error('[EFL] OTP error:', otpError);
+    let errMsg = 'Nepodařilo se odeslat email. ';
+    if (otpError.message?.includes('rate') || otpError.status === 429) {
+      errMsg += 'Příliš mnoho pokusů — počkej chvilku a zkus to znovu.';
+    } else if (otpError.message?.includes('not authorized') || otpError.message?.includes('Signups not allowed')) {
+      errMsg += 'Registrace je dočasně nedostupná.';
+    } else {
+      errMsg += 'Zkus to znovu. (' + (otpError.message || 'neznámá chyba') + ')';
+    }
+    errEl.textContent = errMsg;
+    errEl.style.display = 'block'; return;
+  }
+
+  const okEl2 = document.getElementById('login-success');
+  okEl2.innerHTML = '📧 <strong>Zkontroluj email!</strong><br>Poslali jsme ověřovací odkaz na <strong>' + email + '</strong>. Klikni na něj a vstoupíš do komunity.';
+  okEl2.style.display = 'block';
+  btnEl.style.display = 'none';
+
+  // Předvyplnit mapu cestami klienta
+  const clientTrips = getClientTrips(email);
+  if (clientTrips.length > 0) {
+    clientTrips.forEach(dest => {
+      if (!places.efl.find(p => p.name === dest.name)) {
+        places.efl.push(dest);
+      }
+    });
+    localStorage.setItem('efl_map_' + email, JSON.stringify(clientTrips));
+  }
+
+  await loadIntents();
+  await loadMyActivity();
+  if (admin) {
+    showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
+    document.getElementById('admin-nav-btn').style.display = 'block';
+    const mmAdmin = document.getElementById('mm-admin');
+    if (mmAdmin) mmAdmin.style.display = 'block';
+  }
+  else if (verified && clientTrips.length > 0) showToast(`✅ Vítej zpět! Našli jsme tvoje ${clientTrips.length} cest${clientTrips.length > 4 ? 'í' : clientTrips.length > 1 ? 'y' : 'u'} s Essence for Life na mapě 🗺`);
+  else if (verified) showToast('✅ Přihlášen jako ověřený klient Essence for Life!');
+  else showToast('🌍 Vítej v komunitě!');
+
+  // Zobrazit FAB na mobilu pro všechny přihlášené
+  if (window.innerWidth <= 600) {
+    const fab = document.getElementById('fab-btn');
+    if (fab) fab.style.display = 'flex';
+  }
+
+  // Zobrazit ebook banner jen ověřeným EFL klientům
+  if (!admin && verified) setTimeout(showEbook, 2000);
+}
+
+function deleteMyAccount() {
+  if (!currentUser) return;
+  const confirmed = confirm('Opravdu chceš smazat svůj účet? Tato akce je nevratná — odstraní všechna tvoje data, sny a komentáře.');
+  if (!confirmed) return;
+  (async () => {
+    try {
+      const uid = currentUser.id;
+      const email = currentUser.email;
+      // Smaž všechna data uživatele
+      await db.from('likes').delete().eq('user_id', uid);
+      await db.from('interests').delete().eq('user_id', uid);
+      await db.from('comments').delete().eq('user_id', uid);
+      await db.from('intents').delete().eq('user_id', uid);
+      await db.from('users').delete().eq('id', uid);
+      // Odhlásit
+      await db.auth.signOut();
+      localStorage.removeItem('efl_user');
+      localStorage.removeItem('efl_map_' + email);
+      currentUser = null;
+      document.getElementById('profile-modal').classList.remove('open');
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('login-name').value = '';
+      document.getElementById('login-email').value = '';
+      showToast('Účet byl smazán. Na shledanou!');
+    } catch(e) {
+      showToast('Chyba: kontaktuj info@essenceforlife.cz');
+    }
+  })();
+}
+
+function doLogout() {
+  localStorage.removeItem('efl_user');
+  currentUser = null;
+  closeProfile();
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-email').value = '';
+}
+
+function updateUserUI() {
+  if (!currentUser) return;
+  const parts = currentUser.name.trim().split(' ');
+  const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+  document.getElementById('nav-avatar').textContent = ini;
+  document.getElementById('nav-name').textContent = (currentUser.is_admin === true ? '👑 ' : '') + parts[0] + (parts[1] ? ' ' + parts[1][0] + '.' : '');
+  document.getElementById('modal-avatar').textContent = ini;
+  document.getElementById('modal-name').textContent = currentUser.name;
+  document.getElementById('pf-name').value = currentUser.name || '';
+  document.getElementById('pf-city').value = currentUser.city || '';
+  document.getElementById('pf-style').value = currentUser.travel_style || '';
+  document.getElementById('pf-bio').value = currentUser.bio || '';
+  const adminBadge = currentUser.is_admin ? ' · 👑 Admin' : '';
+  const adminLabel = currentUser.is_admin === true;
+  document.getElementById('modal-sub').textContent = adminLabel ? '👑 Administrátor Essence for Life' : currentUser.verified ? '✅ Ověřený klient Essence for Life' : '🌍 Člen komunity';
+}
+
+// ── NAČTENÍ DAT ─────────────────────────────────────────────────────────────
+async function loadIntents() {
+  const { data, error } = await db
+    .from('intents')
+    .select(`*, users(name, verified)`)
+    .order('created_at', { ascending: false });
+
+  if (error) { console.error(error); }
+  // Zobrazit jen reálná data
+  allIntents = (data || []);
+  renderFeed();
+}
+
+async function loadMyActivity() {
+  if (!currentUser) return;
+
+  const { data: interests } = await db.from('interests').select('intent_id').eq('user_id', currentUser.id);
+  const { data: likes } = await db.from('likes').select('intent_id').eq('user_id', currentUser.id);
+  const { data: comments } = await db.from('comments').select('id').eq('user_id', currentUser.id);
+
+  myInterests = new Set((interests || []).map(i => i.intent_id));
+  myLikes = new Set((likes || []).map(l => l.intent_id));
+
+  document.getElementById('my-posts-count').textContent = allIntents.filter(i => i.user_id === currentUser.id).length;
+  document.getElementById('my-interest-count').textContent = myInterests.size;
+  document.getElementById('my-liked-count').textContent = myLikes.size;
+  document.getElementById('my-comment-count').textContent = (comments || []).length;
+  document.getElementById('ps-intents').textContent = allIntents.filter(i => i.user_id === currentUser.id).length;
+  document.getElementById('ps-interest').textContent = myInterests.size;
+  document.getElementById('ps-liked').textContent = myLikes.size;
+}
+
+// ── RENDER FEED ─────────────────────────────────────────────────────────────
+async function getInterestCounts() {
+  const { data } = await db.from('interests').select('intent_id');
+  const counts = {};
+  (data || []).forEach(r => { counts[r.intent_id] = (counts[r.intent_id] || 0) + 1; });
+  return counts;
+}
+
+async function getCommentCounts() {
+  const { data } = await db.from('comments').select('intent_id');
+  const counts = {};
+  (data || []).forEach(r => { counts[r.intent_id] = (counts[r.intent_id] || 0) + 1; });
+  return counts;
+}
+
+async function renderFeed() {
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '<div class="loading"><span class="spinner"></span>Načítám…</div>';
+
+  const [interestCounts, commentCounts] = await Promise.all([getInterestCounts(), getCommentCounts()]);
+
+  let filtered = allIntents.filter(i => {
+    if (activeFilter === 'partner') return i.looking_for_partner;
+    if (activeFilter === 'oblibene') return myLikes.has(i.id);
+    return true;
+  });
+
+  if (!filtered.length) {
+    feed.innerHTML = `<div class="empty-state"><div class="es-icon">✈️</div><h3>Žádné sny</h3><p>Zatím tu nic není — buď první!</p></div>`;
+    return;
+  }
+
+  feed.innerHTML = '';
+  filtered.forEach(intent => {
+    const cnt = interestCounts[intent.id] || 0;
+    const commentCnt = commentCounts[intent.id] || 0;
+    const milestone = cnt >= MILESTONE;
+    const userName = sanitize(intent.users?.name || 'Anonym');
+    const verified = intent.users?.verified;
+    const parts = userName.trim().split(' ');
+    const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    const colorIdx = Math.abs(userName.charCodeAt(0)) % COLORS.length;
+    const timeAgo = formatTime(intent.created_at);
+    const isInterested = myInterests.has(intent.id);
+    const isLiked = myLikes.has(intent.id);
+    const isAdmin = currentUser && ADMINS.includes((currentUser.email||'').toLowerCase().trim());
+    const isOwner = currentUser && intent.user_id && (intent.user_id === currentUser.id || intent.user_id === currentUser.user_id);
+    const canDelete = isAdmin || isOwner;
+    const deleteBtn = canDelete ? '<button class="action-btn" onclick="deleteIntent(&#39;' + intent.id + '&#39;)" style="color:#e57373;border-color:#e57373">🗑️</button>' : '';
+
+    feed.innerHTML += `<div class="intent-card">
+      <div class="intent-header">
+        <div class="intent-who">
+          <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
+          <div>
+            <div class="intent-name">${userName}${verified ? '<span class="user-badge-inline verified">✅ Essence for Life</span>' : ''}</div>
+            <div class="intent-time">${timeAgo}</div>
+          </div>
+        </div>
+        <div class="destination-badge">✈ ${sanitize(intent.destination)}</div>
+      </div>
+      <div class="intent-meta">
+        ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
+        ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
+        ${milestone ? `<span class="milestone-badge">🔥 ${cnt} zájemců</span>` : ''}
+      </div>
+      <div class="intent-body">${sanitize(intent.description || '')}</div>
+      <div class="intent-actions">
+        <button class="action-btn ${isInterested ? 'interested' : ''}" onclick="toggleInterest('${intent.id}', this)">${isInterested ? '✓ Mám zájem' : '✋ Mám zájem'}</button>
+        <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${intent.id}', this)">${isLiked ? '❤️' : '🤍'}</button>
+        <button class="action-btn" onclick="toggleComments('${intent.id}')">💬 ${commentCnt}</button>
+        <button class="action-btn" onclick="shareIntent('${intent.id}', '${intent.destination}')">🔗</button>
+        ${deleteBtn}
+        <div class="interest-count" style="margin-left:auto">${cnt} zájem</div>
+      </div>
+      <div class="comments" id="comments-${intent.id}"></div>
+    </div>`;
+
+  });
+
+  // Onclick na smazat - spustí se AŽ po vykreslení všech karet
+  document.querySelectorAll('.delete-intent-btn').forEach(btn => {
+    const id = btn.getAttribute('data-id');
+    btn.onclick = () => deleteIntent(id);
+  });
+}
+
+async function toggleInterest(intentId, btn) {
+  if (!currentUser) return;
+  if (myInterests.has(intentId)) {
+    await db.from('interests').delete().eq('intent_id', intentId).eq('user_id', currentUser.id);
+    myInterests.delete(intentId);
+    btn.classList.remove('interested');
+    btn.textContent = '✋ Mám zájem';
+  } else {
+    await db.from('interests').insert({ intent_id: intentId, user_id: currentUser.id });
+    myInterests.add(intentId);
+    btn.classList.add('interested');
+    btn.textContent = '✓ Mám zájem';
+
+    // Zkontrolovat milník
+    const { count } = await db.from('interests').select('*', { count: 'exact', head: true }).eq('intent_id', intentId);
+    const intent = allIntents.find(i => i.id === intentId);
+    if (count === MILESTONE && intent) {
+      showToast(`🔥 "${intent.destination}" dosáhl ${MILESTONE} zájemců!`);
+      await sendMilestoneNotification(intent, count);
+    } else {
+      showToast('Zájem zaznamenán!');
+    }
+  }
+  await loadMyActivity();
+}
+
+async function toggleLike(intentId, btn) {
+  if (!currentUser) return;
+  if (myLikes.has(intentId)) {
+    await db.from('likes').delete().eq('intent_id', intentId).eq('user_id', currentUser.id);
+    myLikes.delete(intentId);
+    btn.classList.remove('liked');
+    btn.textContent = '🤍';
+  } else {
+    await db.from('likes').insert({ intent_id: intentId, user_id: currentUser.id });
+    myLikes.add(intentId);
+    btn.classList.add('liked');
+    btn.textContent = '❤️';
+    showToast('Přidáno do oblíbených ❤️');
+  }
+  await loadMyActivity();
+}
+
+async function toggleComments(intentId) {
+  const el = document.getElementById(`comments-${intentId}`);
+  if (el.classList.contains('open')) { el.classList.remove('open'); return; }
+
+  el.classList.add('open');
+  el.innerHTML = '<div class="loading"><span class="spinner"></span></div>';
+
+  const { data } = await db.from('comments').select(`*, users(name, verified)`).eq('intent_id', intentId).order('created_at');
+  const commHtml = (data || []).map(c => {
+    const isMine = currentUser && c.user_id === currentUser.id;
+    const canDelete = isMine || currentUser?.is_admin;
+    return `<div class="comment" id="comment-row-${c.id}">
+      <div class="intent-avatar" style="background:${c.users?.verified ? '#1A6B6E' : COLORS[2]};width:28px;height:28px;font-size:.65rem;flex-shrink:0">
+        ${(c.users?.name || 'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+      </div>
+      <div class="comment-bubble" style="flex:1">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.15rem">
+          <span class="comment-author" style="margin:0">${c.users?.name || 'Anonym'}${c.users?.verified ? ' ✅' : ''}</span>
+          <span style="display:flex;gap:.3rem">
+            ${isMine ? `<button onclick="editComment('${c.id}','${intentId}')" style="background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--muted);padding:0" title="Upravit">✏️</button>` : ''}
+            ${canDelete ? `<button onclick="deleteComment('${c.id}','${intentId}')" style="background:none;border:none;cursor:pointer;font-size:.72rem;color:var(--muted);padding:0" title="Smazat">🗑️</button>` : ''}
+          </span>
+        </div>
+        <div id="comment-text-${c.id}">${c.text}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `${commHtml}
+    <div class="comment-input-row">
+      <input type="text" placeholder="Přidat komentář…" id="cinput-${intentId}" onkeydown="if(event.key==='Enter')addComment('${intentId}')"/>
+      <button onclick="addComment('${intentId}')">→</button>
+    </div>`;
+}
+
+async function addComment(intentId) {
+  if (!currentUser) return;
+  const inp = document.getElementById(`cinput-${intentId}`);
+  const text = inp.value.trim(); if (!text) return;
+
+  // Rate limiting: max 10 komentářů za hodinu
+  const sinceHour = new Date(Date.now() - 60*60*1000).toISOString();
+  const { count: commentCount } = await db.from('comments')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', currentUser.id)
+    .gte('created_at', sinceHour);
+  if (commentCount >= 10) {
+    showToast('⏳ Maximálně 10 komentářů za hodinu.');
+    return;
+  }
+
+  await db.from('comments').insert({ intent_id: intentId, user_id: currentUser.id, text });
+  showToast('Komentář přidán');
+  await toggleComments(intentId);
+  await toggleComments(intentId);
+}
+
+function filterIntents(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('#community-section .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderFeed();
+}
+
+function shareIntent(id, dest) {
+  navigator.clipboard.writeText(window.location.href + '?intent=' + id).catch(() => {});
+  showToast(`Odkaz na "${dest}" zkopírován 🔗`);
+}
+
+async function postIntent() {
+  if (!currentUser || !currentUser.id) { showToast('Nejdříve se přihlas'); return; }
+  const dest = document.getElementById('new-dest').value.trim();
+  const date = document.getElementById('new-date').value.trim();
+  const desc = document.getElementById('new-desc').value.trim();
+  const partner = document.getElementById('partner-toggle').classList.contains('on');
+  if (!dest || !desc) { showToast('Vyplň prosím destinaci a popis'); return; }
+
+  // Rate limiting: max 3 sny za 24 hodin
+  const since = new Date(Date.now() - 24*60*60*1000).toISOString();
+  const { count } = await db.from('intents')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', currentUser.id)
+    .gte('created_at', since);
+  if (count >= 3) {
+    showToast('⏳ Maximálně 3 sny za 24 hodin. Zkus to zítra!');
+    return;
+  }
+
+  const { error } = await db.from('intents').insert({
+    user_id: currentUser.id,
+    destination: dest,
+    travel_date: date || null,
+    description: desc,
+    looking_for_partner: partner
+  });
+
+  if (error) { showToast('Chyba při ukládání. Zkus to znovu.'); return; }
+
+  document.getElementById('new-dest').value = '';
+  document.getElementById('new-date').value = '';
+  document.getElementById('new-desc').value = '';
+  document.getElementById('partner-toggle').classList.remove('on');
+
+  await loadIntents();
+  await loadMyActivity();
+  showToast('Sen sdílen! ✈️');
+
+  // Notifikace adminům o novém snu
+  const newIntent = { destination: dest, travel_date: date, description: desc };
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Komunita Essence for Life <komunita@essenceforlife.cz>',
+        to: ADMIN_EMAILS,
+        subject: `✈️ Nový sen v komunitě: ${dest}`,
+        html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:2rem">
+          <h2 style="color:#1A6B6E">✈️ Nový cestovatelský sen</h2>
+          <p><strong>${currentUser.name}</strong> sdílel/a nový sen:</p>
+          <div style="background:#f9f9f9;border:1px solid #e2eff0;border-radius:8px;padding:1rem;margin:1rem 0">
+            <h3 style="color:#1A6B6E;margin:0 0 .5rem">${dest}</h3>
+            ${date ? `<p style="color:#6B9497;font-size:.85rem;margin:.25rem 0">📅 ${date}</p>` : ''}
+            <p style="color:#1C3A3C;font-size:.9rem;margin:.5rem 0 0">${desc}</p>
+          </div>
+          <a href="https://janmetlicky-prog.github.io/efl-komunita/" style="display:inline-block;background:#1A6B6E;color:white;padding:.75rem 1.5rem;border-radius:8px;text-decoration:none">Otevřít komunitu →</a>
+        </div>`
+      })
+    });
+  } catch(e) { console.error('Notifikace selhala:', e); }
+}
+
+// ── MOJE ZÁLOŽKA ─────────────────────────────────────────────────────────────
+async function renderMineFeed() {
+  const feed = document.getElementById('mine-feed');
+  const [interestCounts, commentCounts] = await Promise.all([getInterestCounts(), getCommentCounts()]);
+
+  let filtered = mineTab === 'my' ? allIntents.filter(i => i.user_id === currentUser?.id)
+    : mineTab === 'interest' ? allIntents.filter(i => myInterests.has(i.id))
+    : allIntents.filter(i => myLikes.has(i.id));
+
+  const msgs = { my: 'Ještě jsi nesdílela žádný sen.', interest: 'Zatím nemáš označený zájem.', liked: 'Zatím nemáš žádné oblíbené.' };
+  const icons = { my: '📌', interest: '✋', liked: '❤️' };
+
+  if (!filtered.length) {
+    feed.innerHTML = `<div class="empty-state"><div class="es-icon">${icons[mineTab]}</div><h3>Nic tu není</h3><p>${msgs[mineTab]}</p></div>`;
+    return;
+  }
+  feed.innerHTML = '';
+  filtered.forEach(intent => {
+    const cnt = interestCounts[intent.id] || 0;
+    const commentCnt = commentCounts[intent.id] || 0;
+    const userName = intent.users?.name || currentUser?.name || 'Ty';
+    const parts = userName.trim().split(' ');
+    const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    const colorIdx = Math.abs(userName.charCodeAt(0)) % COLORS.length;
+    feed.innerHTML += `<div class="intent-card">
+      <div class="intent-header">
+        <div class="intent-who">
+          <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
+          <div><div class="intent-name">${userName}</div><div class="intent-time">${formatTime(intent.created_at)}</div></div>
+        </div>
+        <div class="destination-badge">✈ ${sanitize(intent.destination)}</div>
+      </div>
+      <div class="intent-meta">
+        ${intent.travel_date ? `<span class="meta-chip">📅 ${intent.travel_date}</span>` : ''}
+        ${intent.looking_for_partner ? `<span class="meta-chip partner">👥 Hledá parťáka</span>` : ''}
+      </div>
+      <div class="intent-body">${sanitize(intent.description || '')}</div>
+      <div class="intent-actions">
+        <div class="interest-count">${cnt} zájem · 💬 ${commentCnt}</div>
+        <button class="action-btn delete-intent-btn" data-id="${intent.id}" style="color:#e57373;border-color:#e57373;margin-left:auto">🗑️ Smazat</button>
+      </div>
+    </div>`;
+  });
+
+  document.querySelectorAll(".delete-intent-btn").forEach(function(b){var id=b.getAttribute("data-id");b.onclick=function(){deleteIntent(id);};});
+}
+
+function switchMineTab(tab, btn) {
+  mineTab = tab;
+  document.querySelectorAll('.mine-tabs .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderMineFeed();
+}
+
+// ── PROFIL ───────────────────────────────────────────────────────────────────
+function openProfile() {
+  document.getElementById('profile-modal').classList.add('open');
+  const ebookBtn = document.getElementById('profile-ebook-btn');
+  if (ebookBtn) ebookBtn.style.display = currentUser?.verified ? 'flex' : 'none';
+}
+function closeProfile() { document.getElementById('profile-modal').classList.remove('open'); }
+
+async function saveProfile() {
+  if (!currentUser) return;
+  const updates = {
+    name: document.getElementById('pf-name').value || currentUser.name,
+    city: document.getElementById('pf-city').value,
+    travel_style: document.getElementById('pf-style').value,
+    bio: document.getElementById('pf-bio').value,
+  };
+  const { error } = await db.from('users').update(updates).eq('id', currentUser.id);
+  if (error) { showToast('Chyba při ukládání'); return; }
+  currentUser = { ...currentUser, ...updates };
+  localStorage.setItem('efl_user', JSON.stringify(currentUser));
+  updateUserUI();
+  closeProfile();
+  showToast('Profil uložen!');
+}
+
+// ── MAPA ─────────────────────────────────────────────────────────────────────
+const places = {
+  efl: [
+    { name:'Kérala', country:'Indie', lat:10.85, lng:76.27 },
+    { name:'Marakéš', country:'Maroko', lat:31.63, lng:-8.01 },
+    { name:'Chiang Mai', country:'Thajsko', lat:18.79, lng:98.98 },
+    { name:'Cusco', country:'Peru', lat:-13.53, lng:-71.97 },
+  ],
+  personal: [
+    { name:'Kyoto', country:'Japonsko', lat:35.01, lng:135.76 },
+    { name:'Reykjavík', country:'Island', lat:64.14, lng:-21.89 },
+    { name:'Řím', country:'Itálie', lat:41.90, lng:12.49 },
+    { name:'Amalfi', country:'Itálie', lat:40.63, lng:14.60 },
+    { name:'Dolomity', country:'Itálie', lat:46.41, lng:11.84 },
+    { name:'Santorini', country:'Řecko', lat:36.39, lng:25.46 },
+    { name:'Bergen', country:'Norsko', lat:60.39, lng:5.32 },
+  ]
+};
+let activeTab = 'personal', projection, gMap, dotsGroup, svgMap;
+
+async function initMap() {
+  const container = document.querySelector('.map-container');
+  const W = container.clientWidth || 760;
+  const H = Math.round(W * 0.52);
+  const svg = d3.select('#world-map').attr('width', W).attr('height', H).attr('viewBox', `0 0 ${W} ${H}`);
+  svg.append('rect').attr('width', W).attr('height', H).attr('fill', '#D8EFF2');
+  projection = d3.geoNaturalEarth1().scale(W / 6.2).translate([W / 2, H / 2]);
+  const pathFn = d3.geoPath().projection(projection);
+  const g = svg.append('g'); gMap = g;
+  try {
+    const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+    g.selectAll('path').data(topojson.feature(world, world.objects.countries).features)
+      .enter().append('path').attr('d', pathFn).attr('fill', '#EEF7F8').attr('stroke', '#C0DDE0').attr('stroke-width', 0.4);
+  } catch(e) {}
+  svg.call(d3.zoom().scaleExtent([1, 10]).on('zoom', e => g.attr('transform', e.transform)));
+  svgMap = svg;
+  renderDots(); renderPlaceList(); updateMapStats();
+}
+
+function renderDots() {
+  if (!svgMap) return;
+  if (dotsGroup) dotsGroup.remove();
+  dotsGroup = gMap.append('g');
+  const tip = document.getElementById('map-tooltip');
+  const cont = document.querySelector('.map-container');
+  places.efl.forEach(p => {
+    if (!p.lat && !p.lng) return;
+    const [x, y] = projection([p.lng, p.lat]);
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 14).attr('fill', 'rgba(232,119,58,.15)');
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 9).attr('fill', 'rgba(232,119,58,.25)');
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 7)
+      .attr('fill', '#E8773A').attr('stroke', 'white').attr('stroke-width', 2).style('cursor', 'pointer')
+      .on('mouseover', function(ev) { tip.style.display='block'; tip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''} · s Essence for Life</small>`; d3.select(this).attr('r', 10); })
+      .on('mousemove', function(ev) { const r=cont.getBoundingClientRect(); tip.style.left=(ev.clientX-r.left+14)+'px'; tip.style.top=(ev.clientY-r.top-42)+'px'; })
+      .on('mouseout', function() { tip.style.display='none'; d3.select(this).attr('r', 7); });
+  });
+  places.personal.forEach(p => {
+    if (!p.lat && !p.lng) return;
+    const [x, y] = projection([p.lng, p.lat]);
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 9).attr('fill', 'rgba(26,107,110,.15)');
+    dotsGroup.append('circle').attr('cx', x).attr('cy', y).attr('r', 5.5)
+      .attr('fill', '#1A6B6E').attr('stroke', 'white').attr('stroke-width', 1.8).style('cursor', 'pointer')
+      .on('mouseover', function(ev) { tip.style.display='block'; tip.innerHTML=`<strong>${p.name}</strong><small>${p.country||''}</small>`; d3.select(this).attr('r', 8); })
+      .on('mousemove', function(ev) { const r=cont.getBoundingClientRect(); tip.style.left=(ev.clientX-r.left+14)+'px'; tip.style.top=(ev.clientY-r.top-42)+'px'; })
+      .on('mouseout', function() { tip.style.display='none'; d3.select(this).attr('r', 5.5); });
+  });
+}
+
+function renderPlaceList() {
+  const list = document.getElementById('place-list'); list.innerHTML = '';
+  places.efl.forEach((p, i) => { list.innerHTML += `<div class="place-tag efl"><span><span class="place-tag-name">${p.name}</span><span class="place-tag-country">${p.country ? '· ' + p.country : ''}</span></span><button class="remove-tag" onclick="removePlace('efl',${i})">×</button></div>`; });
+  places.personal.forEach((p, i) => { list.innerHTML += `<div class="place-tag personal"><span><span class="place-tag-name">${p.name}</span><span class="place-tag-country">${p.country ? '· ' + p.country : ''}</span></span><button class="remove-tag" onclick="removePlace('personal',${i})">×</button></div>`; });
+}
+
+function updateMapStats() {
+  const all = new Set([...places.efl.map(p=>p.country||p.name), ...places.personal.map(p=>p.country||p.name)]);
+  const cont = new Set();
+  [...places.efl, ...places.personal].forEach(p => {
+    if (!p.lat) return;
+    if (p.lat>35&&p.lng>-30&&p.lng<60) cont.add('EU');
+    else if (p.lat>0&&p.lng>60) cont.add('AS');
+    else if (p.lat<0&&p.lng>60) cont.add('OC');
+    else if (p.lng>-20&&p.lng<55&&p.lat<35) cont.add('AF');
+    else if (p.lng<-30&&p.lat>15) cont.add('NA');
+    else if (p.lng<-30&&p.lat<=15) cont.add('SA');
+  });
+  document.getElementById('efl-count').textContent = places.efl.length;
+  document.getElementById('personal-count').textContent = places.personal.length;
+  document.getElementById('country-count').textContent = all.size;
+  document.getElementById('continent-count').textContent = cont.size;
+}
+
+function selectTab(tab) {
+  activeTab = tab;
+  document.getElementById('tab-personal').classList.toggle('active', tab === 'personal');
+  document.getElementById('tab-efl').classList.toggle('active', tab === 'efl');
+}
+
+async function addPlace() {
+  const pi = document.getElementById('place-input');
+  const ci = document.getElementById('country-input');
+  const name = pi.value.trim(); if (!name) return;
+  const country = ci.value.trim();
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(country ? name+', '+country : name)}&format=json&limit=1`);
+    const data = await res.json();
+    if (data.length > 0) places[activeTab].push({ name, country, lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) });
+    else places[activeTab].push({ name, country, lat: 0, lng: 0 });
+  } catch { places[activeTab].push({ name, country, lat: 0, lng: 0 }); }
+  renderDots(); renderPlaceList(); updateMapStats();
+  pi.value = ''; ci.value = '';
+  showToast(`${name} přidáno na mapu!`);
+}
+
+function removePlace(type, idx) { places[type].splice(idx, 1); renderDots(); renderPlaceList(); updateMapStats(); }
+
+// ── NAVIGACE ──────────────────────────────────────────────────────────────────
+// ── DOPORUČENÍ ────────────────────────────────────────────────────────────────
+
+let recFilter = 'vse';
+let selectedStars = 0;
+
+function setStars(n) {
+  selectedStars = n;
+  document.querySelectorAll('.star-btn').forEach((btn, i) => {
+    btn.classList.toggle('active', i < n);
+  });
+}
+
+function recTypLabel(type) {
+  if (type === 'pobyt_efl') return '🌿 Pobyt s Essence for Life';
+  if (type === 'misto') return '📍 Místo';
+  return '💡 Tip';
+}
+
+function starsHtml(n) {
+  return '★'.repeat(n) + '☆'.repeat(5-n);
+}
+
+async function loadRecs() {
+  const feed = document.getElementById('rec-feed');
+  if (!feed) return;
+  feed.innerHTML = '<div class="loading"><span class="spinner"></span>Načítám doporučení…</div>';
+
+  const { data, error } = await db.from('recommendations')
+    .select('*, users(name, verified)')
+    .order('created_at', { ascending: false });
+
+  renderRecs(data || []);
+}
+
+function renderRecs(data) {
+  const feed = document.getElementById('rec-feed');
+  if (!feed) return;
+
+  const filtered = data.filter(r => recFilter === 'vse' || r.type === recFilter);
+
+  if (!filtered.length) {
+    feed.innerHTML = `<div class="empty-state"><div class="es-icon">⭐</div><h3>Žádná doporučení</h3><p>Buď první kdo se podělí o svůj zážitek!</p></div>`;
+    return;
+  }
+
+  feed.innerHTML = filtered.map(r => {
+    const userName = sanitize(r.users?.name || 'Anonym');
+    const parts = userName.trim().split(' ');
+    const ini = (parts[0][0] + (parts[1] ? parts[1][0] : '')).toUpperCase();
+    const colorIdx = Math.abs(userName.charCodeAt(0)) % COLORS.length;
+    const isMine = currentUser && r.user_id === currentUser.id;
+    const canDelete = isMine || currentUser?.is_admin;
+
+    return `<div class="rec-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem">
+        <div style="display:flex;align-items:center;gap:.75rem">
+          <div class="intent-avatar" style="background:${COLORS[colorIdx]}">${ini}</div>
+          <div>
+            <div class="intent-name">${userName}${r.users?.verified ? ' ✅' : ''}</div>
+            <div class="intent-time">${formatTime(r.created_at)}</div>
+          </div>
+        </div>
+        <span class="rec-type-badge ${r.type}">${recTypLabel(r.type)}</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <strong style="color:var(--teal-dark);font-size:.95rem">${sanitize(r.title)}</strong>
+        <span class="rec-stars" style="color:#E9C46A">${starsHtml(r.stars||0)}</span>
+      </div>
+      <div class="intent-body" style="margin-bottom:.75rem">${sanitize(r.text)}</div>
+      ${canDelete ? `<div style="display:flex;gap:.5rem;padding-top:.6rem;border-top:1px solid var(--border)">
+        ${isMine ? '<button class=\"action-btn\" onclick=\"editRec(this)\" data-rid=\"' + r.id + '\" data-title=\"' + (r.title||'') + '\" data-text=\"' + (r.text||'').replace(/"/g,'&quot;') + '\">✏️ Upravit</button>' : ''}
+        <button class="action-btn" onclick="deleteRec(this)" data-rid="${r.id}">🗑️ Smazat</button>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterRecs(f, btn) {
+  recFilter = f;
+  document.querySelectorAll('#doporuceni-section .filter-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  loadRecs();
+}
+
+async function postRec() {
+  if (!currentUser) return;
+  const title = document.getElementById('rec-title').value.trim();
+  const text = document.getElementById('rec-text').value.trim();
+  const type = document.getElementById('rec-type').value;
+  if (!title || !text) { showToast('Vyplň prosím název a popis'); return; }
+  if (!selectedStars) { showToast('Vyber prosím hodnocení ★'); return; }
+
+  const { error } = await db.from('recommendations').insert({
+    user_id: currentUser.id, title, text, type, stars: selectedStars
+  });
+  if (error) { showToast('Chyba při ukládání'); return; }
+
+  document.getElementById('rec-title').value = '';
+  document.getElementById('rec-text').value = '';
+  selectedStars = 0;
+  document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+  loadRecs();
+  showToast('Doporučení sdíleno! ⭐');
+}
+
+async function editRec(btn) {
+  const id = typeof btn === 'string' ? btn : btn.getAttribute('data-rid');
+  const { data } = await db.from('recommendations').select('*').eq('id', id).single();
+  if (!data) return;
+  document.getElementById('edit-rec-id').value = id;
+  document.getElementById('edit-rec-title').value = data.title || '';
+  document.getElementById('edit-rec-text').value = data.text || '';
+  document.getElementById('edit-rec-modal').style.display = 'flex';
+}
+
+function closeEditRecModal() {
+  document.getElementById('edit-rec-modal').style.display = 'none';
+}
+
+async function saveEditRec() {
+  const id = document.getElementById('edit-rec-id').value;
+  const title = document.getElementById('edit-rec-title').value.trim();
+  const text = document.getElementById('edit-rec-text').value.trim();
+  if (!title || !text) { showToast('Vyplň název i popis'); return; }
+  const { error } = await db.from('recommendations')
+    .update({ title, text })
+    .eq('id', id);
+  if (error) { showToast('Chyba při ukládání'); return; }
+  closeEditRecModal();
+  await loadRecs();
+  showToast('Doporučení upraveno ✏️');
+}
+
+async function deleteRec(btn) {
+  const id = typeof btn === 'string' ? btn : btn.getAttribute('data-rid');
+  if (!confirm('Smazat toto doporučení?')) return;
+  await db.from('recommendations').delete().eq('id', id);
+  await loadRecs();
+  showToast('Doporučení smazáno 🗑️');
+}
+
+// ── ADMIN DASHBOARD ────────────────────────────────────────────────────────
+async function loadAdminDashboard() {
+  if (!currentUser?.is_admin) return;
+
+  // Zobrazit admin tlačítko v nav
+  document.getElementById('admin-nav-btn').style.display = 'block';
+
+  try {
+    // Paralelní načtení všech dat
+    const [usersRes, intentsRes, recsRes, interestsRes] = await Promise.all([
+      db.from('users').select('*').order('created_at', { ascending: false }),
+      db.from('intents').select('*, users(name, verified)').order('created_at', { ascending: false }),
+      db.from('recommendations').select('id'),
+      db.from('interests').select('intent_id, intents(destination)')
+    ]);
+
+    const users = usersRes.data || [];
+    const intents = intentsRes.data || [];
+    const recs = recsRes.data || [];
+    const interests = interestsRes.data || [];
+
+    // STATS
+    document.getElementById('admin-total-users').textContent = users.length;
+    document.getElementById('admin-verified').textContent = users.filter(u => u.verified).length;
+    document.getElementById('admin-intents').textContent = intents.length;
+    document.getElementById('admin-recs').textContent = recs.length;
+
+    // TOP DESTINACE
+    const destCount = {};
+    intents.forEach(i => {
+      const d = i.destination;
+      destCount[d] = (destCount[d] || 0) + 1;
+    });
+    // Přidat zájem
+    interests.forEach(i => {
+      const d = i.intents?.destination;
+      if (d) destCount[d] = (destCount[d] || 0) + 0.5;
+    });
+    const topDests = Object.entries(destCount).sort((a,b) => b[1]-a[1]).slice(0, 6);
+    const maxDest = topDests[0]?.[1] || 1;
+    document.getElementById('admin-top-destinations').innerHTML = topDests.length
+      ? topDests.map(([dest, cnt]) => `
+        <div class="admin-dest-row">
+          <div>
+            <span style="font-weight:500;color:var(--teal-dark)">${dest}</span>
+            <div class="admin-dest-bar" style="width:${Math.round(cnt/maxDest*100)}%;background:var(--teal)"></div>
+          </div>
+          <span style="color:var(--muted);font-size:.78rem">${Math.round(cnt)} zájem</span>
+        </div>`).join('')
+      : '<p style="color:var(--muted);font-size:.85rem">Zatím žádná data</p>';
+
+    // NOVÍ ČLENOVÉ
+    document.getElementById('admin-new-users').innerHTML = users.slice(0, 6).map(u => `
+      <div class="admin-user-row">
+        <div class="intent-avatar" style="background:${u.is_admin?'#1A6B6E':u.verified?'#E8773A':'#6B9497'};width:32px;height:32px;font-size:.72rem;flex-shrink:0">
+          ${(u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:500;color:var(--teal-dark)">${u.name||'—'}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${formatTime(u.created_at)}</div>
+        </div>
+        <span style="font-size:.72rem;padding:.15rem .5rem;border-radius:10px;background:${u.is_admin?'rgba(26,107,110,.1)':u.verified?'rgba(232,119,58,.08)':'rgba(107,148,151,.08)'};color:${u.is_admin?'var(--teal-dark)':u.verified?'#B85A1E':'var(--muted)'}">
+          ${u.is_admin?'👑 Admin':u.verified?'✅ Klient':'🌍 Člen'}
+        </span>
+      </div>`).join('') || '<p style="color:var(--muted);font-size:.85rem">Zatím žádní členové</p>';
+
+    // NEJAKTIVNĚJŠÍ — podle počtu snů
+    const userIntentCount = {};
+    intents.forEach(i => { userIntentCount[i.user_id] = (userIntentCount[i.user_id] || 0) + 1; });
+    const activeUsers = users.filter(u => userIntentCount[u.id]).sort((a,b) => (userIntentCount[b.id]||0)-(userIntentCount[a.id]||0)).slice(0,5);
+    document.getElementById('admin-active-users').innerHTML = activeUsers.length
+      ? activeUsers.map(u => `
+        <div class="admin-user-row">
+          <div class="intent-avatar" style="background:var(--teal);width:32px;height:32px;font-size:.72rem;flex-shrink:0">
+            ${(u.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+          </div>
+          <div style="flex:1;font-weight:500;color:var(--teal-dark)">${u.name||'—'}</div>
+          <span style="color:var(--muted);font-size:.78rem">${userIntentCount[u.id]} snů</span>
+        </div>`).join('')
+      : '<p style="color:var(--muted);font-size:.85rem">Zatím žádná aktivita</p>';
+
+    // POSLEDNÍ SNY
+    document.getElementById('admin-last-intents').innerHTML = intents.slice(0,5).map(i => `
+      <div class="admin-user-row">
+        <div style="flex:1">
+          <div style="font-weight:500;color:var(--teal-dark)">${i.destination}</div>
+          <div style="font-size:.72rem;color:var(--muted)">${i.users?.name||'—'} · ${formatTime(i.created_at)}</div>
+        </div>
+        ${i.looking_for_partner ? '<span style="font-size:.7rem;color:var(--orange)">👥 Parťák</span>' : ''}
+      </div>`).join('') || '<p style="color:var(--muted);font-size:.85rem">Zatím žádné sny</p>';
+
+    // TABULKA VŠECH UŽIVATELŮ
+    const tbody = document.getElementById('admin-users-tbody');
+    const userIntents = {};
+    intents.forEach(i => { userIntents[i.user_id] = (userIntents[i.user_id]||0)+1; });
+    tbody.innerHTML = users.map(u => `
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:.5rem .75rem;font-weight:500;color:var(--teal-dark)">${u.name||'—'}</td>
+        <td style="padding:.5rem .75rem;color:var(--muted);font-size:.78rem">${u.email}</td>
+        <td style="padding:.5rem .75rem">${u.is_admin?'👑 Admin':u.verified?'✅ Klient':'🌍 Člen'}</td>
+        <td style="padding:.5rem .75rem;color:var(--muted);font-size:.78rem">${formatTime(u.created_at)}</td>
+        <td style="padding:.5rem .75rem;text-align:center">${userIntents[u.id]||0}</td>
+        <td style="padding:.5rem .75rem;text-align:center">
+          ${!u.is_admin ? `<button onclick="adminDeleteUser(this)" data-uid="${u.id}" data-email="${u.email}" style="background:#ffebee;border:none;border-radius:6px;padding:.2rem .6rem;cursor:pointer;color:#e57373;font-size:.75rem">Smazat</button>` : ''}
+        </td>
+      </tr>`).join('') || '<tr><td colspan="5" style="padding:1rem;color:var(--muted);text-align:center">Zatím žádní členové</td></tr>';
+
+  } catch(e) {
+    console.error('Admin dashboard error:', e);
+  }
+}
+
+async function adminDeleteUser(btn) {
+  if (!currentUser?.is_admin) return;
+  const userId = btn.getAttribute('data-uid');
+  const email = btn.getAttribute('data-email');
+  const confirmed = confirm('Smazat uzivatele ' + email + '? Odstrani se vsechna jeho data.');
+  if (!confirmed) return;
+  try {
+    await db.from('likes').delete().eq('user_id', userId);
+    await db.from('interests').delete().eq('user_id', userId);
+    await db.from('comments').delete().eq('user_id', userId);
+    await db.from('intents').delete().eq('user_id', userId);
+    await db.from('users').delete().eq('id', userId);
+    showToast('Uživatel ' + email + ' smazán ✅');
+    loadAdminDashboard();
+  } catch(e) {
+    showToast('Chyba při mazání: ' + e.message);
+  }
+}
+
+async function deleteIntent(intentId) {
+  // Nejdřív smazat závislé záznamy (foreign key constraint)
+  await db.from('likes').delete().eq('intent_id', intentId);
+  await db.from('interests').delete().eq('intent_id', intentId);
+  await db.from('comments').delete().eq('intent_id', intentId);
+  // Pak smazat intent
+  const { error } = await db.from('intents').delete().eq('id', intentId);
+  if (error) { showToast('Chyba při mazání'); return; }
+  await loadIntents();
+  await loadMyActivity();
+  showToast('Sen smazán 🗑️');
+}
+
+async function editComment(commentId, intentId) {
+  const textEl = document.getElementById(`comment-text-${commentId}`);
+  const currentText = textEl.textContent;
+  const newText = prompt('Upravit komentář:', currentText);
+  if (!newText || newText === currentText) return;
+  const { error } = await db.from('comments').update({ text: newText }).eq('id', commentId);
+  if (error) { showToast('Chyba při úpravě'); return; }
+  textEl.textContent = newText;
+  showToast('Komentář upraven ✏️');
+}
+
+async function deleteComment(commentId, intentId) {
+  if (!confirm('Smazat tento komentář?')) return;
+  const { error } = await db.from('comments').delete().eq('id', commentId);
+  if (error) { showToast('Chyba při mazání'); return; }
+  document.getElementById(`comment-row-${commentId}`)?.remove();
+  showToast('Komentář smazán 🗑️');
+}
+
+function showSection(name, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(name + '-section').classList.add('active');
+  btn.classList.add('active');
+  currentSection = name;
+  if (name === 'map') setTimeout(() => { if (!svgMap) initMap(); }, 100);
+  if (name === 'mine') renderMineFeed();
+  if (name === 'doporuceni') loadRecs();
+  if (name === 'admin') loadAdminDashboard();
+  // Skrýt FAB na sekcích kde není potřeba
+  const fab = document.getElementById('fab-btn');
+  if (fab && window.innerWidth <= 600) {
+    fab.style.display = (name === 'community' || name === 'doporuceni') ? 'flex' : 'none';
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function formatTime(ts) {
+  if (!ts) return '';
+  const diff = (Date.now() - new Date(ts)) / 1000;
+  if (diff < 60) return 'právě teď';
+  if (diff < 3600) return `před ${Math.floor(diff/60)} min`;
+  if (diff < 86400) return `před ${Math.floor(diff/3600)} hod`;
+  if (diff < 604800) return `před ${Math.floor(diff/86400)} dny`;
+  return new Date(ts).toLocaleDateString('cs-CZ');
+}
+
+// ── HAMBURGER MENU ────────────────────────────────────────────────────────────
+function toggleMobileMenu() {
+  const menu = document.getElementById('mobile-menu');
+  const overlay = document.getElementById('mobile-menu-overlay');
+  const btn = document.getElementById('hamburger-btn');
+  const isOpen = menu.style.display !== 'none';
+  menu.style.display = isOpen ? 'none' : 'block';
+  overlay.style.display = isOpen ? 'none' : 'block';
+  btn.textContent = isOpen ? '☰' : '✕';
+}
+
+function closeMobileMenu() {
+  document.getElementById('mobile-menu').style.display = 'none';
+  document.getElementById('mobile-menu-overlay').style.display = 'none';
+  document.getElementById('hamburger-btn').textContent = '☰';
+}
+
+function initMobileNav() {
+  function applyMobileLayout() {
+    const isMobile = window.innerWidth <= 600;
+    const hamburger = document.getElementById('hamburger-btn');
+    const desktopNav = document.getElementById('desktop-nav');
+    const logoDiv = document.getElementById('logo-div');
+    const logoSub = document.getElementById('logo-sub-text');
+    const navName = document.getElementById('nav-name');
+    const fab = document.getElementById('fab-btn');
+
+    if (isMobile) {
+      hamburger.style.display = 'flex';
+      desktopNav.style.display = 'none';
+      if (logoDiv) logoDiv.style.display = 'none';
+      if (logoSub) logoSub.style.display = 'none';
+      if (navName) navName.style.display = 'none';
+      if (fab) fab.style.display = 'flex';
+      document.body.style.overflowX = 'hidden';
+    } else {
+      hamburger.style.display = 'none';
+      desktopNav.style.display = 'flex';
+      if (logoDiv) logoDiv.style.display = 'block';
+      if (logoSub) logoSub.style.display = 'block';
+      if (navName) navName.style.display = 'inline';
+      if (fab) fab.style.display = 'none';
+    }
+  }
+  applyMobileLayout();
+  window.addEventListener('resize', applyMobileLayout);
+}
+
+window.addEventListener('resize', () => {
+  if (window.innerWidth > 600) closeMobileMenu();
+});
+
+// ── FAB & MODALY ─────────────────────────────────────────────────────────────
+let currentSection = 'community';
+
+function openNewSenModal() {
+  document.getElementById('new-sen-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('mob-new-dest').focus(), 100);
+}
+
+function openNewRecModal() {
+  document.getElementById('new-rec-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('mob-rec-title').focus(), 100);
+}
+
+function closeNewRecModal() {
+  document.getElementById('new-rec-modal').style.display = 'none';
+  document.getElementById('mob-rec-title').value = '';
+  document.getElementById('mob-rec-text').value = '';
+  mobSelectedStars = 0;
+  document.querySelectorAll('.mob-star').forEach(s => s.style.opacity = '.3');
+}
+
+let mobSelectedStars = 0;
+function setMobStars(n) {
+  mobSelectedStars = n;
+  document.querySelectorAll('.mob-star').forEach((s, i) => {
+    s.style.opacity = i < n ? '1' : '.3';
+    s.style.color = i < n ? '#E9C46A' : 'inherit';
+  });
+}
+
+async function postRecMobile() {
+  const title = document.getElementById('mob-rec-title').value.trim();
+  const text = document.getElementById('mob-rec-text').value.trim();
+  const type = document.getElementById('mob-rec-type').value;
+  if (!title || !text) { showToast('Vyplň prosím název a popis'); return; }
+  if (!mobSelectedStars) { showToast('Vyber prosím hodnocení ★'); return; }
+  if (!currentUser) return;
+  const { error } = await db.from('recommendations').insert({
+    user_id: currentUser.id, title, text, type, stars: mobSelectedStars
+  });
+  if (error) { showToast('Chyba při ukládání'); return; }
+  closeNewRecModal();
+  loadRecs();
+  showToast('Doporučení sdíleno! ⭐');
+}
+
+// FAB kontextové tlačítko
+function onFabClick() {
+  if (currentSection === 'doporuceni') openNewRecModal();
+  else openNewSenModal();
+}
+
+function openNewSenModal() {
+  document.getElementById('new-sen-modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('mob-new-dest').focus(), 100);
+}
+
+function closeNewSenModal() {
+  document.getElementById('new-sen-modal').style.display = 'none';
+  document.getElementById('mob-new-dest').value = '';
+  document.getElementById('mob-new-date').value = '';
+  document.getElementById('mob-new-desc').value = '';
+  document.getElementById('mob-partner-toggle').checked = false;
+}
+
+async function postIntentMobile() {
+  const dest = document.getElementById('mob-new-dest').value.trim();
+  const date = document.getElementById('mob-new-date').value.trim();
+  const desc = document.getElementById('mob-new-desc').value.trim();
+  const partner = document.getElementById('mob-partner-toggle').checked;
+  if (!dest || !desc) { showToast('Vyplň prosím destinaci a popis'); return; }
+
+  if (!currentUser || !currentUser.id) { showToast('Nejdříve se přihlas'); return; }
+  const { error } = await db.from('intents').insert({
+    user_id: currentUser.id, destination: dest,
+    travel_date: date || null, description: desc, looking_for_partner: partner
+  });
+  if (error) { showToast('Chyba při ukládání'); return; }
+  closeNewSenModal();
+  await loadIntents();
+  await loadMyActivity();
+  showToast('Sen sdílen! ✈️');
+
+  // Notifikace
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method:'POST',
+      headers:{'Authorization':`Bearer ${RESEND_KEY}`,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        from:'Komunita Essence for Life <komunita@essenceforlife.cz>',
+        to:ADMIN_EMAILS,
+        subject:`✈️ Nový sen v komunitě: ${dest}`,
+        html:`<p><strong>${currentUser.name}</strong> sdílel/a nový sen: <strong>${dest}</strong></p>${date?`<p>Termín: ${date}</p>`:''}<p>${desc}</p>`
+      })
+    });
+  } catch(e) {}
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+document.getElementById('place-input').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('country-input').focus(); });
+document.getElementById('country-input').addEventListener('keydown', e => { if (e.key === 'Enter') addPlace(); });
+
+// ── ESSENCE TRIPS ────────────────────────────────────────────────────────────
+// Statická data — admin upravuje přes Supabase tabulku 'essence_trips'
+// nebo přímo zde pro rychlou úpravu
+const ESSENCE_TRIPS_STATIC = [
+  {
+    dest: "Bali",
+    label: "Bali — spirituální & wellness",
+    date: "říjen 2026",
+    spots: 3,
+    url: "https://essenceforlife.cz/skupinove-cesty/"
+  },
+  {
+    dest: "Japonsko",
+    label: "Japonsko — podzimní sakura",
+    date: "říjen 2026",
+    spots: 2,
+    url: "https://essenceforlife.cz/skupinove-cesty/"
+  },
+  {
+    dest: "Maroko",
+    label: "Maroko — pouštní dobrodružství",
+    date: "únor 2027",
+    spots: 5,
+    url: "https://essenceforlife.cz/skupinove-cesty/"
+  }
+];
+
+async function loadEssenceTrips() {
+  const panel = document.getElementById('essence-trips-panel');
+  const list = document.getElementById('essence-trips-list');
+  if (!panel || !list) return;
+
+  // Zkus načíst z Supabase tabulky essence_trips
+  let trips = ESSENCE_TRIPS_STATIC;
+  try {
+    const { data } = await db.from('essence_trips')
+      .select('*')
+      .eq('active', true)
+      .order('sort_order', { ascending: true })
+      .limit(4);
+    if (data && data.length > 0) trips = data;
+  } catch(e) {
+    // Tabulka ještě neexistuje — použij statická data
+  }
+
+  if (!trips || trips.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
+
+  list.innerHTML = trips.map(t => `
+    <a href="${t.url || 'https://essenceforlife.cz/skupinove-cesty/'}" target="_blank" rel="noopener"
+       style="display:block;text-decoration:none;padding:.6rem .75rem;background:var(--chip-bg);border-radius:10px;border:1px solid var(--border);transition:background .15s"
+       onmouseover="this.style.background='var(--efl)'" onmouseout="this.style.background='var(--chip-bg)'">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.2rem">
+        <span style="font-size:.82rem;font-weight:500;color:var(--teal-dark)">${t.label || t.dest}</span>
+        
+      </div>
+      <div style="font-size:.75rem;color:var(--muted)">📅 ${t.date || ''}</div>
+    </a>
+  `).join('');
+}
+
+// ── AUTH HANDLER — zpracuj magic link po návratu ─────────────────────────────
+db.auth.onAuthStateChange(async (event, session) => {
+  if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') && session?.user && !currentUser) {
+    const email = session.user.email.toLowerCase().trim();
+    const pendingName = localStorage.getItem('efl_pending_name') || '';
+    const pendingSource = localStorage.getItem('efl_pending_source') || '';
+    const verified = isEFLClient(email);
+    const admin = ADMINS.includes(email);
+
+    // Supabase auth může posílat jméno v user_metadata
+    const metaName = session.user.user_metadata?.name || '';
+
+    const { data: existing } = await db.from('users').select('*').eq('email', email).maybeSingle();
+    if (existing) {
+      currentUser = { ...existing, is_admin: admin };
+      if (admin && !existing.is_admin) {
+        await db.from('users').update({ is_admin: true, verified: true }).eq('id', existing.id);
+        currentUser.is_admin = true; currentUser.verified = true;
+      }
+
+      // Kontrola: pokud existující uživatel má špatné jméno, oprav ho
+      if (!admin) {
+        const name = currentUser.name || '';
+        const emailPrefix = email.split('@')[0];
+        if (!name || name === emailPrefix || name.includes('.') || name.includes('@') || name.toLowerCase() === 'anonym') {
+          const newName = await askNameModal();
+          if (newName && newName.trim().length > 1) {
+            await db.from('users').update({ name: newName.trim() }).eq('id', currentUser.id);
+            currentUser.name = newName.trim();
+          }
+        }
+      }
+    } else {
+      // Nový uživatel — zjistit jméno
+      let insertName = pendingName || metaName || '';
+
+      // Pokud nemáme jméno z localStorage ani metadata, zeptáme se přes modal
+      const emailPrefix = email.split('@')[0];
+      if (!insertName || insertName === emailPrefix || insertName.includes('.') || insertName.includes('@')) {
+        insertName = await askNameModal();
+      }
+
+      // Pojistka — pokud stále nemáme jméno (nemělo by nastat, modal vyžaduje 2+ znaky)
+      if (!insertName || insertName.trim().length < 2) {
+        insertName = emailPrefix;
+      }
+
+      console.log('[EFL] Creating user:', email, 'name:', insertName);
+      const { data: newUser, error: insertError } = await db.from('users').insert({
+        email, name: insertName.trim(), verified, is_admin: admin, source: pendingSource
+      }).select().single();
+
+      if (newUser) {
+        currentUser = newUser;
+        console.log('[EFL] User created OK, id:', newUser.id);
+      } else {
+        console.error('[EFL] Insert user FAILED:', insertError);
+        showToast('Chyba při vytváření profilu. Zkus to znovu.');
+        // Insert selhal (race condition?) - zkus znovu načíst
+        const { data: retryUser } = await db.from('users').select('*').eq('email', email).maybeSingle();
+        if (retryUser) {
+          currentUser = { ...retryUser, is_admin: admin };
+          console.log('[EFL] Retry found user, id:', retryUser.id);
+        }
+      }
+    }
+
+    localStorage.removeItem('efl_pending_name');
+    localStorage.removeItem('efl_pending_source');
+
+    // Pokud stále nemáme currentUser s platným id, poslední záchrana
+    if (!currentUser || !currentUser.id) {
+      console.error('[EFL] No valid user after all attempts! Asking for name...');
+      const fallbackName = await askNameModal();
+      const { data: lastTry, error: lastErr } = await db.from('users').insert({
+        email, name: (fallbackName || email.split('@')[0]).trim(), verified, is_admin: admin
+      }).select().single();
+      if (lastTry) {
+        currentUser = lastTry;
+        console.log('[EFL] Fallback user created, id:', lastTry.id);
+      } else {
+        console.error('[EFL] FINAL insert failed:', lastErr);
+        showToast('Nepodařilo se vytvořit profil. Kontaktuj nás prosím.');
+        return; // STOP — nemá smysl pokračovat bez platného uživatele
+      }
+    }
+
+    localStorage.setItem('efl_user', JSON.stringify(currentUser));
+    updateUserUI();
+    document.getElementById('login-screen').classList.add('hidden');
+
+    const clientTrips = getClientTrips(email);
+    clientTrips.forEach(dest => {
+      if (!places.efl.find(p => p.name === dest.name)) places.efl.push(dest);
+    });
+    if (clientTrips.length > 0) localStorage.setItem('efl_map_' + email, JSON.stringify(clientTrips));
+
+    await loadIntents();
+    await loadMyActivity();
+    await loadEssenceTrips();
+
+    if (admin) {
+      showToast('👑 Vítej! Jsi přihlášen jako administrátor.');
+      document.getElementById('admin-nav-btn').style.display = 'block';
+      const mmAdmin = document.getElementById('mm-admin');
+      if (mmAdmin) mmAdmin.style.display = 'block';
+    } else if (verified) {
+      showToast('✅ Email ověřen! Vítej, ověřený kliente Essence for Life.');
+      setTimeout(showEbook, 2000);
+    } else {
+      showToast('🌍 Email ověřen! Vítej v komunitě.');
+    }
+
+    // FAB na mobilu
+    if (window.innerWidth <= 600) {
+      const fab = document.getElementById('fab-btn');
+      if (fab) fab.style.display = 'flex';
+    }
+  }
+});
+
+// ── DETEKCE CHYB V MAGIC LINKU ──────────────────────────────────────────────
+(function() {
+  const hash = window.location.hash;
+  if (hash && hash.includes('error=')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const errorCode = params.get('error_code') || '';
+    const errorDesc = params.get('error_description') || '';
+    let msg = '';
+    if (errorCode === 'otp_expired' || errorDesc.toLowerCase().includes('expired')) {
+      msg = 'Ověřovací odkaz vypršel. Zadej svůj email znovu a pošleme ti nový.';
+    } else if (errorCode === 'access_denied') {
+      msg = 'Přístup zamítnut. Zkus se přihlásit znovu.';
+    } else {
+      msg = 'Při ověřování nastala chyba. Zkus se prosím přihlásit znovu.';
+    }
+    const errEl = document.getElementById('login-error');
+    if (errEl) {
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }
+    history.replaceState(null, '', window.location.pathname);
+  }
+})();
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+(async () => {
+  const saved = localStorage.getItem('efl_user');
+  if (saved) {
+    currentUser = JSON.parse(saved);
+    // Vždy zkontrolovat admin status z lokálního seznamu
+    const emailLower = (currentUser.email || '').toLowerCase().trim();
+    currentUser.is_admin = ADMINS.includes(emailLower);
+    updateUserUI();
+    document.getElementById('login-screen').classList.add('hidden');
+    if (currentUser.is_admin) {
+      document.getElementById('admin-nav-btn').style.display = 'block';
+      const mmAdmin = document.getElementById('mm-admin');
+      if (mmAdmin) mmAdmin.style.display = 'block';
+    }
+
+    // Obnovit cesty z mapy
+    const savedTrips = localStorage.getItem('efl_map_' + currentUser.email);
+    if (savedTrips) {
+      const trips = JSON.parse(savedTrips);
+      trips.forEach(dest => {
+        if (!places.efl.find(p => p.name === dest.name)) {
+          places.efl.push(dest);
+        }
+      });
+    } else {
+      // Zkusit načíst z CLIENT_TRIPS
+      const clientTrips = getClientTrips(currentUser.email);
+      clientTrips.forEach(dest => {
+        if (!places.efl.find(p => p.name === dest.name)) {
+          places.efl.push(dest);
+        }
+      });
+    }
+
+    await loadIntents();
+    await loadMyActivity();
+    await loadEssenceTrips();
+
+    // FAB na mobilu
+    if (window.innerWidth <= 600) {
+      const fab = document.getElementById('fab-btn');
+      if (fab) fab.style.display = 'flex';
+    }
+  }
+})();
+</script>
+
+<!-- FOOTER -->
+<footer id="efl-footer" style="background:var(--teal-dark);color:rgba(255,255,255,0.75);text-align:center;padding:1.25rem 1rem;font-size:.78rem;font-family:'DM Sans',sans-serif;line-height:1.8;margin-top:2rem">
+  <div style="max-width:700px;margin:0 auto">
+    <div style="margin-bottom:.3rem">
+      <a href="https://essenceforlife.cz" target="_blank" rel="noopener"
+         style="color:var(--efl);font-weight:500;text-decoration:none;font-size:.85rem">Essence for Life</a>
+      <span style="margin:0 .5rem;opacity:.4">·</span>
+      <span>Skoro 10 let tvoříme cestovatelské zážitky pro menší skupinky</span>
+    </div>
+    <div>
+      <a href="https://essenceforlife.cz/skupinove-cesty/" target="_blank" rel="noopener"
+         style="color:rgba(255,255,255,0.55);text-decoration:none;margin:0 .4rem">Skupinové cesty</a>
+      <span style="opacity:.3">·</span>
+      <a href="https://essenceforlife.cz/kontakt/" target="_blank" rel="noopener"
+         style="color:rgba(255,255,255,0.55);text-decoration:none;margin:0 .4rem">Kontakt</a>
+      <span style="opacity:.3">·</span>
+      <a href="mailto:info@essenceforlife.cz"
+         style="color:rgba(255,255,255,0.55);text-decoration:none;margin:0 .4rem">info@essenceforlife.cz</a>
+    </div>
+  </div>
+</footer>
+
+<!-- MODAL Upravit doporučení -->
+<div id="edit-rec-modal" style="display:none;position:fixed;inset:0;z-index:3000;align-items:center;justify-content:center;background:rgba(0,0,0,.5)">
+  <div style="background:white;border-radius:16px;width:90%;max-width:480px;padding:1.5rem">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+      <h3 style="font-family:'Playfair Display',serif;font-size:1.2rem;color:#1A6B6E;font-style:italic;margin:0">Upravit doporučení</h3>
+      <button onclick="closeEditRecModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:#6B9497">×</button>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.4rem">Název místa nebo pobytu</label>
+      <input type="text" id="edit-rec-title" placeholder="Bali Reset Week, Kjóto…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;box-sizing:border-box"/>
+    </div>
+    <div style="margin-bottom:1.25rem">
+      <label style="display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:#6B9497;margin-bottom:.4rem">Tvůj zážitek / popis</label>
+      <textarea id="edit-rec-text" rows="5" placeholder="Popiš místo, zážitek nebo tip…" style="width:100%;padding:.7rem .9rem;border:1px solid #E2EFF0;border-radius:10px;font-family:'DM Sans',sans-serif;resize:vertical;box-sizing:border-box"></textarea>
+    </div>
+    <input type="hidden" id="edit-rec-id"/>
+    <button onclick="saveEditRec()" style="width:100%;padding:.85rem;background:#2A9CA0;color:white;border:none;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer">
+      Uložit změny →
+    </button>
+  </div>
+</div>
+</body>
+</html>
+
