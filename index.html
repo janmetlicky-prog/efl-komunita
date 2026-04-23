@@ -500,14 +500,14 @@
     <div class="landing-stats">
       <div class="landing-stat"><div class="landing-stat-num" id="lp-stat-visited">—</div><div class="landing-stat-label">Navštívené destinace</div></div>
       <div class="landing-stat"><div class="landing-stat-num" id="lp-stat-users">—</div><div class="landing-stat-label">Klientů</div></div>
-      <div class="landing-stat"><div class="landing-stat-num" id="lp-stat-upcoming">—</div><div class="landing-stat-label">Připravované cesty</div></div>
+      <div class="landing-stat"><div class="landing-stat-num" id="lp-stat-upcoming">—</div><div class="landing-stat-label">Obsazujeme</div></div>
       <div class="landing-stat"><div class="landing-stat-num">2017</div><div class="landing-stat-label">Cestujeme od</div></div>
     </div>
     <div class="landing-map-wrap">
       <h3 class="landing-map-heading">Cestovatelská mapa</h3>
       <div class="landing-legend">
         <span><span class="landing-legend-dot" style="background:#c9a84c"></span>Navštívené destinace</span>
-        <span><span class="landing-legend-dot" style="background:#4a9b8e"></span>Připravované cesty</span>
+        <span><span class="landing-legend-dot" style="background:#4a9b8e"></span>Právě obsazujeme</span>
       </div>
       <div class="landing-map-box" id="landing-map-box">
         <div class="landing-skeleton" id="landing-map-skeleton" style="width:100%;height:300px"></div>
@@ -515,7 +515,7 @@
       </div>
     </div>
     <div class="landing-trips">
-      <h3 class="landing-map-heading">Připravované cesty</h3>
+      <h3 class="landing-map-heading">Cesty které právě obsazujeme</h3>
       <div class="landing-trips-grid" id="landing-trips-grid">
         <div class="landing-skeleton" style="height:90px"></div>
         <div class="landing-skeleton" style="height:90px"></div>
@@ -560,7 +560,7 @@
         <div id="essence-trips-panel" style="margin-top:1.25rem;background:white;border-radius:16px;border:1px solid var(--border);overflow:hidden;">
           <div style="background:var(--teal-dark);padding:.85rem 1.1rem;display:flex;align-items:center;gap:.5rem">
             <span style="font-size:1rem">✈️</span>
-            <span style="color:white;font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic">Připravované cesty Essence for Life</span>
+            <span style="color:white;font-family:'Playfair Display',serif;font-size:.95rem;font-style:italic">Cesty které právě obsazujeme</span>
           </div>
           <div id="essence-trips-list" style="padding:.75rem .9rem;display:flex;flex-direction:column;gap:.7rem">
             <!-- Načítá se dynamicky -->
@@ -2598,106 +2598,143 @@ const LP_DEST_NORMALIZE = {
   'ischia':'Ischia','ischia, itálie':'Ischia','mallorca':'Mallorca','madeira':'Madeira',
   'malta':'Malta','albánie':'Albánie','keňa':'Keňa','la palma':'La Palma',
   'mauricius':'Mauricius','portugalsko azory':'Azory','azory, portugalsko':'Azory',
-  'azory':'Azory','bali':'Bali','zanzibar':'Zanzibar','vietnam':'Vietnam',
-  'laos':'Laos','jordánsko':'Jordánsko',
+  'azory':'Azory','bali':'Indonésie','indonésie':'Indonésie','zanzibar':'Zanzibar',
+  'vietnam':'Vietnam','laos':'Laos','jordánsko':'Jordánsko',
+  'srí lanka':'Srí Lanka','sri lanka':'Srí Lanka',
+  'řecko':'Řecko','thajsko':'Thajsko','mexiko':'Mexiko',
+  'česká republika':'Česká republika',
 };
 const LP_NAME_TO_DEST = {
   'keňa s jogou':'Keňa','ischie individuál':'Ischia','ischie s darkou':'Ischia',
   'monika malta':'Malta','las olas s katkou':'Ischia','azory od lenky':'Azory',
-  'bali s jogou':'Bali','bali-lowcost':'Bali','keňa s janou 2026':'Keňa',
+  'bali s jogou':'Indonésie','bali-lowcost':'Indonésie','keňa s janou 2026':'Keňa',
   'zanzibar individuál':'Zanzibar','jóga bety':'La Palma','albánie s jerrym':'Albánie',
   'ischie magic jana':'Ischia','jóga ischie s ivou':'Ischia','azory s adelia':'Azory',
-  'albánie s jerrym 2':'Albánie','bali-individuál':'Bali','zahrada živlů':'Česká republika',
+  'albánie s jerrym 2':'Albánie','bali-individuál':'Indonésie','zahrada živlů':'Česká republika',
   'la palma':'La Palma','madeira':'Madeira','mauricius':'Mauricius','azory':'Azory',
+  'sri lanka':'Srí Lanka','mexiko':'Mexiko',
+  'jógový pobyt na ischii':'Ischia','návrat k sobě na ischii':'Ischia',
+  'reset week madeira':'Madeira',
 };
 function lpNormDest(t) {
-  return LP_DEST_NORMALIZE[(t.destination||'').toLowerCase().trim()]
-    || LP_NAME_TO_DEST[(t.name||'').toLowerCase().trim()]
-    || null;
+  const d = (t.destination||'').toLowerCase().trim();
+  if (LP_DEST_NORMALIZE[d]) return LP_DEST_NORMALIZE[d];
+  const n = (t.name||'').toLowerCase().trim();
+  if (LP_NAME_TO_DEST[n]) return LP_NAME_TO_DEST[n];
+  // Partial name match
+  for (const [key,val] of Object.entries(LP_NAME_TO_DEST)) {
+    if (n.includes(key) || key.includes(n)) return val;
+  }
+  for (const [key,val] of Object.entries(LP_DEST_NORMALIZE)) {
+    if (n.includes(key)) return val;
+  }
+  return null;
 }
-const LP_STATIC_VISITED = ['Vietnam','Laos','Jordánsko'];
+const LP_STATIC_VISITED = ['Vietnam','Laos','Jordánsko','Řecko','Thajsko'];
 const LP_PIN_COORDS = {
-  'Ischia':{x:478,y:126},'Mallorca':{x:445,y:112},'Azory':{x:393,y:105},
-  'Madeira':{x:408,y:128},'Malta':{x:490,y:138},'Albánie':{x:500,y:118},
-  'La Palma':{x:420,y:138},'Keňa':{x:542,y:210},'Bali':{x:700,y:178},
-  'Zanzibar':{x:548,y:228},'Mauricius':{x:578,y:268},'Česká republika':{x:490,y:88},
-  'Srí Lanka':{x:638,y:200},'Vietnam':{x:688,y:168},'Laos':{x:678,y:160},
-  'Jordánsko':{x:535,y:148},
+  'Ischia':{x:500,y:195},'Mallorca':{x:453,y:192},'Azory':{x:365,y:188},
+  'Madeira':{x:380,y:208},'Malta':{x:505,y:210},'Albánie':{x:515,y:182},
+  'La Palma':{x:375,y:218},'Keňa':{x:560,y:305},'Indonésie':{x:730,y:325},
+  'Zanzibar':{x:560,y:325},'Mauricius':{x:590,y:355},'Česká republika':{x:500,y:160},
+  'Srí Lanka':{x:660,y:290},'Vietnam':{x:710,y:260},'Laos':{x:700,y:248},
+  'Jordánsko':{x:548,y:218},'Řecko':{x:520,y:188},'Thajsko':{x:698,y:268},
+  'Mexiko':{x:195,y:240},'Srí Lanka':{x:660,y:290},
 };
-const LP_EMOJIS = {'Ischia':'🌊','Mallorca':'⛵','Azory':'🐋','Madeira':'🌿','Srí Lanka':'🪷','Česká republika':'🌲'};
+const LP_EMOJIS = {'Ischia':'🌊','Mallorca':'⛵','Azory':'🐋','Madeira':'🌿','Srí Lanka':'🪷','Česká republika':'🌲','Indonésie':'🌴','Keňa':'🦁','Řecko':'🏛️','Thajsko':'🛕'};
 
 async function initLandingPage() {
   if (landingLoaded) return;
   landingLoaded = true;
 
-  let essTrips = [], dbTrips = [], uCount = null;
+  let stats = null, essTrips = [];
 
   try {
-    const [tRes, uRes] = await Promise.all([
+    const [statsRes, tRes] = await Promise.all([
+      fetch('https://raw.githubusercontent.com/janmetlicky-prog/efl-kalkulace/main/data/stats.json?t='+Date.now()).then(r=>r.json()),
       db.from('essence_trips').select('*').eq('active', true).order('sort_order'),
-      db.from('users').select('*', { count: 'exact', head: true }),
     ]);
+    stats = statsRes;
     essTrips = tRes.data || [];
-    uCount = uRes.count;
-  } catch(e) { console.warn('[LP] Supabase err:', e); }
+  } catch(e) { console.warn('[LP] Data fetch err:', e); }
 
-  try {
-    const dj = await fetch('https://raw.githubusercontent.com/janmetlicky-prog/efl-kalkulace/main/data/db.json?t='+Date.now()).then(r=>r.json());
-    dbTrips = (dj.trips||[]).filter(t=>t.status!=='storno');
-  } catch(e) { console.warn('[LP] GitHub err:', e); }
+  if (!stats) { console.warn('[LP] No stats data'); return; }
 
-  // Visited
-  const visitedDB = [...new Set(dbTrips.filter(t=>t.status==='done').map(t=>lpNormDest(t)).filter(Boolean))];
-  const allVisited = [...new Set([...visitedDB,...LP_STATIC_VISITED])];
-
-  // Upcoming with occupancy
+  const allVisited = stats.visitedDestinations || [];
   const upcoming = essTrips.map(et => {
-    const eDest = lpNormDest({destination: et.dest||''});
-    const eNum = (et.date||'').match(/(\d+)/)?.[1];
-    const eYear = (et.date||'').match(/(\d{4})/)?.[1];
-    let booked = 0;
-    for (const dt of dbTrips) {
-      if (lpNormDest(dt)===eDest && (dt.date||'').match(/(\d+)/)?.[1]===eNum && (dt.date||'').match(/(\d{4})/)?.[1]===eYear) {
-        booked = (dt.participants||[]).filter(p=>!p.cancelled).length;
-        break;
-      }
-    }
-    return {...et, normDest:eDest, booked};
+    const nd = lpNormDest({destination: et.dest||'', name: et.label||''});
+    return { ...et, normDest: nd, dest: et.dest, label: et.label };
   });
 
   // Stats
   document.getElementById('lp-stat-visited').textContent = allVisited.length;
-  document.getElementById('lp-stat-users').textContent = uCount!=null ? uCount : '—';
+  document.getElementById('lp-stat-users').textContent = stats.clientCount || '—';
   document.getElementById('lp-stat-upcoming').textContent = essTrips.length || '—';
 
-  // SVG Map
+  // SVG Map — using clean Natural Earth style outlines
   const ns = 'http://www.w3.org/2000/svg';
   const svg = document.createElementNS(ns,'svg');
   svg.setAttribute('viewBox','0 0 900 500');
+  svg.setAttribute('xmlns',ns);
+
+  // Ocean background
   const oc = document.createElementNS(ns,'rect');
-  oc.setAttribute('width','900'); oc.setAttribute('height','500'); oc.setAttribute('fill','rgba(42,107,107,0.08)');
+  oc.setAttribute('width','900'); oc.setAttribute('height','500');
+  oc.setAttribute('fill','#e8f4f4'); oc.setAttribute('rx','12');
   svg.appendChild(oc);
 
-  const conts = [
-    'M440 55L460 50L480 55L510 52L530 58L535 70L525 80L520 95L510 100L500 108L505 120L498 130L488 125L480 118L470 112L460 105L450 95L445 85L440 75L435 65Z',
-    'M440 140L460 135L480 140L500 145L520 148L540 155L555 170L560 190L555 210L548 230L540 250L530 265L515 275L500 280L485 275L475 260L465 240L455 220L445 200L435 180L430 160L435 148Z',
-    'M530 50L560 45L590 42L620 45L650 50L680 55L710 52L740 58L760 65L770 80L765 95L755 108L740 115L720 120L700 118L690 125L680 135L670 145L660 155L645 160L630 155L615 148L600 140L585 135L570 130L555 125L540 118L535 105L530 90L528 70Z',
-    'M620 145L635 150L645 160L650 175L640 190L625 195L615 185L612 170L615 155Z',
-    'M670 145L685 148L700 155L710 170L705 185L695 178L680 170L672 158Z',
-    'M80 50L120 42L160 45L200 50L230 60L250 75L260 95L255 110L240 125L225 135L210 142L195 148L180 155L165 160L150 158L135 150L120 140L105 125L95 108L85 90L78 70Z',
-    'M165 160L180 162L195 170L200 180L195 188L185 192L175 188L168 178L163 168Z',
-    'M195 195L215 192L235 200L250 215L260 235L265 260L260 285L250 310L238 335L225 355L215 370L205 378L195 370L188 350L182 325L178 300L175 275L178 250L182 230L188 212Z',
-    'M720 240L745 235L770 240L790 250L795 268L785 285L770 295L750 298L735 290L720 278L715 260Z',
-    'M700 190L710 188L718 192L715 198L705 198Z',
-    'M720 195L730 192L738 196L735 202L725 202Z',
-    'M750 80L758 75L765 80L762 92L755 95L748 90Z',
-    'M438 58L445 55L450 60L448 68L442 70L436 65Z',
-    'M558 260L565 255L570 262L567 275L560 278L555 270Z',
+  // Better continent paths (simplified Natural Earth)
+  const continents = [
+    // North America
+    {d:'M45,45 L85,30 L130,25 L165,30 L195,42 L220,38 L240,50 L248,65 L255,85 L258,105 L250,115 L238,122 L228,132 L218,140 L210,148 L198,155 L192,162 L185,168 L178,172 L172,178 L168,185 L175,195 L182,198 L188,205 L195,210 L198,218 L192,222 L185,228 L180,232 L172,228 L165,220 L158,218 L148,222 L142,230 L138,235 L145,240 L152,245 L148,250 L140,248 L130,242 L125,235 L118,230 L105,228 L95,232 L85,235 L78,228 L72,218 L65,210 L58,198 L52,185 L48,172 L42,155 L38,140 L35,120 L32,100 L35,80 L38,65 L42,52 Z',c:'#d4e8e2'},
+    // South America
+    {d:'M195,275 L210,268 L225,272 L238,278 L248,290 L255,305 L260,322 L262,340 L258,358 L252,375 L245,388 L238,398 L230,408 L222,415 L218,420 L225,425 L228,432 L222,438 L215,435 L210,425 L205,415 L198,408 L192,398 L188,385 L185,370 L182,355 L180,340 L178,325 L180,310 L185,295 L190,282 Z',c:'#d4e8e2'},
+    // Europe
+    {d:'M430,48 L445,42 L458,45 L468,50 L478,48 L488,52 L498,55 L508,52 L518,58 L525,65 L530,72 L528,82 L522,90 L518,98 L512,105 L508,112 L515,118 L520,125 L518,132 L510,138 L505,145 L498,150 L492,155 L488,162 L482,168 L478,175 L472,180 L465,185 L458,188 L452,192 L445,195 L438,192 L432,185 L428,178 L425,170 L422,162 L418,152 L420,142 L425,132 L428,122 L425,112 L420,102 L418,92 L422,82 L425,72 L428,62 L430,55 Z',c:'#d4e8e2'},
+    // Africa
+    {d:'M445,210 L455,205 L465,208 L478,212 L488,215 L498,218 L510,222 L518,228 L528,235 L538,245 L548,258 L555,272 L560,288 L562,305 L558,322 L552,338 L545,352 L538,365 L528,375 L518,382 L508,388 L498,390 L488,385 L478,378 L470,368 L462,355 L455,342 L450,328 L445,312 L442,298 L438,282 L435,268 L432,255 L430,242 L432,228 L438,218 Z',c:'#d4e8e2'},
+    // Asia
+    {d:'M535,45 L555,42 L575,38 L598,42 L618,48 L638,52 L658,48 L678,45 L698,50 L718,55 L735,58 L748,65 L758,72 L765,82 L768,95 L762,108 L755,118 L748,128 L742,135 L735,142 L728,148 L720,155 L712,162 L705,168 L698,175 L690,182 L682,188 L675,195 L668,202 L660,208 L652,215 L645,220 L638,225 L628,228 L618,225 L608,218 L598,212 L588,208 L578,205 L568,202 L558,198 L548,195 L540,188 L535,178 L530,168 L528,155 L530,142 L532,128 L530,115 L528,102 L530,88 L532,72 L535,58 Z',c:'#d4e8e2'},
+    // India
+    {d:'M628,228 L638,232 L648,240 L655,252 L658,265 L655,278 L648,288 L638,295 L628,290 L622,278 L618,265 L620,252 L625,238 Z',c:'#d4e8e2'},
+    // Southeast Asia
+    {d:'M688,235 L698,232 L708,238 L715,248 L718,260 L715,272 L708,280 L698,278 L692,268 L688,255 L688,245 Z',c:'#d4e8e2'},
+    // Indonesia archipelago
+    {d:'M715,310 L725,308 L735,312 L740,318 L735,322 L725,322 L718,318 Z',c:'#cde2dc'},
+    {d:'M740,315 L750,312 L758,316 L755,322 L748,324 L742,320 Z',c:'#cde2dc'},
+    {d:'M758,318 L768,315 L775,320 L772,326 L765,328 L758,324 Z',c:'#cde2dc'},
+    // Japan
+    {d:'M762,108 L770,102 L778,108 L775,122 L770,128 L762,122 Z',c:'#d4e8e2'},
+    // Australia
+    {d:'M738,355 L758,348 L778,352 L795,360 L808,372 L812,388 L805,402 L792,412 L775,418 L758,415 L745,408 L735,398 L730,385 L732,370 Z',c:'#d4e8e2'},
+    // UK + Ireland
+    {d:'M435,62 L442,58 L448,62 L446,72 L440,75 L435,70 Z',c:'#d4e8e2'},
+    {d:'M430,68 L434,65 L436,70 L433,74 L429,72 Z',c:'#d4e8e2'},
+    // Madagascar
+    {d:'M568,352 L575,348 L580,355 L578,368 L572,375 L566,368 Z',c:'#cde2dc'},
+    // Sri Lanka
+    {d:'M650,288 L656,285 L660,290 L658,298 L652,300 L648,295 Z',c:'#cde2dc'},
+    // New Zealand
+    {d:'M822,408 L828,402 L832,410 L828,420 L822,418 Z',c:'#cde2dc'},
+    {d:'M825,420 L830,418 L832,425 L828,430 L824,428 Z',c:'#cde2dc'},
   ];
-  conts.forEach(d => {
+  continents.forEach(({d,c}) => {
     const p = document.createElementNS(ns,'path');
-    p.setAttribute('d',d); p.setAttribute('fill','rgba(74,155,142,0.12)'); p.setAttribute('stroke','rgba(74,155,142,0.2)'); p.setAttribute('stroke-width','1');
+    p.setAttribute('d',d);
+    p.setAttribute('fill',c||'#d4e8e2');
+    p.setAttribute('stroke','#b8d4cc');
+    p.setAttribute('stroke-width','0.8');
+    p.setAttribute('stroke-linejoin','round');
     svg.appendChild(p);
+  });
+
+  // Graticule lines (subtle grid)
+  [125,250,375].forEach(y => {
+    const line = document.createElementNS(ns,'line');
+    line.setAttribute('x1','0'); line.setAttribute('y1',y);
+    line.setAttribute('x2','900'); line.setAttribute('y2',y);
+    line.setAttribute('stroke','rgba(180,210,200,0.3)'); line.setAttribute('stroke-width','0.5');
+    line.setAttribute('stroke-dasharray','4,8');
+    svg.appendChild(line);
   });
 
   const mapBox = document.getElementById('landing-map-box');
@@ -2713,13 +2750,11 @@ async function initLandingPage() {
   }
   function hideTT() { tooltip.classList.remove('visible'); }
 
-  const upDests = new Set(upcoming.map(u=>u.normDest).filter(Boolean));
-
   // Visited pins
   allVisited.forEach(dest => {
     const c = LP_PIN_COORDS[dest]; if (!c) return;
     const ci = document.createElementNS(ns,'circle');
-    ci.setAttribute('cx',c.x); ci.setAttribute('cy',c.y); ci.setAttribute('r','7'); ci.setAttribute('class','pin-v');
+    ci.setAttribute('cx',c.x); ci.setAttribute('cy',c.y); ci.setAttribute('r','6'); ci.setAttribute('class','pin-v');
     ci.addEventListener('mouseenter',()=>showTT(dest,c.x,c.y));
     ci.addEventListener('mouseleave',hideTT);
     ci.addEventListener('touchstart',e=>{e.preventDefault();showTT(dest,c.x,c.y);});
@@ -2727,14 +2762,16 @@ async function initLandingPage() {
   });
 
   // Upcoming pins
+  const placedUpcoming = new Set();
   upcoming.forEach(trip => {
     const dest = trip.normDest; if (!dest) return;
     const base = LP_PIN_COORDS[dest]; if (!base) return;
-    const x = allVisited.includes(dest) ? base.x+12 : base.x;
+    const offset = placedUpcoming.has(dest) ? 14 : (allVisited.includes(dest) ? 14 : 0);
+    placedUpcoming.add(dest);
+    const x = base.x + offset;
     const ci = document.createElementNS(ns,'circle');
-    ci.setAttribute('cx',x); ci.setAttribute('cy',base.y); ci.setAttribute('r','9'); ci.setAttribute('class','pin-u');
-    const spots = trip.spots||0;
-    const tt = (trip.label||trip.dest||'')+' — '+(trip.date||'')+' — '+trip.booked+'/'+spots+' míst';
+    ci.setAttribute('cx',x); ci.setAttribute('cy',base.y); ci.setAttribute('r','8'); ci.setAttribute('class','pin-u');
+    const tt = (trip.label||trip.dest||'')+' — '+(trip.date||'');
     ci.addEventListener('mouseenter',()=>showTT(tt,x,base.y));
     ci.addEventListener('mouseleave',hideTT);
     ci.addEventListener('touchstart',e=>{e.preventDefault();showTT(tt,x,base.y);});
@@ -2754,10 +2791,6 @@ async function initLandingPage() {
     upcoming.forEach(trip => {
       const dest = trip.normDest||'';
       const emoji = LP_EMOJIS[dest]||'✈️';
-      const spots = trip.spots||1;
-      const ratio = spots>0 ? trip.booked/spots : 0;
-      const color = ratio>0.8?'#d04040':ratio>=0.5?'#e8a020':'#4a9b8e';
-      const pct = Math.min(ratio*100,100);
       const card = document.createElement('div');
       card.className = 'landing-trip-card';
       if (trip.url) card.onclick = ()=>window.open(trip.url,'_blank');
@@ -2765,8 +2798,6 @@ async function initLandingPage() {
         +'<div class="landing-trip-info">'
         +'<div class="landing-trip-label">'+(trip.label||trip.dest||'')+'</div>'
         +'<div class="landing-trip-date">'+(trip.date||'')+'</div>'
-        +'<div class="landing-trip-bar"><div class="landing-trip-bar-fill" style="width:'+pct+'%;background:'+color+'"></div></div>'
-        +'<div class="landing-trip-spots">'+trip.booked+' / '+spots+' míst obsazeno</div>'
         +'</div>';
       grid.appendChild(card);
     });
