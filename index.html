@@ -86,6 +86,88 @@
   .landing-footer-link { text-align:center; margin:16px 0 8px; }
   .landing-footer-link a { display:inline-block; border:1px solid #4a9b8e; color:#4a9b8e; border-radius:9px; padding:.45rem 1.2rem; font-size:12px; text-decoration:none; transition:background .2s,color .2s; }
   .landing-footer-link a:hover { background:#4a9b8e; color:white; }
+
+  /* ── DNEŠNÍ DÁVKA INSPIRACE ─────────────────────────── */
+  .landing-daily { padding:20px 24px 8px; max-width:860px; margin:0 auto; }
+  .landing-daily-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .landing-daily-title { font-size:15px; font-weight:600; color:#1a3c3c; display:flex; align-items:center; gap:8px; }
+  .landing-daily-dot { width:8px; height:8px; border-radius:50%; background:#c0392b; display:inline-block; animation:ldPulse 2s infinite; flex-shrink:0; }
+  @keyframes ldPulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .landing-daily-link { font-size:12px; color:#4a9b8e; cursor:pointer; text-decoration:none; background:none; border:none; padding:0; }
+  .landing-daily-link:hover { text-decoration:underline; }
+  .landing-daily-empty { font-size:13px; color:#8a9b9b; font-style:italic; padding:8px 0 16px; }
+  .daily-card { display:flex; align-items:flex-start; gap:12px; padding:11px 14px; background:#fff; border:1px solid #e8f0ef; border-radius:12px; margin-bottom:8px; cursor:pointer; transition:border-color .15s,box-shadow .15s; }
+  .daily-card:hover { border-color:#4a9b8e; box-shadow:0 2px 8px rgba(74,155,142,.12); }
+  .daily-card-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .daily-card-icon.type-article { background:#e8f5f3; }
+  .daily-card-icon.type-event { background:#e8eef8; }
+  .daily-card-icon.type-dream { background:#fdf3e3; }
+  .daily-card-title { font-size:13px; font-weight:600; color:#1a3c3c; line-height:1.4; margin-bottom:3px; }
+  .daily-card-meta { font-size:11px; color:#7a9090; }
+  .daily-card-badge { display:inline-block; font-size:10px; padding:1px 7px; border-radius:20px; margin-left:5px; font-weight:500; vertical-align:middle; }
+  .badge-article { background:#e8f5f3; color:#2e7d6e; }
+  .badge-event   { background:#e8eef8; color:#2c5fa0; }
+  .badge-dream   { background:#fdf3e3; color:#a06c20; }
+
+  /* ── KALENDÁŘ AKCÍ ───────────────────────────────────── */
+  .landing-calendar { padding:8px 24px 20px; max-width:860px; margin:0 auto; }
+  .landing-cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .landing-cal-title { font-size:15px; font-weight:600; color:#1a3c3c; }
+  .cal-strip { display:flex; gap:6px; overflow-x:auto; padding-bottom:6px; scrollbar-width:none; margin-bottom:14px; }
+  .cal-strip::-webkit-scrollbar { display:none; }
+  .cal-strip-day { flex-shrink:0; width:48px; padding:7px 4px 9px; background:#fff; border:1px solid #e0eceb; border-radius:10px; text-align:center; cursor:pointer; transition:border-color .15s; }
+  .cal-strip-day:hover { border-color:#4a9b8e; }
+  .cal-strip-day.today { border-color:#4a9b8e; background:#f0faf8; }
+  .cal-strip-day.has-event::after { content:''; display:block; width:5px; height:5px; border-radius:50%; background:#4a9b8e; margin:3px auto 0; }
+  .cal-strip-day.today.has-event::after { background:#2e7d6e; }
+  .cal-dow { font-size:10px; color:#7a9090; margin-bottom:3px; }
+  .cal-num { font-size:15px; font-weight:600; color:#1a3c3c; }
+  .cal-strip-day.today .cal-dow,.cal-strip-day.today .cal-num { color:#2e7d6e; }
+  .event-item { display:flex; gap:12px; align-items:flex-start; padding:11px 14px; background:#fff; border:1px solid #e8f0ef; border-radius:12px; margin-bottom:8px; }
+  .event-datebox { flex-shrink:0; width:38px; text-align:center; padding-top:2px; }
+  .event-datebox-month { font-size:9px; color:#7a9090; text-transform:uppercase; letter-spacing:.5px; }
+  .event-datebox-day { font-size:18px; font-weight:700; color:#1a3c3c; line-height:1.1; }
+  .event-item-title { font-size:13px; font-weight:600; color:#1a3c3c; margin-bottom:3px; line-height:1.4; }
+  .event-item-desc { font-size:11px; color:#7a9090; line-height:1.5; }
+  .event-tag { display:inline-block; font-size:10px; padding:2px 8px; border-radius:20px; margin-top:5px; font-weight:500; }
+  .event-tag.zoom     { background:#e8eef8; color:#2c5fa0; }
+  .event-tag.trip     { background:#e8f5f3; color:#2e7d6e; }
+  .event-tag.deadline { background:#fdf0ee; color:#a04030; }
+  .event-tag.other    { background:#f0f0f0; color:#556060; }
+  .cal-empty { font-size:13px; color:#8a9b9b; font-style:italic; padding:8px 0; }
+
+  /* ── INSPIRACE SEKCE ─────────────────────────────────── */
+  .insp-feed { padding:16px; }
+  .insp-card { background:#fff; border:1px solid #e8f0ef; border-radius:14px; margin-bottom:14px; overflow:hidden; }
+  .insp-card-header { padding:14px 16px 10px; }
+  .insp-card-meta { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .insp-avatar { width:30px; height:30px; border-radius:50%; background:#e8f5f3; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#2e7d6e; flex-shrink:0; }
+  .insp-meta-name { font-size:12px; font-weight:600; color:#1a3c3c; }
+  .insp-meta-sub { font-size:11px; color:#7a9090; }
+  .insp-series-badge { margin-left:auto; font-size:10px; padding:2px 8px; border-radius:20px; background:#e8f5f3; color:#2e7d6e; font-weight:600; white-space:nowrap; }
+  .insp-card-title { font-size:16px; font-weight:700; color:#1a3c3c; line-height:1.4; margin-bottom:8px; }
+  .insp-card-body { font-size:13px; color:#445555; line-height:1.7; }
+  .insp-parts-nav { display:flex; gap:6px; flex-wrap:wrap; padding:0 16px 12px; }
+  .insp-part-chip { font-size:11px; padding:4px 11px; border-radius:20px; border:1px solid #d0e4e2; cursor:pointer; color:#556060; background:#fff; transition:all .15s; }
+  .insp-part-chip.active { background:#2e7d6e; color:#fff; border-color:#2e7d6e; }
+  .insp-poll { border-top:1px solid #eef4f3; padding:14px 16px; }
+  .insp-poll-q { font-size:13px; font-weight:600; color:#1a3c3c; margin-bottom:10px; }
+  .insp-poll-opt { display:flex; align-items:center; gap:10px; padding:8px 12px; border:1px solid #e0eceb; border-radius:10px; margin-bottom:7px; cursor:pointer; position:relative; overflow:hidden; transition:border-color .15s; }
+  .insp-poll-opt:hover { border-color:#4a9b8e; }
+  .insp-poll-opt.voted { border-color:#4a9b8e; }
+  .insp-poll-bar { position:absolute; left:0; top:0; height:100%; background:#e8f5f3; z-index:0; transition:width .4s ease; border-radius:10px; }
+  .insp-poll-label { font-size:13px; color:#1a3c3c; z-index:1; position:relative; flex:1; }
+  .insp-poll-pct { font-size:12px; color:#2e7d6e; z-index:1; position:relative; font-weight:600; }
+  .insp-poll-total { font-size:11px; color:#7a9090; margin-top:4px; }
+  .insp-reactions { display:flex; gap:14px; padding:10px 16px; border-top:1px solid #eef4f3; }
+  .insp-react-btn { display:flex; align-items:center; gap:5px; font-size:12px; color:#7a9090; cursor:pointer; background:none; border:none; padding:0; }
+  .insp-react-btn.active { color:#2e7d6e; }
+  .insp-next-teaser { background:#f8fbfb; border-top:1px solid #eef4f3; padding:10px 16px; font-size:12px; color:#7a9090; }
+  .insp-login-wall { background:#f0faf8; border:1px dashed #4a9b8e; border-radius:12px; padding:20px; text-align:center; margin:16px; }
+  .insp-login-wall p { font-size:13px; color:#445555; margin-bottom:12px; }
+  @media(max-width:600px) {
+    .landing-daily,.landing-calendar { padding-left:14px; padding-right:14px; }
+  }
   .landing-skeleton { background:linear-gradient(90deg,#eee 25%,#f5f5f5 50%,#eee 75%); background-size:200% 100%; animation:lshimmer 1.5s infinite; border-radius:12px; }
   @keyframes lshimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
   @media(max-width:600px) {
@@ -471,6 +553,7 @@
   <nav id="desktop-nav">
     <button class="active" onclick="showSection('landing',this)">🌍 Mapa</button>
     <button onclick="showSection('community',this)">✈ Sny</button>
+    <button onclick="showSection('inspirace',this)">📖 Inspirace</button>
     <button onclick="showSection('mine',this)">📌 Moje</button>
     <button onclick="showSection('doporuceni',this)">⭐ Doporučení</button>
     <button id="admin-nav-btn" onclick="showSection('admin',this)" style="display:none">👑 Admin</button>
@@ -524,6 +607,45 @@
     </div>
     <div class="landing-footer-link">
       <a href="https://essenceforlife.cz" target="_blank">Všechny cesty Essence → essenceforlife.cz</a>
+    </div>
+
+    <!-- DNEŠNÍ DÁVKA INSPIRACE -->
+    <div class="landing-daily">
+      <div class="landing-daily-header">
+        <div class="landing-daily-title">
+          <span class="landing-daily-dot"></span>
+          Dnešní dávka inspirace
+        </div>
+        <button class="landing-daily-link" onclick="showSection('inspirace',null)">Vše →</button>
+      </div>
+      <div id="daily-feed"><div class="landing-daily-empty">Načítám...</div></div>
+    </div>
+
+    <!-- KALENDÁŘ AKCÍ -->
+    <div class="landing-calendar">
+      <div class="landing-cal-header">
+        <div class="landing-cal-title">📅 Kalendář akcí</div>
+      </div>
+      <div class="cal-strip" id="cal-strip"></div>
+      <div id="cal-events-list"><div class="cal-empty">Načítám akce...</div></div>
+    </div>
+
+  </section>
+
+  <!-- INSPIRACE -->
+  <section id="inspirace-section" class="section">
+    <div class="page-header">
+      <h1>Inspirace</h1>
+      <p class="page-sub">Články, tipy a trendy ze světa cestování — každý týden něco nového.</p>
+    </div>
+    <div class="insp-feed" id="insp-feed">
+      <div class="loading"><span class="spinner"></span></div>
+    </div>
+    <div id="insp-login-wall" style="display:none">
+      <div class="insp-login-wall">
+        <p>Přihlaš se pro hlasování a komentáře k článkům komunity.</p>
+        <button class="btn-primary" onclick="document.getElementById('auth-modal').style.display='flex'">Vstoupit do komunity →</button>
+      </div>
     </div>
   </section>
 
@@ -890,6 +1012,7 @@
   <div style="display:flex;flex-direction:column;width:100%">
     <button onclick="showSection('landing',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">🌍&nbsp;&nbsp;Mapa & cesty</button>
     <button onclick="showSection('community',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">✈️&nbsp;&nbsp;Cestovatelské sny</button>
+    <button onclick="showSection('inspirace',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">📖&nbsp;&nbsp;Inspirace</button>
     <button onclick="showSection('doporuceni',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">⭐&nbsp;&nbsp;Doporučení</button>
     <button onclick="showSection('mine',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">📌&nbsp;&nbsp;Moje záznamy</button>
     <button onclick="openProfile();closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">👤&nbsp;&nbsp;Můj profil</button>
@@ -906,6 +1029,9 @@
   </button>
   <button class="mobile-nav-btn" onclick="showSection('community',this);syncMobileNav(this)" id="mob-community">
     <span class="nav-icon">✈️</span>Sny
+  </button>
+  <button class="mobile-nav-btn" onclick="showSection('inspirace',this);syncMobileNav(this)" id="mob-inspirace">
+    <span class="nav-icon">📖</span>Inspirace
   </button>
   <button class="mobile-nav-btn" onclick="showSection('doporuceni',this);syncMobileNav(this)" id="mob-doporuceni">
     <span class="nav-icon">⭐</span>Doporučení
@@ -2771,6 +2897,7 @@ function showSection(name, btn) {
   if (name === 'mine') renderMineFeed();
   if (name === 'doporuceni') loadRecs();
   if (name === 'admin') loadAdminDashboard();
+  if (name === 'inspirace') loadInspiraceSection();
   window.scrollTo(0, 0);
   // Skrýt FAB na sekcích kde není potřeba
   const fab = document.getElementById('fab-btn');
@@ -3250,6 +3377,265 @@ db.auth.onAuthStateChange(async (event, session) => {
     </button>
   </div>
 </div>
+
+<script>
+// ── DNEŠNÍ DÁVKA INSPIRACE ────────────────────────────────────────────────────
+async function loadDailyFeed() {
+  const el = document.getElementById('daily-feed');
+  if (!el) return;
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const todayEnd   = new Date(); todayEnd.setHours(23,59,59,999);
+  const iso = d => d.toISOString();
+
+  try {
+    const [artRes, evRes, dreamRes] = await Promise.all([
+      db.from('articles').select('id,title,part_number,series_total,created_at').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
+      db.from('events').select('id,title,event_date,type').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
+      db.from('travel_intents').select('id,destination,user_name,created_at,interested_count').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}).limit(2),
+    ]);
+
+    const items = [];
+    (artRes.data||[]).forEach(a => items.push({type:'article', title: a.title, meta: a.series_total > 1 ? `Seriál ${a.part_number}/${a.series_total}` : 'Článek', ts: a.created_at, id: a.id}));
+    (evRes.data||[]).forEach(e => items.push({type:'event', title: e.title, meta: formatEventDate(e.event_date), ts: e.created_at, id: e.id}));
+    (dreamRes.data||[]).forEach(d => items.push({type:'dream', title: `${d.user_name||'Člen komunity'} chce na: ${d.destination}`, meta: d.interested_count > 0 ? `${d.interested_count} lidí má zájem` : 'Nový sen', ts: d.created_at, id: d.id}));
+
+    items.sort((a,b) => new Date(b.ts) - new Date(a.ts));
+
+    if (!items.length) {
+      el.innerHTML = '<div class="landing-daily-empty">Dnes zatím nic nového — zkus to zítra 🌱</div>';
+      return;
+    }
+
+    const iconMap = {article:'📖', event:'📅', dream:'✈️'};
+    const badgeMap = {article:'Článek', event:'Událost', dream:'Sen'};
+    el.innerHTML = items.slice(0,4).map(item => `
+      <div class="daily-card" onclick="${item.type==='article'?`showSection('inspirace',null)`:`showSection('${item.type==='event'?'landing':'community'}',null)`}">
+        <div class="daily-card-icon type-${item.type}">${iconMap[item.type]}</div>
+        <div>
+          <div class="daily-card-title">${item.title}<span class="daily-card-badge badge-${item.type}">${badgeMap[item.type]}</span></div>
+          <div class="daily-card-meta">${item.meta} · ${formatTime(item.ts)}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    console.warn('[daily]', e);
+    el.innerHTML = '<div class="landing-daily-empty">Načítání se nezdařilo.</div>';
+  }
+}
+
+// ── KALENDÁŘ AKCÍ ─────────────────────────────────────────────────────────────
+const CZ_DAYS  = ['Ne','Po','Út','St','Čt','Pá','So'];
+const CZ_MONTHS = ['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
+const CZ_MONTHS_FULL = ['ledna','února','března','dubna','května','června','července','srpna','září','října','listopadu','prosince'];
+
+function formatEventDate(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  return `${dt.getDate()}. ${CZ_MONTHS_FULL[dt.getMonth()]}`;
+}
+
+async function loadCalendar() {
+  const strip = document.getElementById('cal-strip');
+  const list  = document.getElementById('cal-events-list');
+  if (!strip || !list) return;
+
+  const now = new Date();
+  let allEvents = [];
+
+  try {
+    const { data } = await db.from('events').select('*').gte('event_date', now.toISOString().slice(0,10)).order('event_date');
+    allEvents = data || [];
+  } catch(e) { console.warn('[cal]', e); }
+
+  const eventDaySet = new Set(allEvents.map(e => e.event_date?.slice(0,10)));
+
+  // Render strip — 14 dní od dneška
+  strip.innerHTML = '';
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i);
+    const key = d.toISOString().slice(0,10);
+    const isToday = i === 0;
+    const hasEv = eventDaySet.has(key);
+    const div = document.createElement('div');
+    div.className = 'cal-strip-day' + (isToday?' today':'') + (hasEv?' has-event':'');
+    div.innerHTML = `<div class="cal-dow">${CZ_DAYS[d.getDay()]}</div><div class="cal-num">${d.getDate()}</div>`;
+    strip.appendChild(div);
+  }
+
+  // Render upcoming events
+  if (!allEvents.length) {
+    list.innerHTML = '<div class="cal-empty">Žádné nadcházející akce — brzy přibydou 📅</div>';
+    return;
+  }
+
+  const tagLabels = {zoom:'Zoom', trip:'Odjezd', deadline:'Uzávěrka', other:'Akce'};
+  list.innerHTML = allEvents.slice(0,5).map(ev => {
+    const dt = new Date(ev.event_date);
+    const tag = ev.type || 'other';
+    return `
+    <div class="event-item">
+      <div class="event-datebox">
+        <div class="event-datebox-month">${CZ_MONTHS[dt.getMonth()]}</div>
+        <div class="event-datebox-day">${dt.getDate()}</div>
+      </div>
+      <div>
+        <div class="event-item-title">${ev.title}</div>
+        ${ev.description ? `<div class="event-item-desc">${ev.description}</div>` : ''}
+        <span class="event-tag ${tag}">${tagLabels[tag]||'Akce'}${ev.time_label ? ' · '+ev.time_label : ''}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── INSPIRACE SEKCE ────────────────────────────────────────────────────────────
+let inspLoaded = false;
+let inspVotes = {};
+
+async function loadInspiraceSection() {
+  if (inspLoaded) return;
+  inspLoaded = true;
+  const feed = document.getElementById('insp-feed');
+  if (!feed) return;
+
+  try {
+    const { data: articles } = await db.from('articles')
+      .select('*')
+      .order('created_at', {ascending:false});
+
+    if (!articles || !articles.length) {
+      feed.innerHTML = '<div style="padding:24px;text-align:center;color:#7a9090;font-size:13px;font-style:italic">Brzy zde budou první články ✍️</div>';
+      return;
+    }
+
+    // Group by series_id
+    const series = {};
+    articles.forEach(a => {
+      const sid = a.series_id || a.id;
+      if (!series[sid]) series[sid] = [];
+      series[sid].push(a);
+    });
+
+    feed.innerHTML = '';
+    Object.values(series).forEach(parts => {
+      parts.sort((a,b) => a.part_number - b.part_number);
+      feed.appendChild(buildInspCard(parts));
+    });
+  } catch(e) {
+    console.warn('[inspirace]', e);
+    feed.innerHTML = '<div style="padding:24px;color:#7a9090;font-size:13px">Načítání se nezdařilo.</div>';
+  }
+}
+
+function buildInspCard(parts) {
+  const card = document.createElement('div');
+  card.className = 'insp-card';
+  card.id = 'insp-card-' + parts[0].series_id;
+
+  function render(idx) {
+    const a = parts[idx];
+    const isSeries = parts.length > 1;
+    const hasNextPart = parts[idx+1];
+    const voteKey = a.id;
+    const voted = inspVotes[voteKey];
+
+    let pollHTML = '';
+    if (a.poll_question && a.poll_options) {
+      let opts;
+      try { opts = typeof a.poll_options === 'string' ? JSON.parse(a.poll_options) : a.poll_options; } catch(e) { opts = []; }
+      pollHTML = `<div class="insp-poll">
+        <div class="insp-poll-q">${a.poll_question}</div>
+        ${opts.map((opt,i) => `
+          <div class="insp-poll-opt${voted===i?' voted':''}" onclick="castVote('${voteKey}',${i},this.closest('.insp-card'))">
+            <div class="insp-poll-bar" style="width:${voted!==undefined?opt.pct:0}%"></div>
+            <span class="insp-poll-label">${opt.label}</span>
+            ${voted!==undefined?`<span class="insp-poll-pct">${opt.pct} %</span>`:''}
+          </div>`).join('')}
+        <div class="insp-poll-total">Hlasovalo ${a.vote_count||0} lidí</div>
+      </div>`;
+    }
+
+    card.innerHTML = `
+      <div class="insp-card-header">
+        <div class="insp-card-meta">
+          <div class="insp-avatar">EFL</div>
+          <div>
+            <div class="insp-meta-name">Adéla Metlická</div>
+            <div class="insp-meta-sub">Nedělní káva · ${new Date(a.created_at).toLocaleDateString('cs-CZ',{day:'numeric',month:'long'})}</div>
+          </div>
+          ${isSeries?`<div class="insp-series-badge">Seriál ${a.part_number}/${parts.length}</div>`:''}
+        </div>
+        <div class="insp-card-title">${a.title}</div>
+        <div class="insp-card-body">${a.body||''}</div>
+      </div>
+      ${isSeries?`<div class="insp-parts-nav">${parts.map((p,i)=>`<div class="insp-part-chip${i===idx?' active':''}" onclick="switchInspPart('${parts[0].series_id}',${i})">${p.part_number}. díl</div>`).join('')}</div>`:''}
+      ${pollHTML}
+      <div class="insp-reactions">
+        <button class="insp-react-btn" onclick="toggleInspLike(this,'${a.id}')">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 14s-6-3.5-6-8a4 4 0 0 1 6-3.44A4 4 0 0 1 14 6c0 4.5-6 8-6 8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          <span>${a.like_count||0} líbí se</span>
+        </button>
+      </div>
+      ${hasNextPart?`<div class="insp-next-teaser">📅 Příští díl: <strong>${hasNextPart.title}</strong> — vyjde ${new Date(hasNextPart.publish_date||Date.now()+7*86400000).toLocaleDateString('cs-CZ',{weekday:'long', day:'numeric', month:'long'})}</div>`:''}
+    `;
+  }
+
+  card._parts = parts;
+  card._currentIdx = 0;
+  render(0);
+
+  window['switchInspPart'] = window['switchInspPart'] || function(sid, idx) {
+    const c = document.getElementById('insp-card-'+sid);
+    if (!c) return;
+    c._currentIdx = idx;
+    c._parts && (function(){ const r = c._parts; c.innerHTML=''; const nc=buildInspCard(r); nc._currentIdx=idx; document.getElementById('insp-card-'+sid).replaceWith(nc); })();
+  };
+
+  return card;
+}
+
+function switchInspPart(sid, idx) {
+  const oldCard = document.getElementById('insp-card-'+sid);
+  if (!oldCard || !oldCard._parts) return;
+  const parts = oldCard._parts;
+  const newCard = buildInspCard(parts);
+  newCard._currentIdx = idx;
+  oldCard.replaceWith(newCard);
+  // Re-render with correct part
+  const a = parts[idx];
+  newCard.querySelector('.insp-card-title').textContent = a.title;
+  newCard.querySelector('.insp-card-body').textContent = a.body||'';
+  newCard.querySelectorAll('.insp-part-chip').forEach((c,i) => c.classList.toggle('active', i===idx));
+}
+
+function castVote(articleId, optionIdx, card) {
+  if (inspVotes[articleId] !== undefined) return;
+  inspVotes[articleId] = optionIdx;
+  const opts = card.querySelectorAll('.insp-poll-opt');
+  opts.forEach((opt, i) => {
+    opt.classList.toggle('voted', i === optionIdx);
+    const bar = opt.querySelector('.insp-poll-bar');
+    const stored = opt.getAttribute('data-pct') || '0';
+    if (bar) bar.style.width = stored + '%';
+  });
+  // Persist vote to Supabase
+  db.from('article_votes').upsert({article_id: articleId, option_idx: optionIdx, voter_id: currentUser?.id||localStorage.getItem('efl_user_id')||'anon'}).then(() => {}).catch(()=>{});
+}
+
+function toggleInspLike(btn, articleId) {
+  btn.classList.toggle('active');
+  const span = btn.querySelector('span');
+  const count = parseInt(span.textContent) || 0;
+  span.textContent = (btn.classList.contains('active') ? count+1 : count-1) + ' líbí se';
+}
+
+// Patch initLandingPage to also load daily feed and calendar
+const _origInit = window.initLandingPage;
+window.initLandingPage = async function() {
+  await (_origInit ? _origInit() : Promise.resolve());
+  loadDailyFeed();
+  loadCalendar();
+};
+</script>
+
 </body>
 </html>
 
