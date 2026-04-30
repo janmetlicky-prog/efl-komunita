@@ -3407,13 +3407,13 @@ async function loadDailyFeed() {
 
   try {
     const [artRes, evRes, dreamRes] = await Promise.all([
-      db.from('articles').select('id,title,part_number,series_total,created_at').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
+      db.from('articles').select('id,title,part_number,series_total,poll_question,created_at').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
       db.from('events').select('id,title,event_date,type').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
       db.from('intents').select('id,destination,created_at,users(name)').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}).limit(2),
     ]);
 
     const items = [];
-    (artRes.data||[]).forEach(a => items.push({type:'article', title: a.title, meta: a.series_total > 1 ? `Seriál ${a.part_number}/${a.series_total}` : 'Článek', ts: a.created_at, id: a.id}));
+    (artRes.data||[]).forEach(a => items.push({type: a.poll_question ? 'poll' : 'article', title: a.title, meta: a.poll_question ? 'Hlasování' : (a.series_total > 1 ? `Seriál ${a.part_number}/${a.series_total}` : 'Článek'), ts: a.created_at, id: a.id}));
     (evRes.data||[]).forEach(e => items.push({type:'event', title: e.title, meta: formatEventDate(e.event_date), ts: e.created_at, id: e.id}));
     (dreamRes.data||[]).forEach(d => items.push({type:'dream', title: (d.users?.name||'Člen komunity') + ' chce na: ' + d.destination, meta: 'Nový sen', ts: d.created_at, id: d.id}));
 
@@ -3424,10 +3424,10 @@ async function loadDailyFeed() {
       return;
     }
 
-    const iconMap = {article:'📖', event:'📅', dream:'✈️'};
-    const badgeMap = {article:'Článek', event:'Událost', dream:'Sen'};
+    const iconMap = {article:'📖', poll:'🗳️', event:'📅', dream:'✈️'};
+    const badgeMap = {article:'Článek', poll:'Hlasování', event:'Událost', dream:'Sen'};
     el.innerHTML = items.slice(0,4).map(item => `
-      <div class="daily-card" onclick="${item.type==='article'?`showSection('inspirace',null)`:`showSection('${item.type==='event'?'landing':'community'}',null)`}">
+      <div class="daily-card" onclick="${(item.type==='article'||item.type==='poll')?`showSection('inspirace',null)`:`showSection('${item.type==='event'?'landing':'community'}',null)`}">
         <div class="daily-card-icon type-${item.type}">${iconMap[item.type]}</div>
         <div>
           <div class="daily-card-title">${item.title}<span class="daily-card-badge badge-${item.type}">${badgeMap[item.type]}</span></div>
