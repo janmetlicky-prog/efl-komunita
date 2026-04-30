@@ -519,6 +519,7 @@
   .exp-landing-banner p { margin:.3rem 0 0; color:var(--muted); font-size:.85rem; }
   .exp-landing-banner .exp-arrow { color:#C9843A; font-size:1.5rem; }
   .exp-nav-btn { color:#C9843A !important; }
+  #exp-trip-select:focus { border-color:#C9843A; box-shadow:0 0 0 2px rgba(201,132,58,.15); }
   @media(max-width:600px) {
     .exp-grid { grid-template-columns:1fr; }
     .exp-landing-banner { flex-direction:column; text-align:center; padding:1.2rem; }
@@ -936,10 +937,15 @@
     <div class="add-place-card" style="margin-top:1.5rem">
       <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:#C9843A;margin-bottom:1rem">🔒 Správa tajných expedic</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+        <div style="grid-column:1/-1">
+          <select id="exp-trip-select" onchange="onTripSelect(this)" style="width:100%;padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;background:#fff;color:var(--text);cursor:pointer;outline:none;transition:border-color .15s">
+            <option value="">-- Vyberte cestu nebo zadejte ručně --</option>
+          </select>
+        </div>
         <input type="text" id="exp-title" placeholder="Název expedice" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
         <input type="text" id="exp-destination" placeholder="Destinace" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
-        <input type="date" id="exp-from" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
-        <input type="date" id="exp-to" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="text" id="exp-from" placeholder="Datum od (např. 15.5.2026)" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="text" id="exp-to" placeholder="Datum do (např. 22.5.2026)" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
         <input type="text" id="exp-guide" placeholder="Průvodce" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
         <input type="text" id="exp-accommodation" placeholder="Ubytování" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
         <input type="number" id="exp-nights" placeholder="Počet nocí" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
@@ -3878,8 +3884,8 @@ async function loadExpeditions() {
       return;
     }
     grid.innerHTML = data.map(function(e) {
-      var fromDate = e.date_from ? new Date(e.date_from).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'}) : '';
-      var toDate = e.date_to ? new Date(e.date_to).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'}) : '';
+      var fromDate = e.date_from ? (isNaN(Date.parse(e.date_from)) ? e.date_from : new Date(e.date_from).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'})) : '';
+      var toDate = e.date_to ? (isNaN(Date.parse(e.date_to)) ? e.date_to : new Date(e.date_to).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'})) : '';
       var dateRange = fromDate && toDate ? fromDate + ' – ' + toDate : fromDate || toDate || '';
       return '<div class="exp-card">'
         + '<div class="exp-card-header">'
@@ -3947,6 +3953,8 @@ function clearExpForm() {
   ['exp-title','exp-destination','exp-from','exp-to','exp-guide','exp-accommodation','exp-nights','exp-price','exp-description'].forEach(function(id) {
     document.getElementById(id).value = '';
   });
+  var tripSel = document.getElementById('exp-trip-select');
+  if (tripSel) tripSel.selectedIndex = 0;
   delete document.getElementById('exp-title').dataset.editId;
 }
 
@@ -4016,6 +4024,73 @@ async function deleteExpedition(id) {
   } catch(err) { alert('Chyba: ' + err.message); }
 }
 
+// Fetch active trips from kalkulace app
+var _cachedTrips = null;
+async function fetchActiveTrips() {
+  var select = document.getElementById('exp-trip-select');
+  if (!select) return;
+  try {
+    if (!_cachedTrips) {
+      var resp = await fetch('https://raw.githubusercontent.com/janmetlicky-prog/efl-kalkulace/main/data/db.json');
+      var json = await resp.json();
+      var trips = json.trips || json;
+      _cachedTrips = (Array.isArray(trips) ? trips : []).filter(function(t) { return t.status === 'active'; });
+    }
+    // Keep first option, replace rest
+    select.innerHTML = '<option value="">-- Vyberte cestu nebo zadejte ručně --</option>';
+    _cachedTrips.forEach(function(t) {
+      var opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      opt.dataset.trip = JSON.stringify(t);
+      select.appendChild(opt);
+    });
+  } catch(err) {
+    console.error('fetchActiveTrips error:', err);
+  }
+}
+
+function onTripSelect(sel) {
+  var opt = sel.options[sel.selectedIndex];
+  if (!opt || !opt.dataset.trip) return;
+  try {
+    var t = JSON.parse(opt.dataset.trip);
+    // Title — strip date suffix (everything after last comma or pipe date part)
+    var title = t.name || '';
+    var titleClean = title.replace(/,?\s*\d{1,2}\.\s*-\s*\d{1,2}\.\s*\d{1,2}\.\s*\d{4}$/, '').replace(/,?\s*\d{1,2}\.\s*-\s*\d{1,2}\.\s*\d{1,2}\.\s*$/, '').trim();
+    document.getElementById('exp-title').value = titleClean || title;
+    document.getElementById('exp-destination').value = t.destination || '';
+    document.getElementById('exp-guide').value = t.instructor || '';
+    document.getElementById('exp-nights').value = t.nights || '';
+    document.getElementById('exp-price').value = t.price ? t.price + ' Kč' : '';
+    // Parse dates from t.date + t.year
+    if (t.date && t.year) {
+      parseTripDates(t.date, t.year);
+    }
+  } catch(e) {
+    console.error('onTripSelect parse error:', e);
+  }
+}
+
+function parseTripDates(dateStr, year) {
+  // Formats: "15.-22.5." or "30. 5. – 6. 6." or "30.5.-6.6."
+  var clean = dateStr.replace(/\s/g, '').replace('–', '-');
+  // Split on dash between day groups
+  var parts = clean.match(/(\d{1,2})\.(\d{1,2})?\.?-(\d{1,2})\.(\d{1,2})\./);
+  if (parts) {
+    var dayFrom = parts[1];
+    var monthFrom = parts[2] || parts[4]; // if no month for from, same as to
+    var dayTo = parts[3];
+    var monthTo = parts[4];
+    document.getElementById('exp-from').value = dayFrom + '.' + monthFrom + '.' + year;
+    document.getElementById('exp-to').value = dayTo + '.' + monthTo + '.' + year;
+  } else {
+    // Fallback: put raw string
+    document.getElementById('exp-from').value = dateStr + year;
+    document.getElementById('exp-to').value = '';
+  }
+}
+
 // Hook into admin dashboard load
 var _origLoadAdmin = typeof loadAdminDashboard === 'function' ? loadAdminDashboard : null;
 if (_origLoadAdmin) {
@@ -4024,6 +4099,7 @@ if (_origLoadAdmin) {
   loadAdminDashboard = function() {
     _realLoadAdmin();
     loadAdminExpeditions();
+    fetchActiveTrips();
   };
 }
 </script>
