@@ -3409,13 +3409,13 @@ async function loadDailyFeed() {
     const [artRes, evRes, dreamRes] = await Promise.all([
       db.from('articles').select('id,title,part_number,series_total,created_at').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
       db.from('events').select('id,title,event_date,type').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
-      db.from('travel_intents').select('id,destination,user_name,created_at,interested_count').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}).limit(2),
+      db.from('intents').select('id,destination,created_at,users(name)').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}).limit(2),
     ]);
 
     const items = [];
     (artRes.data||[]).forEach(a => items.push({type:'article', title: a.title, meta: a.series_total > 1 ? `Seriál ${a.part_number}/${a.series_total}` : 'Článek', ts: a.created_at, id: a.id}));
     (evRes.data||[]).forEach(e => items.push({type:'event', title: e.title, meta: formatEventDate(e.event_date), ts: e.created_at, id: e.id}));
-    (dreamRes.data||[]).forEach(d => items.push({type:'dream', title: `${d.user_name||'Člen komunity'} chce na: ${d.destination}`, meta: d.interested_count > 0 ? `${d.interested_count} lidí má zájem` : 'Nový sen', ts: d.created_at, id: d.id}));
+    (dreamRes.data||[]).forEach(d => items.push({type:'dream', title: (d.users?.name||'Člen komunity') + ' chce na: ' + d.destination, meta: 'Nový sen', ts: d.created_at, id: d.id}));
 
     items.sort((a,b) => new Date(b.ts) - new Date(a.ts));
 
@@ -3564,17 +3564,17 @@ function buildInspCard(parts) {
     if (a.poll_question && opts.length) {
       if (a.poll_type === 'checkbox') {
         const optRows = opts.map((opt,i) =>
-          '<label class="insp-poll-check-opt" id="pollopt-' + a.id + '-' + i + '" onclick="toggleCheckOpt(event,'' + a.id + '',' + i + ')">' +
+          '<label class="insp-poll-check-opt" id="pollopt-' + a.id + '-' + i + '" onclick="toggleCheckOpt(event,\x27' + a.id + '\x27,' + i + ')">' +
           '<input type="checkbox" id="pollcb-' + a.id + '-' + i + '" onclick="event.stopPropagation()"><span>' + opt.label + '</span></label>'
         ).join('');
         pollHTML = '<div class="insp-poll">' +
           '<div class="insp-poll-q">' + a.poll_question + '</div>' +
           '<div class="insp-poll-check" id="poll-check-' + a.id + '">' + optRows + '</div>' +
-          '<button class="insp-poll-submit" id="poll-submit-' + a.id + '" onclick="submitCheckPoll('' + a.id + '')">Hlasovat</button>' +
+          '<button class="insp-poll-submit" id="poll-submit-' + a.id + '" onclick="submitCheckPoll(\x27' + a.id + '\x27)">Hlasovat</button>' +
           '<div class="insp-poll-total" id="poll-total-' + a.id + '">Hlasovalo ' + (a.vote_count||0) + ' lidí</div></div>';
       } else {
         const optRows = opts.map((opt,i) =>
-          '<div class="insp-poll-opt' + (voted===i?' voted':'') + '" onclick="castVote('' + voteKey + '',' + i + ',this.closest('.insp-card'))">' +
+          '<div class="insp-poll-opt' + (voted===i?' voted':'') + '" onclick="castVote(\x27' + voteKey + '\x27,' + i + ',this.closest(\x27.insp-card\x27))">' +
           '<div class="insp-poll-bar" style="width:' + (voted!==undefined?(opt.pct||0):0) + '%"></div>' +
           '<span class="insp-poll-label">' + opt.label + '</span>' +
           (voted!==undefined ? '<span class="insp-poll-pct">' + (opt.pct||0) + ' %</span>' : '') +
@@ -3588,10 +3588,7 @@ function buildInspCard(parts) {
     let dateStr = '';
     try { dateStr = new Date(a.created_at).toLocaleDateString('cs-CZ',{day:'numeric',month:'long'}); } catch(e) {}
 
-    const bodyHTML = '<p>' + (a.body||'').replace(/
-
-/g,'</p><p>').replace(/
-/g,'<br>') + '</p>';
+    const bodyHTML = '<p>' + (a.body||'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
 
     card.innerHTML =
       '<div class="insp-card-header">' +
@@ -3606,7 +3603,7 @@ function buildInspCard(parts) {
       '</div>' +
       pollHTML +
       '<div class="insp-reactions">' +
-        '<button class="insp-react-btn" onclick="toggleInspLike(this,'' + a.id + '')">' +
+        '<button class="insp-react-btn" onclick="toggleInspLike(this,\x27' + a.id + '\x27)">' +
         '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 14s-6-3.5-6-8a4 4 0 0 1 6-3.44A4 4 0 0 1 14 6c0 4.5-6 8-6 8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>' +
         '<span>' + (a.like_count||0) + ' líbí se</span></button>' +
       '</div>';
@@ -3666,6 +3663,8 @@ async function submitCheckPoll(articleId) {
 
   inspVotes[articleId] = selected;
 }
+
+function castVote(articleId, optionIdx, card) {
   if (inspVotes[articleId] !== undefined) return;
   inspVotes[articleId] = optionIdx;
   const opts = card.querySelectorAll('.insp-poll-opt');
