@@ -2898,6 +2898,10 @@ async function initLandingPage() {
       grid.appendChild(card);
     });
   }
+
+  // Dnešní dávka inspirace + Kalendář akcí
+  loadDailyFeed();
+  loadCalendar();
 }
 
 function showSection(name, btn) {
@@ -3682,13 +3686,18 @@ function toggleInspLike(btn, articleId) {
   span.textContent = (btn.classList.contains('active') ? count+1 : count-1) + ' líbí se';
 }
 
-// Patch initLandingPage to also load daily feed and calendar
-const _origInit = window.initLandingPage;
-window.initLandingPage = async function() {
-  await (_origInit ? _origInit() : Promise.resolve());
-  loadDailyFeed();
-  loadCalendar();
-};
+function formatTime(ts) {
+  if (!ts) return '';
+  try {
+    const d = new Date(ts);
+    const diff = Math.floor((Date.now() - d) / 60000);
+    if (diff < 2) return 'právě teď';
+    if (diff < 60) return 'před ' + diff + ' min';
+    if (diff < 120) return 'před hodinou';
+    if (diff < 1440) return 'před ' + Math.floor(diff/60) + ' hod';
+    return d.toLocaleDateString('cs-CZ', {day:'numeric', month:'short'});
+  } catch(e) { return ''; }
+}
 </script>
 
 </body>
