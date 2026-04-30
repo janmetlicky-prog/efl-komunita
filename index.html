@@ -4034,7 +4034,7 @@ async function fetchActiveTrips() {
       var resp = await fetch('https://raw.githubusercontent.com/janmetlicky-prog/efl-kalkulace/main/data/db.json');
       var json = await resp.json();
       var trips = json.trips || json;
-      _cachedTrips = (Array.isArray(trips) ? trips : []).filter(function(t) { return t.status === 'active'; });
+      _cachedTrips = (Array.isArray(trips) ? trips : []).filter(function(t) { return t.status && t.status !== 'done' && t.status !== 'storno'; });
     }
     // Keep first option, replace rest
     select.innerHTML = '<option value="">-- Vyberte cestu nebo zadejte ručně --</option>';
