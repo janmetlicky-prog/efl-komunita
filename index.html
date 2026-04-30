@@ -161,6 +161,18 @@
   .insp-poll-label { font-size:13px; color:#1a3c3c; z-index:1; position:relative; flex:1; }
   .insp-poll-pct { font-size:12px; color:#2e7d6e; z-index:1; position:relative; font-weight:600; }
   .insp-poll-total { font-size:11px; color:#7a9090; margin-top:4px; }
+
+  /* Checkbox anketa (poll_type = checkbox) */
+  .insp-poll-check { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
+  .insp-poll-check-opt { display:flex; align-items:flex-start; gap:8px; padding:10px 14px; border:1.5px solid #d0e4e2; border-radius:12px; cursor:pointer; flex:1 1 calc(50% - 10px); min-width:140px; transition:border-color .15s,background .15s; }
+  .insp-poll-check-opt:hover { border-color:#4a9b8e; background:#f5fbfa; }
+  .insp-poll-check-opt.selected { border-color:#2e7d6e; background:#f0faf8; }
+  .insp-poll-check-opt input[type=checkbox] { margin-top:2px; flex-shrink:0; accent-color:#2e7d6e; width:15px; height:15px; cursor:pointer; }
+  .insp-poll-check-opt span { font-size:13px; color:#1a3c3c; line-height:1.4; }
+  .insp-poll-submit { display:block; width:100%; padding:13px; background:#c9843a; color:white; border:none; border-radius:50px; font-size:14px; font-weight:700; font-family:'DM Sans',sans-serif; cursor:pointer; margin-top:4px; transition:background .15s; }
+  .insp-poll-submit:hover { background:#b8722e; }
+  .insp-poll-submit:disabled { background:#a0b0af; cursor:default; }
+  .insp-poll-thanks { font-size:13px; color:#2e7d6e; font-weight:600; text-align:center; padding:10px 0 4px; }
   .insp-reactions { display:flex; gap:14px; padding:10px 16px; border-top:1px solid #eef4f3; }
   .insp-react-btn { display:flex; align-items:center; gap:5px; font-size:12px; color:#7a9090; cursor:pointer; background:none; border:none; padding:0; }
   .insp-react-btn.active { color:#2e7d6e; }
@@ -3543,16 +3555,34 @@ function buildInspCard(parts) {
     if (a.poll_question && a.poll_options) {
       let opts;
       try { opts = typeof a.poll_options === 'string' ? JSON.parse(a.poll_options) : a.poll_options; } catch(e) { opts = []; }
-      pollHTML = `<div class="insp-poll">
-        <div class="insp-poll-q">${a.poll_question}</div>
-        ${opts.map((opt,i) => `
-          <div class="insp-poll-opt${voted===i?' voted':''}" onclick="castVote('${voteKey}',${i},this.closest('.insp-card'))">
-            <div class="insp-poll-bar" style="width:${voted!==undefined?opt.pct:0}%"></div>
-            <span class="insp-poll-label">${opt.label}</span>
-            ${voted!==undefined?`<span class="insp-poll-pct">${opt.pct} %</span>`:''}
-          </div>`).join('')}
-        <div class="insp-poll-total">Hlasovalo ${a.vote_count||0} lidí</div>
-      </div>`;
+
+      if (a.poll_type === 'checkbox') {
+        // Checkboxová anketa s tlačítkem Hlasovat
+        pollHTML = `<div class="insp-poll">
+          <div class="insp-poll-q">${a.poll_question}</div>
+          <div class="insp-poll-check" id="poll-check-${a.id}">
+            ${opts.map((opt,i) => `
+              <label class="insp-poll-check-opt" id="pollopt-${a.id}-${i}" onclick="toggleCheckOpt(event,'${a.id}',${i})">
+                <input type="checkbox" id="pollcb-${a.id}-${i}" onclick="event.stopPropagation()">
+                <span>${opt.label}</span>
+              </label>`).join('')}
+          </div>
+          <button class="insp-poll-submit" id="poll-submit-${a.id}" onclick="submitCheckPoll('${a.id}')">Hlasovat</button>
+          <div class="insp-poll-total" id="poll-total-${a.id}">Hlasovalo ${a.vote_count||0} lidí</div>
+        </div>`;
+      } else {
+        // Původní single-click poll
+        pollHTML = `<div class="insp-poll">
+          <div class="insp-poll-q">${a.poll_question}</div>
+          ${opts.map((opt,i) => `
+            <div class="insp-poll-opt${voted===i?' voted':''}" onclick="castVote('${voteKey}',${i},this.closest('.insp-card'))">
+              <div class="insp-poll-bar" style="width:${voted!==undefined?opt.pct:0}%"></div>
+              <span class="insp-poll-label">${opt.label}</span>
+              ${voted!==undefined?`<span class="insp-poll-pct">${opt.pct} %</span>`:''}
+            </div>`).join('')}
+          <div class="insp-poll-total">Hlasovalo ${a.vote_count||0} lidí</div>
+        </div>`;
+      }
     }
 
     card.innerHTML = `
@@ -3608,7 +3638,54 @@ function switchInspPart(sid, idx) {
   newCard.querySelectorAll('.insp-part-chip').forEach((c,i) => c.classList.toggle('active', i===idx));
 }
 
-function castVote(articleId, optionIdx, card) {
+function toggleCheckOpt(e, articleId, idx) {
+  const label = document.getElementById(`pollopt-${articleId}-${idx}`);
+  const cb    = document.getElementById(`pollcb-${articleId}-${idx}`);
+  if (!label || !cb) return;
+  cb.checked = !cb.checked;
+  label.classList.toggle('selected', cb.checked);
+}
+
+async function submitCheckPoll(articleId) {
+  const container = document.getElementById(`poll-check-${articleId}`);
+  const btn = document.getElementById(`poll-submit-${articleId}`);
+  if (!container || !btn) return;
+
+  const selected = [];
+  container.querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
+    selected.push(parseInt(cb.id.split('-').pop()));
+  });
+
+  if (!selected.length) { showToast('Vyber alespoň jednu možnost 👆'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Odesílám…';
+
+  try {
+    const voterId = currentUser?.id || localStorage.getItem('efl_user_id') || 'anon';
+    await db.from('article_votes').upsert({
+      article_id: articleId,
+      option_idx: selected[0],
+      option_idxs: selected,
+      voter_id: voterId
+    });
+  } catch(e) { console.warn('[poll]', e); }
+
+  // Show thank you
+  btn.style.display = 'none';
+  const thanks = document.createElement('div');
+  thanks.className = 'insp-poll-thanks';
+  thanks.textContent = 'Děkujeme za odpověď! 🙏';
+  btn.parentNode.insertBefore(thanks, btn.nextSibling);
+
+  const total = document.getElementById(`poll-total-${articleId}`);
+  if (total) {
+    const cur = parseInt(total.textContent) || 0;
+    total.textContent = `Hlasovalo ${cur + 1} lidí`;
+  }
+
+  inspVotes[articleId] = selected;
+}
   if (inspVotes[articleId] !== undefined) return;
   inspVotes[articleId] = optionIdx;
   const opts = card.querySelectorAll('.insp-poll-opt');
