@@ -476,6 +476,53 @@
     .new-intent-card { position:static; }
     nav button { font-size:.7rem; padding:.45rem .6rem; }
   }
+
+  /* ── TAJNÉ EXPEDICE ───────────────────────────────────────── */
+  .exp-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:1.5rem; margin-top:1.5rem; }
+  .exp-card {
+    background:var(--card-bg); border-radius:16px; overflow:hidden;
+    border:1px solid rgba(201,132,58,.25); box-shadow:0 4px 20px rgba(0,0,0,.08);
+    transition:transform .2s,box-shadow .2s;
+  }
+  .exp-card:hover { transform:translateY(-3px); box-shadow:0 8px 32px rgba(201,132,58,.18); }
+  .exp-card-header {
+    background:linear-gradient(135deg,#C9843A 0%,#A6692E 100%);
+    padding:1.2rem 1.5rem; color:#fff; position:relative;
+  }
+  .exp-card-header h3 { margin:0 0 .3rem; font-family:'Playfair Display',serif; font-size:1.2rem; }
+  .exp-card-header .exp-dest { opacity:.85; font-size:.85rem; }
+  .exp-card-body { padding:1.2rem 1.5rem; }
+  .exp-card-body .exp-meta { display:flex; flex-wrap:wrap; gap:.6rem; margin-bottom:1rem; }
+  .exp-card-body .exp-meta span {
+    background:rgba(201,132,58,.1); color:#A6692E; padding:.25rem .65rem;
+    border-radius:20px; font-size:.78rem; font-weight:500;
+  }
+  .exp-card-body .exp-desc { color:var(--muted); font-size:.88rem; line-height:1.5; margin-bottom:1rem; }
+  .exp-card-body .exp-price { font-family:'Playfair Display',serif; font-size:1.1rem; color:#C9843A; font-weight:600; margin-bottom:1rem; }
+  .exp-btn-interest {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:linear-gradient(135deg,#C9843A,#A6692E); color:#fff;
+    border:none; padding:.65rem 1.5rem; border-radius:12px;
+    font-size:.88rem; font-weight:600; cursor:pointer;
+    transition:opacity .2s;
+  }
+  .exp-btn-interest:hover { opacity:.88; }
+  .exp-landing-banner {
+    background:linear-gradient(135deg,rgba(201,132,58,.08),rgba(201,132,58,.02));
+    border:1px solid rgba(201,132,58,.2); border-radius:16px;
+    padding:1.5rem 2rem; margin:2rem 0; display:flex; align-items:center;
+    justify-content:space-between; gap:1rem; cursor:pointer;
+    transition:border-color .2s;
+  }
+  .exp-landing-banner:hover { border-color:rgba(201,132,58,.45); }
+  .exp-landing-banner h3 { margin:0; font-family:'Playfair Display',serif; color:#C9843A; font-size:1.1rem; }
+  .exp-landing-banner p { margin:.3rem 0 0; color:var(--muted); font-size:.85rem; }
+  .exp-landing-banner .exp-arrow { color:#C9843A; font-size:1.5rem; }
+  .exp-nav-btn { color:#C9843A !important; }
+  @media(max-width:600px) {
+    .exp-grid { grid-template-columns:1fr; }
+    .exp-landing-banner { flex-direction:column; text-align:center; padding:1.2rem; }
+  }
 </style>
 </head>
 <body>
@@ -570,6 +617,7 @@
     <button onclick="showSection('inspirace',this)">📖 Inspirace</button>
     <button onclick="showSection('mine',this)">📌 Moje</button>
     <button onclick="showSection('doporuceni',this)">⭐ Doporučení</button>
+    <button class="exp-nav-btn" onclick="showSection('expedice',this)">🔒 Expedice</button>
     <button id="admin-nav-btn" onclick="showSection('admin',this)" style="display:none">👑 Admin</button>
   </nav>
   <div style="display:flex;align-items:center;gap:.5rem">
@@ -621,6 +669,15 @@
     </div>
     <div class="landing-footer-link">
       <a href="https://essenceforlife.cz" target="_blank">Všechny cesty Essence → essenceforlife.cz</a>
+    </div>
+
+    <!-- TAJNÉ EXPEDICE BANNER -->
+    <div class="exp-landing-banner" onclick="showSection('expedice')">
+      <div>
+        <h3>🔒 Tajné expedice — exkluzivně v komunitě</h3>
+        <p>Speciální cesty dostupné pouze pro členy komunity. Omezený počet míst.</p>
+      </div>
+      <span class="exp-arrow">→</span>
     </div>
 
     <!-- DNEŠNÍ DÁVKA INSPIRACE -->
@@ -875,6 +932,27 @@
 
     </div>
 
+    <!-- SPRÁVA EXPEDIC -->
+    <div class="add-place-card" style="margin-top:1.5rem">
+      <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:#C9843A;margin-bottom:1rem">🔒 Správa tajných expedic</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+        <input type="text" id="exp-title" placeholder="Název expedice" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="text" id="exp-destination" placeholder="Destinace" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="date" id="exp-from" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="date" id="exp-to" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="text" id="exp-guide" placeholder="Průvodce" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="text" id="exp-accommodation" placeholder="Ubytování" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="number" id="exp-nights" placeholder="Počet nocí" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+        <input type="text" id="exp-price" placeholder="Cena (např. od 45 000 Kč)" style="padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem">
+      </div>
+      <textarea id="exp-description" placeholder="Popis expedice..." rows="3" style="width:100%;padding:.6rem;border:1px solid var(--border);border-radius:8px;font-size:.85rem;margin-bottom:.75rem;resize:vertical;box-sizing:border-box"></textarea>
+      <div style="display:flex;gap:.75rem;margin-bottom:1.5rem">
+        <button onclick="saveExpedition()" style="padding:.6rem 1.5rem;background:linear-gradient(135deg,#C9843A,#A6692E);color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:600">Přidat expedici</button>
+        <button onclick="clearExpForm()" style="padding:.6rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;color:var(--muted)">Vyčistit</button>
+      </div>
+      <div id="admin-exp-list"><div class="loading"><span class="spinner"></span></div></div>
+    </div>
+
     <!-- VŠICHNI UŽIVATELÉ -->
     <div class="add-place-card" style="margin-top:1.5rem">
       <h3 style="font-size:.8rem;text-transform:uppercase;letter-spacing:.1em;color:var(--teal-dark);margin-bottom:1rem">📋 Všichni členové</h3>
@@ -896,6 +974,17 @@
       </div>
     </div>
 
+  </section>
+
+  <!-- TAJNÉ EXPEDICE -->
+  <section id="expedice-section" class="section">
+    <div class="page-header">
+      <h1>🔒 Tajné expedice</h1>
+      <p>Exkluzivní cesty dostupné pouze pro členy komunity Essence for Life</p>
+    </div>
+    <div class="exp-grid" id="exp-grid">
+      <div class="loading"><span class="spinner"></span> Načítám expedice...</div>
+    </div>
   </section>
 
 </main>
@@ -1028,6 +1117,7 @@
     <button onclick="showSection('community',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">✈️&nbsp;&nbsp;Cestovatelské sny</button>
     <button onclick="showSection('inspirace',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">📖&nbsp;&nbsp;Inspirace</button>
     <button onclick="showSection('doporuceni',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">⭐&nbsp;&nbsp;Doporučení</button>
+    <button onclick="showSection('expedice',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C9843A;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">🔒&nbsp;&nbsp;Tajné expedice</button>
     <button onclick="showSection('mine',this);closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">📌&nbsp;&nbsp;Moje záznamy</button>
     <button onclick="openProfile();closeMobileMenu()" style="display:block;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left">👤&nbsp;&nbsp;Můj profil</button>
     <button id="mm-admin" style="display:none;width:100%;padding:18px 24px;background:none;border:none;border-bottom:1px solid rgba(192,224,225,.1);cursor:pointer;color:#C0E0E1;font-family:'DM Sans',sans-serif;font-size:18px;font-weight:400;text-align:left" onclick="showSection('admin',this);closeMobileMenu()">👑&nbsp;&nbsp;Admin dashboard</button>
@@ -1052,6 +1142,9 @@
   </button>
   <button class="mobile-nav-btn" onclick="showSection('mine',this);syncMobileNav(this)" id="mob-mine">
     <span class="nav-icon">📌</span>Moje
+  </button>
+  <button class="mobile-nav-btn exp-nav-btn" onclick="showSection('expedice',this);syncMobileNav(this)" id="mob-expedice">
+    <span class="nav-icon">🔒</span>Expedice
   </button>
   <button class="mobile-nav-btn" onclick="openProfile()" id="mob-profile">
     <span class="nav-icon">👤</span>Profil
@@ -2916,6 +3009,7 @@ function showSection(name, btn) {
   if (name === 'doporuceni') loadRecs();
   if (name === 'admin') loadAdminDashboard();
   if (name === 'inspirace') loadInspiraceSection();
+  if (name === 'expedice') loadExpeditions();
   window.scrollTo(0, 0);
   // Skrýt FAB na sekcích kde není potřeba
   const fab = document.getElementById('fab-btn');
@@ -3717,6 +3811,170 @@ function formatTime(ts) {
     if (diff < 1440) return 'před ' + Math.floor(diff/60) + ' hod';
     return d.toLocaleDateString('cs-CZ', {day:'numeric', month:'short'});
   } catch(e) { return ''; }
+}
+
+// ── TAJNÉ EXPEDICE ──────────────────────────────────────────────────────────
+let expeditionsLoaded = false;
+
+async function loadExpeditions() {
+  if (expeditionsLoaded) return;
+  const grid = document.getElementById('exp-grid');
+  try {
+    const { data, error } = await db.from('expeditions').select('*').eq('is_active', true).order('date_from', { ascending: true });
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      grid.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted)"><p style="font-size:1.2rem;margin-bottom:.5rem">Zatím žádné expedice</p><p>Nové tajné expedice se tu brzy objeví!</p></div>';
+      expeditionsLoaded = true;
+      return;
+    }
+    grid.innerHTML = data.map(function(e) {
+      var fromDate = e.date_from ? new Date(e.date_from).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'}) : '';
+      var toDate = e.date_to ? new Date(e.date_to).toLocaleDateString('cs-CZ', {day:'numeric',month:'long',year:'numeric'}) : '';
+      var dateRange = fromDate && toDate ? fromDate + ' – ' + toDate : fromDate || toDate || '';
+      return '<div class="exp-card">'
+        + '<div class="exp-card-header">'
+        + '<h3>' + (e.title || '') + '</h3>'
+        + '<div class="exp-dest">' + (e.destination || '') + '</div>'
+        + '</div>'
+        + '<div class="exp-card-body">'
+        + '<div class="exp-meta">'
+        + (dateRange ? '<span>📅 ' + dateRange + '</span>' : '')
+        + (e.nights ? '<span>🌙 ' + e.nights + ' nocí</span>' : '')
+        + (e.guide_name ? '<span>👤 ' + e.guide_name + '</span>' : '')
+        + (e.accommodation ? '<span>🏨 ' + e.accommodation + '</span>' : '')
+        + '</div>'
+        + (e.description ? '<div class="exp-desc">' + e.description + '</div>' : '')
+        + (e.price ? '<div class="exp-price">' + e.price + '</div>' : '')
+        + '<a href="https://forms.gle/" target="_blank" class="exp-btn-interest">✋ Mám zájem</a>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+    expeditionsLoaded = true;
+  } catch(err) {
+    console.error('loadExpeditions error:', err);
+    grid.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">Nepodařilo se načíst expedice</div>';
+  }
+}
+
+// Admin: save expedition
+async function saveExpedition() {
+  var title = document.getElementById('exp-title').value.trim();
+  var destination = document.getElementById('exp-destination').value.trim();
+  if (!title) { alert('Zadejte název expedice'); return; }
+  var payload = {
+    title: title,
+    destination: destination,
+    date_from: document.getElementById('exp-from').value || null,
+    date_to: document.getElementById('exp-to').value || null,
+    guide_name: document.getElementById('exp-guide').value.trim() || null,
+    accommodation: document.getElementById('exp-accommodation').value.trim() || null,
+    nights: parseInt(document.getElementById('exp-nights').value) || null,
+    price: document.getElementById('exp-price').value.trim() || null,
+    description: document.getElementById('exp-description').value.trim() || null,
+    is_active: true
+  };
+  try {
+    var editId = document.getElementById('exp-title').dataset.editId;
+    if (editId) {
+      var { error } = await db.from('expeditions').update(payload).eq('id', editId);
+      if (error) throw error;
+      delete document.getElementById('exp-title').dataset.editId;
+    } else {
+      var { error } = await db.from('expeditions').insert([payload]);
+      if (error) throw error;
+    }
+    clearExpForm();
+    expeditionsLoaded = false;
+    loadExpeditions();
+    loadAdminExpeditions();
+  } catch(err) {
+    console.error('saveExpedition error:', err);
+    alert('Chyba: ' + err.message);
+  }
+}
+
+function clearExpForm() {
+  ['exp-title','exp-destination','exp-from','exp-to','exp-guide','exp-accommodation','exp-nights','exp-price','exp-description'].forEach(function(id) {
+    document.getElementById(id).value = '';
+  });
+  delete document.getElementById('exp-title').dataset.editId;
+}
+
+async function loadAdminExpeditions() {
+  var container = document.getElementById('admin-exp-list');
+  if (!container) return;
+  try {
+    var { data, error } = await db.from('expeditions').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      container.innerHTML = '<p style="color:var(--muted);text-align:center;padding:1rem">Žádné expedice</p>';
+      return;
+    }
+    container.innerHTML = data.map(function(e) {
+      var status = e.is_active ? '<span style="color:#22c55e">● Aktivní</span>' : '<span style="color:var(--muted)">○ Neaktivní</span>';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem;border-bottom:1px solid var(--border)">'
+        + '<div><strong>' + e.title + '</strong> — ' + (e.destination || '') + ' ' + status + '</div>'
+        + '<div style="display:flex;gap:.5rem">'
+        + '<button onclick="editExpedition(\x27' + e.id + '\x27)" style="padding:.3rem .6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.75rem">✏️</button>'
+        + '<button onclick="toggleExpedition(\x27' + e.id + '\x27,' + !e.is_active + ')" style="padding:.3rem .6rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;cursor:pointer;font-size:.75rem">' + (e.is_active ? '🚫' : '✅') + '</button>'
+        + '<button onclick="deleteExpedition(\x27' + e.id + '\x27)" style="padding:.3rem .6rem;background:#fee2e2;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-size:.75rem">🗑️</button>'
+        + '</div>'
+        + '</div>';
+    }).join('');
+  } catch(err) {
+    console.error('loadAdminExpeditions error:', err);
+    container.innerHTML = '<p style="color:red">Chyba načítání</p>';
+  }
+}
+
+async function editExpedition(id) {
+  try {
+    var { data, error } = await db.from('expeditions').select('*').eq('id', id).single();
+    if (error) throw error;
+    document.getElementById('exp-title').value = data.title || '';
+    document.getElementById('exp-title').dataset.editId = id;
+    document.getElementById('exp-destination').value = data.destination || '';
+    document.getElementById('exp-from').value = data.date_from || '';
+    document.getElementById('exp-to').value = data.date_to || '';
+    document.getElementById('exp-guide').value = data.guide_name || '';
+    document.getElementById('exp-accommodation').value = data.accommodation || '';
+    document.getElementById('exp-nights').value = data.nights || '';
+    document.getElementById('exp-price').value = data.price || '';
+    document.getElementById('exp-description').value = data.description || '';
+    window.scrollTo({ top: document.getElementById('exp-title').offsetTop - 100, behavior: 'smooth' });
+  } catch(err) {
+    alert('Chyba: ' + err.message);
+  }
+}
+
+async function toggleExpedition(id, active) {
+  try {
+    var { error } = await db.from('expeditions').update({ is_active: active }).eq('id', id);
+    if (error) throw error;
+    expeditionsLoaded = false;
+    loadAdminExpeditions();
+  } catch(err) { alert('Chyba: ' + err.message); }
+}
+
+async function deleteExpedition(id) {
+  if (!confirm('Opravdu smazat tuto expedici?')) return;
+  try {
+    var { error } = await db.from('expeditions').delete().eq('id', id);
+    if (error) throw error;
+    expeditionsLoaded = false;
+    loadAdminExpeditions();
+  } catch(err) { alert('Chyba: ' + err.message); }
+}
+
+// Hook into admin dashboard load
+var _origLoadAdmin = typeof loadAdminDashboard === 'function' ? loadAdminDashboard : null;
+if (_origLoadAdmin) {
+  var _adminWrapped = false;
+  var _realLoadAdmin = loadAdminDashboard;
+  loadAdminDashboard = function() {
+    _realLoadAdmin();
+    loadAdminExpeditions();
+  };
 }
 </script>
 
