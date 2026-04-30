@@ -3507,6 +3507,9 @@ async function loadCalendar() {
 // ── INSPIRACE SEKCE ────────────────────────────────────────────────────────────
 let inspLoaded = false;
 let inspVotes = {};
+let inspLikes = {};
+try { inspVotes = JSON.parse(localStorage.getItem('efl_insp_votes') || '{}'); } catch(e) {}
+try { inspLikes = JSON.parse(localStorage.getItem('efl_insp_likes') || '{}'); } catch(e) {}
 
 async function loadInspiraceSection() {
   if (inspLoaded) return;
@@ -3570,7 +3573,7 @@ function buildInspCard(parts) {
         pollHTML = '<div class="insp-poll">' +
           '<div class="insp-poll-q">' + a.poll_question + '</div>' +
           '<div class="insp-poll-check" id="poll-check-' + a.id + '">' + optRows + '</div>' +
-          '<button class="insp-poll-submit" id="poll-submit-' + a.id + '" onclick="submitCheckPoll(\x27' + a.id + '\x27)">Hlasovat</button>' +
+          (voted !== undefined ? '<div class="insp-poll-thanks">Děkujeme za odpověď! 🙏</div>' : '<button class="insp-poll-submit" id="poll-submit-' + a.id + '" onclick="submitCheckPoll(\x27' + a.id + '\x27)">Hlasovat</button>') +
           '<div class="insp-poll-total" id="poll-total-' + a.id + '">Hlasovalo ' + (a.vote_count||0) + ' lidí</div></div>';
       } else {
         const optRows = opts.map((opt,i) =>
@@ -3589,7 +3592,7 @@ function buildInspCard(parts) {
     try { dateStr = new Date(a.created_at).toLocaleDateString('cs-CZ',{day:'numeric',month:'long'}); } catch(e) {}
 
     const rawBody = a.body || '';
-    const bodyHTML = rawBody.trim().startsWith('<') ? rawBody : '<p>' + rawBody.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
+    const bodyHTML = rawBody.includes('<p>') || rawBody.includes('<br') ? rawBody : '<p>' + rawBody.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
 
     card.innerHTML =
       '<div class="insp-card-header">' +
@@ -3604,7 +3607,7 @@ function buildInspCard(parts) {
       '</div>' +
       pollHTML +
       '<div class="insp-reactions">' +
-        '<button class="insp-react-btn" onclick="toggleInspLike(this,\x27' + a.id + '\x27)">' +
+        '<button class="insp-react-btn' + (inspLikes[a.id] ? ' active' : '') + '" onclick="toggleInspLike(this,\x27' + a.id + '\x27)">' +
         '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 14s-6-3.5-6-8a4 4 0 0 1 6-3.44A4 4 0 0 1 14 6c0 4.5-6 8-6 8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>' +
         '<span>' + (a.like_count||0) + ' líbí se</span></button>' +
       '</div>';
@@ -3663,11 +3666,13 @@ async function submitCheckPoll(articleId) {
   }
 
   inspVotes[articleId] = selected;
+  localStorage.setItem('efl_insp_votes', JSON.stringify(inspVotes));
 }
 
 function castVote(articleId, optionIdx, card) {
   if (inspVotes[articleId] !== undefined) return;
   inspVotes[articleId] = optionIdx;
+  localStorage.setItem('efl_insp_votes', JSON.stringify(inspVotes));
   const opts = card.querySelectorAll('.insp-poll-opt');
   opts.forEach((opt, i) => {
     opt.classList.toggle('voted', i === optionIdx);
@@ -3675,15 +3680,30 @@ function castVote(articleId, optionIdx, card) {
     const stored = opt.getAttribute('data-pct') || '0';
     if (bar) bar.style.width = stored + '%';
   });
-  // Persist vote to Supabase
-  db.from('article_votes').upsert({article_id: articleId, option_idx: optionIdx, voter_id: currentUser?.id||localStorage.getItem('efl_user_id')||'anon'}).then(() => {}).catch(()=>{});
+  // Update vote count in UI
+  const totalEl = card.querySelector('.insp-poll-total');
+  if (totalEl) {
+    const cur = parseInt(totalEl.textContent) || 0;
+    totalEl.textContent = 'Hlasovalo ' + (cur + 1) + ' lidí';
+  }
+  // Persist vote to Supabase (trigger updates vote_count)
+  db.from('article_votes').upsert({article_id: articleId, option_idx: optionIdx, voter_id: currentUser?.id||localStorage.getItem('efl_user_id')||'anon'}).then(() => {}).catch(e => console.warn('[vote]', e));
 }
 
 function toggleInspLike(btn, articleId) {
-  btn.classList.toggle('active');
+  const isActive = btn.classList.toggle('active');
   const span = btn.querySelector('span');
   const count = parseInt(span.textContent) || 0;
-  span.textContent = (btn.classList.contains('active') ? count+1 : count-1) + ' líbí se';
+  span.textContent = (isActive ? count + 1 : Math.max(count - 1, 0)) + ' líbí se';
+  const voterId = currentUser?.id || localStorage.getItem('efl_user_id') || 'anon';
+  if (isActive) {
+    inspLikes[articleId] = true;
+    db.from('article_likes').upsert({article_id: articleId, voter_id: voterId}).then(() => {}).catch(e => console.warn('[like]', e));
+  } else {
+    delete inspLikes[articleId];
+    db.from('article_likes').delete().eq('article_id', articleId).eq('voter_id', voterId).then(() => {}).catch(e => console.warn('[unlike]', e));
+  }
+  localStorage.setItem('efl_insp_likes', JSON.stringify(inspLikes));
 }
 
 function formatTime(ts) {
