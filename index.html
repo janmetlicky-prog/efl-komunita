@@ -3542,7 +3542,7 @@ async function loadInspiraceSection() {
 function buildInspCard(parts) {
   const card = document.createElement('div');
   card.className = 'insp-card';
-  card.id = 'insp-card-' + parts[0].series_id;
+  card.id = 'insp-card-' + (parts[0].series_id || parts[0].id);
 
   function render(idx) {
     const a = parts[idx];
