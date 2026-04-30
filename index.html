@@ -147,6 +147,8 @@
   .insp-series-badge { margin-left:auto; font-size:10px; padding:2px 8px; border-radius:20px; background:#e8f5f3; color:#2e7d6e; font-weight:600; white-space:nowrap; }
   .insp-card-title { font-size:16px; font-weight:700; color:#1a3c3c; line-height:1.4; margin-bottom:8px; }
   .insp-card-body { font-size:13px; color:#445555; line-height:1.7; }
+  .insp-card-body p { margin:0 0 10px; }
+  .insp-card-body p:last-child { margin-bottom:0; }
   .insp-parts-nav { display:flex; gap:6px; flex-wrap:wrap; padding:0 16px 12px; }
   .insp-part-chip { font-size:11px; padding:4px 11px; border-radius:20px; border:1px solid #d0e4e2; cursor:pointer; color:#556060; background:#fff; transition:all .15s; }
   .insp-part-chip.active { background:#2e7d6e; color:#fff; border-color:#2e7d6e; }
@@ -3564,7 +3566,7 @@ function buildInspCard(parts) {
           ${isSeries?`<div class="insp-series-badge">Seriál ${a.part_number}/${parts.length}</div>`:''}
         </div>
         <div class="insp-card-title">${a.title}</div>
-        <div class="insp-card-body">${a.body||''}</div>
+        <div class="insp-card-body">${(a.body||'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>')}</div>
       </div>
       ${isSeries?`<div class="insp-parts-nav">${parts.map((p,i)=>`<div class="insp-part-chip${i===idx?' active':''}" onclick="switchInspPart('${parts[0].series_id}',${i})">${p.part_number}. díl</div>`).join('')}</div>`:''}
       ${pollHTML}
@@ -3602,7 +3604,7 @@ function switchInspPart(sid, idx) {
   // Re-render with correct part
   const a = parts[idx];
   newCard.querySelector('.insp-card-title').textContent = a.title;
-  newCard.querySelector('.insp-card-body').textContent = a.body||'';
+  newCard.querySelector('.insp-card-body').innerHTML = (a.body||'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>');
   newCard.querySelectorAll('.insp-part-chip').forEach((c,i) => c.classList.toggle('active', i===idx));
 }
 
