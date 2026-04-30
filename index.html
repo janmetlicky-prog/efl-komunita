@@ -3542,100 +3542,76 @@ async function loadInspiraceSection() {
 function buildInspCard(parts) {
   const card = document.createElement('div');
   card.className = 'insp-card';
-  card.id = 'insp-card-' + (parts[0].series_id || parts[0].id);
+  const cardSid = parts[0].series_id || parts[0].id;
+  card.id = 'insp-card-' + cardSid;
 
-  function render(idx) {
-    const a = parts[idx];
-    const isSeries = a.series_total > 1;
-    const hasNextPart = parts[idx+1];
+  try {
+    const a = parts[0];
+    const isSeries = (a.series_total || 1) > 1;
     const voteKey = a.id;
     const voted = inspVotes[voteKey];
 
-    let pollHTML = '';
-    if (a.poll_question && a.poll_options) {
-      let opts;
-      try { opts = typeof a.poll_options === 'string' ? JSON.parse(a.poll_options) : a.poll_options; } catch(e) { opts = []; }
+    let opts = [];
+    if (a.poll_options) {
+      try { opts = typeof a.poll_options === 'string' ? JSON.parse(a.poll_options) : a.poll_options; } catch(e) {}
+    }
 
+    let pollHTML = '';
+    if (a.poll_question && opts.length) {
       if (a.poll_type === 'checkbox') {
-        // Checkboxová anketa s tlačítkem Hlasovat
-        pollHTML = `<div class="insp-poll">
-          <div class="insp-poll-q">${a.poll_question}</div>
-          <div class="insp-poll-check" id="poll-check-${a.id}">
-            ${opts.map((opt,i) => `
-              <label class="insp-poll-check-opt" id="pollopt-${a.id}-${i}" onclick="toggleCheckOpt(event,'${a.id}',${i})">
-                <input type="checkbox" id="pollcb-${a.id}-${i}" onclick="event.stopPropagation()">
-                <span>${opt.label}</span>
-              </label>`).join('')}
-          </div>
-          <button class="insp-poll-submit" id="poll-submit-${a.id}" onclick="submitCheckPoll('${a.id}')">Hlasovat</button>
-          <div class="insp-poll-total" id="poll-total-${a.id}">Hlasovalo ${a.vote_count||0} lidí</div>
-        </div>`;
+        const optRows = opts.map((opt,i) =>
+          '<label class="insp-poll-check-opt" id="pollopt-' + a.id + '-' + i + '" onclick="toggleCheckOpt(event,'' + a.id + '',' + i + ')">' +
+          '<input type="checkbox" id="pollcb-' + a.id + '-' + i + '" onclick="event.stopPropagation()"><span>' + opt.label + '</span></label>'
+        ).join('');
+        pollHTML = '<div class="insp-poll">' +
+          '<div class="insp-poll-q">' + a.poll_question + '</div>' +
+          '<div class="insp-poll-check" id="poll-check-' + a.id + '">' + optRows + '</div>' +
+          '<button class="insp-poll-submit" id="poll-submit-' + a.id + '" onclick="submitCheckPoll('' + a.id + '')">Hlasovat</button>' +
+          '<div class="insp-poll-total" id="poll-total-' + a.id + '">Hlasovalo ' + (a.vote_count||0) + ' lidí</div></div>';
       } else {
-        // Původní single-click poll
-        pollHTML = `<div class="insp-poll">
-          <div class="insp-poll-q">${a.poll_question}</div>
-          ${opts.map((opt,i) => `
-            <div class="insp-poll-opt${voted===i?' voted':''}" onclick="castVote('${voteKey}',${i},this.closest('.insp-card'))">
-              <div class="insp-poll-bar" style="width:${voted!==undefined?opt.pct:0}%"></div>
-              <span class="insp-poll-label">${opt.label}</span>
-              ${voted!==undefined?`<span class="insp-poll-pct">${opt.pct} %</span>`:''}
-            </div>`).join('')}
-          <div class="insp-poll-total">Hlasovalo ${a.vote_count||0} lidí</div>
-        </div>`;
+        const optRows = opts.map((opt,i) =>
+          '<div class="insp-poll-opt' + (voted===i?' voted':'') + '" onclick="castVote('' + voteKey + '',' + i + ',this.closest('.insp-card'))">' +
+          '<div class="insp-poll-bar" style="width:' + (voted!==undefined?(opt.pct||0):0) + '%"></div>' +
+          '<span class="insp-poll-label">' + opt.label + '</span>' +
+          (voted!==undefined ? '<span class="insp-poll-pct">' + (opt.pct||0) + ' %</span>' : '') +
+          '</div>'
+        ).join('');
+        pollHTML = '<div class="insp-poll"><div class="insp-poll-q">' + a.poll_question + '</div>' + optRows +
+          '<div class="insp-poll-total">Hlasovalo ' + (a.vote_count||0) + ' lidí</div></div>';
       }
     }
 
-    card.innerHTML = `
-      <div class="insp-card-header">
-        <div class="insp-card-meta">
-          <div class="insp-avatar">EFL</div>
-          <div>
-            <div class="insp-meta-name">Adéla Metlická</div>
-            <div class="insp-meta-sub">Nedělní káva · ${new Date(a.created_at).toLocaleDateString('cs-CZ',{day:'numeric',month:'long'})}</div>
-          </div>
-          ${isSeries?`<div class="insp-series-badge">Seriál ${a.part_number}/${a.series_total}</div>`:''}
-        </div>
-        <div class="insp-card-title">${a.title}</div>
-        <div class="insp-card-body">${(a.body||'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>')}</div>
-      </div>
-      ${isSeries?`<div class="insp-parts-nav">${parts.map((p,i)=>`<div class="insp-part-chip${i===idx?' active':''}" onclick="switchInspPart('${parts[0].series_id}',${i})">${p.part_number}. díl</div>`).join('')}</div>`:''}
-      ${pollHTML}
-      <div class="insp-reactions">
-        <button class="insp-react-btn" onclick="toggleInspLike(this,'${a.id}')">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 14s-6-3.5-6-8a4 4 0 0 1 6-3.44A4 4 0 0 1 14 6c0 4.5-6 8-6 8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
-          <span>${a.like_count||0} líbí se</span>
-        </button>
-      </div>
-      ${hasNextPart?`<div class="insp-next-teaser">📅 Příští díl: <strong>${hasNextPart.title}</strong> — vyjde ${new Date(hasNextPart.publish_date||Date.now()+7*86400000).toLocaleDateString('cs-CZ',{weekday:'long', day:'numeric', month:'long'})}</div>`:''}
-    `;
+    let dateStr = '';
+    try { dateStr = new Date(a.created_at).toLocaleDateString('cs-CZ',{day:'numeric',month:'long'}); } catch(e) {}
+
+    const bodyHTML = '<p>' + (a.body||'').replace(/
+
+/g,'</p><p>').replace(/
+/g,'<br>') + '</p>';
+
+    card.innerHTML =
+      '<div class="insp-card-header">' +
+        '<div class="insp-card-meta">' +
+          '<div class="insp-avatar">EFL</div>' +
+          '<div><div class="insp-meta-name">Adéla Metlická</div>' +
+          '<div class="insp-meta-sub">Nedělní káva · ' + dateStr + '</div></div>' +
+          (isSeries ? '<div class="insp-series-badge">Seriál ' + a.part_number + '/' + a.series_total + '</div>' : '') +
+        '</div>' +
+        '<div class="insp-card-title">' + a.title + '</div>' +
+        '<div class="insp-card-body">' + bodyHTML + '</div>' +
+      '</div>' +
+      pollHTML +
+      '<div class="insp-reactions">' +
+        '<button class="insp-react-btn" onclick="toggleInspLike(this,'' + a.id + '')">' +
+        '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 14s-6-3.5-6-8a4 4 0 0 1 6-3.44A4 4 0 0 1 14 6c0 4.5-6 8-6 8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>' +
+        '<span>' + (a.like_count||0) + ' líbí se</span></button>' +
+      '</div>';
+  } catch(e) {
+    console.error('[buildInspCard]', e);
+    card.innerHTML = '<div style="padding:16px;color:#7a9090;font-size:13px">Článek se nepodařilo zobrazit.</div>';
   }
 
-  card._parts = parts;
-  card._currentIdx = 0;
-  render(0);
-
-  window['switchInspPart'] = window['switchInspPart'] || function(sid, idx) {
-    const c = document.getElementById('insp-card-'+sid);
-    if (!c) return;
-    c._currentIdx = idx;
-    c._parts && (function(){ const r = c._parts; c.innerHTML=''; const nc=buildInspCard(r); nc._currentIdx=idx; document.getElementById('insp-card-'+sid).replaceWith(nc); })();
-  };
-
   return card;
-}
-
-function switchInspPart(sid, idx) {
-  const oldCard = document.getElementById('insp-card-'+sid);
-  if (!oldCard || !oldCard._parts) return;
-  const parts = oldCard._parts;
-  const newCard = buildInspCard(parts);
-  newCard._currentIdx = idx;
-  oldCard.replaceWith(newCard);
-  // Re-render with correct part
-  const a = parts[idx];
-  newCard.querySelector('.insp-card-title').textContent = a.title;
-  newCard.querySelector('.insp-card-body').innerHTML = (a.body||'').replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>').replace(/^/,'<p>').replace(/$/,'</p>');
-  newCard.querySelectorAll('.insp-part-chip').forEach((c,i) => c.classList.toggle('active', i===idx));
 }
 
 function toggleCheckOpt(e, articleId, idx) {
