@@ -3614,7 +3614,7 @@ async function loadInspiraceSection() {
   try {
     const [artRes, votesRes] = await Promise.all([
       db.from('articles').select('*').order('created_at', {ascending:false}),
-      db.from('article_votes').select('article_id,option_idx,option_idxs')
+      db.from('article_votes').select('article_id,option_idx')
     ]);
     const articles = artRes.data;
     const allVotes = votesRes.data || [];
@@ -3634,8 +3634,8 @@ async function loadInspiraceSection() {
         if (a.poll_type === 'checkbox') {
           opts.forEach(function(opt, i) { opt.votes = 0; });
           articleVotes.forEach(function(v) {
-            var idxs = v.option_idxs || [v.option_idx];
-            idxs.forEach(function(idx) { if (opts[idx]) opts[idx].votes = (opts[idx].votes||0) + 1; });
+            var idx = v.option_idx;
+            if (idx != null && opts[idx]) opts[idx].votes = (opts[idx].votes||0) + 1;
           });
           var maxVotes = Math.max(1, articleVotes.length);
           opts.forEach(function(opt) { opt.pct = Math.round((opt.votes||0) / maxVotes * 100); });
