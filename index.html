@@ -4024,19 +4024,18 @@ async function deleteExpedition(id) {
   } catch(err) { alert('Chyba: ' + err.message); }
 }
 
-// Fetch active trips from kalkulace app
+// Fetch active trips via Supabase Edge Function (proxy to private GitHub repo)
 var _cachedTrips = null;
 async function fetchActiveTrips() {
   var select = document.getElementById('exp-trip-select');
   if (!select) return;
   try {
     if (!_cachedTrips) {
-      var resp = await fetch('https://raw.githubusercontent.com/janmetlicky-prog/efl-kalkulace/main/data/db.json');
-      var json = await resp.json();
-      var trips = json.trips || json;
-      _cachedTrips = (Array.isArray(trips) ? trips : []).filter(function(t) { return t.status && t.status !== 'done' && t.status !== 'storno'; });
+      var resp = await fetch(SUPA_URL + '/functions/v1/fetch-trips', {
+        headers: { 'Authorization': 'Bearer ' + SUPA_KEY }
+      });
+      _cachedTrips = await resp.json();
     }
-    // Keep first option, replace rest
     select.innerHTML = '<option value="">-- Vyberte cestu nebo zadejte ručně --</option>';
     _cachedTrips.forEach(function(t) {
       var opt = document.createElement('option');
@@ -4055,39 +4054,16 @@ function onTripSelect(sel) {
   if (!opt || !opt.dataset.trip) return;
   try {
     var t = JSON.parse(opt.dataset.trip);
-    // Title — strip date suffix (everything after last comma or pipe date part)
-    var title = t.name || '';
-    var titleClean = title.replace(/,?\s*\d{1,2}\.\s*-\s*\d{1,2}\.\s*\d{1,2}\.\s*\d{4}$/, '').replace(/,?\s*\d{1,2}\.\s*-\s*\d{1,2}\.\s*\d{1,2}\.\s*$/, '').trim();
-    document.getElementById('exp-title').value = titleClean || title;
+    document.getElementById('exp-title').value = t.name || '';
     document.getElementById('exp-destination').value = t.destination || '';
     document.getElementById('exp-guide').value = t.instructor || '';
     document.getElementById('exp-nights').value = t.nights || '';
     document.getElementById('exp-price').value = t.price ? t.price + ' Kč' : '';
-    // Parse dates from t.date + t.year
-    if (t.date && t.year) {
-      parseTripDates(t.date, t.year);
-    }
+    document.getElementById('exp-from').value = t.dateFrom || '';
+    document.getElementById('exp-to').value = t.dateTo || '';
+    document.getElementById('exp-accommodation').value = t.hotelName || '';
   } catch(e) {
     console.error('onTripSelect parse error:', e);
-  }
-}
-
-function parseTripDates(dateStr, year) {
-  // Formats: "15.-22.5." or "30. 5. – 6. 6." or "30.5.-6.6."
-  var clean = dateStr.replace(/\s/g, '').replace('–', '-');
-  // Split on dash between day groups
-  var parts = clean.match(/(\d{1,2})\.(\d{1,2})?\.?-(\d{1,2})\.(\d{1,2})\./);
-  if (parts) {
-    var dayFrom = parts[1];
-    var monthFrom = parts[2] || parts[4]; // if no month for from, same as to
-    var dayTo = parts[3];
-    var monthTo = parts[4];
-    document.getElementById('exp-from').value = dayFrom + '.' + monthFrom + '.' + year;
-    document.getElementById('exp-to').value = dayTo + '.' + monthTo + '.' + year;
-  } else {
-    // Fallback: put raw string
-    document.getElementById('exp-from').value = dateStr + year;
-    document.getElementById('exp-to').value = '';
   }
 }
 
