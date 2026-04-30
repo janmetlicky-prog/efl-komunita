@@ -3612,14 +3612,43 @@ async function loadInspiraceSection() {
   if (!feed) return;
 
   try {
-    const { data: articles } = await db.from('articles')
-      .select('*')
-      .order('created_at', {ascending:false});
+    const [artRes, votesRes] = await Promise.all([
+      db.from('articles').select('*').order('created_at', {ascending:false}),
+      db.from('article_votes').select('article_id,option_idx,option_idxs')
+    ]);
+    const articles = artRes.data;
+    const allVotes = votesRes.data || [];
 
     if (!articles || !articles.length) {
       feed.innerHTML = '<div style="padding:24px;text-align:center;color:#7a9090;font-size:13px;font-style:italic">Brzy zde budou první články ✍️</div>';
       return;
     }
+
+    // Spočítat hlasy a procenta pro každý článek
+    articles.forEach(a => {
+      const articleVotes = allVotes.filter(v => v.article_id === a.id);
+      a.vote_count = articleVotes.length;
+      if (a.poll_options) {
+        var opts = typeof a.poll_options === 'string' ? JSON.parse(a.poll_options) : a.poll_options;
+        // Počítat hlasy per option
+        if (a.poll_type === 'checkbox') {
+          opts.forEach(function(opt, i) { opt.votes = 0; });
+          articleVotes.forEach(function(v) {
+            var idxs = v.option_idxs || [v.option_idx];
+            idxs.forEach(function(idx) { if (opts[idx]) opts[idx].votes = (opts[idx].votes||0) + 1; });
+          });
+          var maxVotes = Math.max(1, articleVotes.length);
+          opts.forEach(function(opt) { opt.pct = Math.round((opt.votes||0) / maxVotes * 100); });
+        } else {
+          opts.forEach(function(opt, i) {
+            opt.votes = articleVotes.filter(function(v) { return v.option_idx === i; }).length;
+          });
+          var totalV = Math.max(1, articleVotes.length);
+          opts.forEach(function(opt) { opt.pct = Math.round((opt.votes||0) / totalV * 100); });
+        }
+        a.poll_options = opts;
+      }
+    });
 
     // Group by series_id
     const series = {};
@@ -3671,7 +3700,7 @@ function buildInspCard(parts) {
           '<div class="insp-poll-total" id="poll-total-' + a.id + '">Hlasovalo ' + (a.vote_count||0) + ' lidí</div></div>';
       } else {
         const optRows = opts.map((opt,i) =>
-          '<div class="insp-poll-opt' + (voted===i?' voted':'') + '" data-pct="' + (opt.pct||0) + '" onclick="castVote(\x27' + voteKey + '\x27,' + i + ',this.closest(\x27.insp-card\x27))">' +
+          '<div class="insp-poll-opt' + (voted===i?' voted':'') + '" data-pct="' + (opt.pct||0) + '" data-votes="' + (opt.votes||0) + '" onclick="castVote(\x27' + voteKey + '\x27,' + i + ',this.closest(\x27.insp-card\x27))">' +
           '<div class="insp-poll-bar" style="width:' + (voted!==undefined?(opt.pct||0):0) + '%"></div>' +
           '<span class="insp-poll-label">' + opt.label + '</span>' +
           (voted!==undefined ? '<span class="insp-poll-pct">' + (opt.pct||0) + ' %</span>' : '') +
@@ -3767,21 +3796,42 @@ function castVote(articleId, optionIdx, card) {
   if (inspVotes[articleId] !== undefined) return;
   inspVotes[articleId] = optionIdx;
   localStorage.setItem('efl_insp_votes', JSON.stringify(inspVotes));
-  const opts = card.querySelectorAll('.insp-poll-opt');
-  opts.forEach((opt, i) => {
-    opt.classList.toggle('voted', i === optionIdx);
-    const bar = opt.querySelector('.insp-poll-bar');
-    const stored = opt.getAttribute('data-pct') || '0';
-    if (bar) bar.style.width = stored + '%';
+
+  // Přepočítat procenta z data-pct atributů + nový hlas
+  var opts = card.querySelectorAll('.insp-poll-opt');
+  var votes = [];
+  opts.forEach(function(opt, i) {
+    votes.push(i === optionIdx ? 1 : 0);
   });
-  // Update vote count in UI
-  const totalEl = card.querySelector('.insp-poll-total');
+  // Přičíst existující hlasy z data-votes
+  opts.forEach(function(opt, i) {
+    var existing = parseInt(opt.getAttribute('data-votes') || '0');
+    votes[i] += existing;
+  });
+  var totalVotes = votes.reduce(function(s,v){return s+v;}, 0) || 1;
+
+  opts.forEach(function(opt, i) {
+    opt.classList.toggle('voted', i === optionIdx);
+    var pct = Math.round(votes[i] / totalVotes * 100);
+    var bar = opt.querySelector('.insp-poll-bar');
+    if (bar) bar.style.width = pct + '%';
+    // Přidat/aktualizovat procenta label
+    var pctSpan = opt.querySelector('.insp-poll-pct');
+    if (!pctSpan) {
+      pctSpan = document.createElement('span');
+      pctSpan.className = 'insp-poll-pct';
+      opt.appendChild(pctSpan);
+    }
+    pctSpan.textContent = pct + ' %';
+  });
+
+  var totalEl = card.querySelector('.insp-poll-total');
   if (totalEl) {
-    const cur = parseInt(totalEl.textContent) || 0;
-    totalEl.textContent = 'Hlasovalo ' + (cur + 1) + ' lidí';
+    totalEl.textContent = 'Hlasovalo ' + totalVotes + ' lidí';
   }
-  // Persist vote to Supabase (trigger updates vote_count)
-  db.from('article_votes').upsert({article_id: articleId, option_idx: optionIdx, voter_id: currentUser?.id||localStorage.getItem('efl_user_id')||'anon'}).then(() => {}).catch(e => console.warn('[vote]', e));
+
+  // Persist vote to Supabase
+  db.from('article_votes').upsert({article_id: articleId, option_idx: optionIdx, voter_id: currentUser?.id||localStorage.getItem('efl_user_id')||'anon'}).then(function(){}).catch(function(e) { console.warn('[vote]', e); });
 }
 
 function toggleInspLike(btn, articleId) {
