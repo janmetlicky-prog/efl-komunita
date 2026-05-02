@@ -3501,15 +3501,11 @@ db.auth.onAuthStateChange(async (event, session) => {
 async function loadDailyFeed() {
   const el = document.getElementById('daily-feed');
   if (!el) return;
-  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-  const todayEnd   = new Date(); todayEnd.setHours(23,59,59,999);
-  const iso = d => d.toISOString();
-
   try {
     const [artRes, evRes, dreamRes] = await Promise.all([
-      db.from('articles').select('id,title,part_number,series_total,series_id,poll_question,created_at').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
-      db.from('events').select('id,title,event_date,type').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}),
-      db.from('intents').select('id,destination,created_at,users(name)').gte('created_at', iso(todayStart)).lte('created_at', iso(todayEnd)).order('created_at', {ascending:false}).limit(2),
+      db.from('articles').select('id,title,part_number,series_total,series_id,poll_question,created_at').order('created_at', {ascending:false}).limit(10),
+      db.from('events').select('id,title,event_date,type,created_at').order('created_at', {ascending:false}).limit(10),
+      db.from('intents').select('id,destination,created_at,users(name)').order('created_at', {ascending:false}).limit(10),
     ]);
 
     const items = [];
@@ -3520,13 +3516,13 @@ async function loadDailyFeed() {
     items.sort((a,b) => new Date(b.ts) - new Date(a.ts));
 
     if (!items.length) {
-      el.innerHTML = '<div class="landing-daily-empty">Dnes zatím nic nového — zkus to zítra 🌱</div>';
+      el.innerHTML = '<div class="landing-daily-empty">Zatím žádný obsah 🌱</div>';
       return;
     }
 
     const iconMap = {article:'📖', poll:'🗳️', event:'📅', dream:'✈️'};
     const badgeMap = {article:'Článek', poll:'Hlasování', event:'Událost', dream:'Sen'};
-    el.innerHTML = items.slice(0,4).map(item => `
+    el.innerHTML = items.slice(0,3).map(item => `
       <div class="daily-card" onclick="${(item.type==='article'||item.type==='poll')?`showSection('inspirace',null)`:`showSection('${item.type==='event'?'landing':'community'}',null)`}">
         <div class="daily-card-icon type-${item.type}">${iconMap[item.type]}</div>
         <div>
