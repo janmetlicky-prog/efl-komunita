@@ -3513,7 +3513,7 @@ async function loadDailyFeed() {
     ]);
 
     const items = [];
-    (artRes.data||[]).forEach(a => { const isPoll = a.poll_question && a.poll_type !== 'none'; items.push({type: isPoll ? 'poll' : 'article', title: a.title, meta: isPoll ? 'Hlasování' : (a.series_total > 1 ? `Seriál ${a.part_number}/${a.series_total}` : 'Článek'), ts: a.created_at, id: a.id}); });
+    (artRes.data||[]).forEach(a => { const isSeries = a.series_id && a.series_total > 1; const isPoll = a.poll_question && !a.series_id; items.push({type: isSeries ? 'article' : (isPoll ? 'poll' : 'article'), title: a.title, meta: isSeries ? `Seriál ${a.part_number}/${a.series_total}` : (isPoll ? 'Hlasování' : 'Článek'), ts: a.created_at, id: a.id}); });
     (evRes.data||[]).forEach(e => items.push({type:'event', title: e.title, meta: formatEventDate(e.event_date), ts: e.created_at, id: e.id}));
     (dreamRes.data||[]).forEach(d => items.push({type:'dream', title: (d.users?.name||'Člen komunity') + ' chce na: ' + d.destination, meta: 'Nový sen', ts: d.created_at, id: d.id}));
 
