@@ -520,6 +520,10 @@
   .exp-landing-banner .exp-arrow { color:#C9843A; font-size:1.5rem; }
   .exp-nav-btn { color:#C9843A !important; }
   #exp-trip-select:focus { border-color:#C9843A; box-shadow:0 0 0 2px rgba(201,132,58,.15); }
+  .insp-series-tabs { display:flex; gap:6px; padding:12px 16px 0; }
+  .insp-series-tab { padding:6px 14px; border:1px solid #d0e4e2; border-radius:20px; background:#f8fcfb; font-size:12px; font-weight:600; color:#5a8a84; cursor:pointer; transition:all .15s; font-family:'DM Sans',sans-serif; }
+  .insp-series-tab:hover { border-color:#4a9b8e; background:#eef7f5; }
+  .insp-series-tab.active { background:#2e7d6e; color:#fff; border-color:#2e7d6e; }
   @media(max-width:600px) {
     .exp-grid { grid-template-columns:1fr; }
     .exp-landing-banner { flex-direction:column; text-align:center; padding:1.2rem; }
@@ -3678,8 +3682,32 @@ function buildInspCard(parts) {
   card.id = 'insp-card-' + cardSid;
 
   try {
-    const a = parts[0];
-    const isSeries = (a.series_total || 1) > 1;
+    const isSeries = parts.length > 1 || (parts[0].series_total || 1) > 1;
+
+    // Series tabs
+    let tabsHTML = '';
+    if (isSeries && parts.length > 1) {
+      tabsHTML = '<div class="insp-series-tabs">' + parts.map((p, idx) =>
+        '<button class="insp-series-tab' + (idx === 0 ? ' active' : '') + '" onclick="switchSeriesPart(this,' + idx + ',\x27' + cardSid + '\x27)">' +
+        'Díl ' + p.part_number + '</button>'
+      ).join('') + '</div>';
+    }
+
+    // Render all parts, show only first
+    const partsHTML = parts.map((a, idx) => {
+      return buildInspPartHTML(a, isSeries, idx === 0);
+    }).join('');
+
+    card.innerHTML = tabsHTML + partsHTML;
+  } catch(e) {
+    console.error('[buildInspCard]', e);
+    card.innerHTML = '<div style="padding:16px;color:#7a9090;font-size:13px">Článek se nepodařilo zobrazit.</div>';
+  }
+
+  return card;
+}
+
+function buildInspPartHTML(a, isSeries, visible) {
     const voteKey = a.id;
     const voted = inspVotes[voteKey];
 
@@ -3719,7 +3747,7 @@ function buildInspCard(parts) {
     const rawBody = a.body || '';
     const bodyHTML = rawBody.includes('<p>') || rawBody.includes('<br') ? rawBody : '<p>' + rawBody.replace(/\n\n/g,'</p><p>').replace(/\n/g,'<br>') + '</p>';
 
-    card.innerHTML =
+    return '<div class="insp-series-part" data-part-idx="' + (a.part_number-1) + '" style="' + (visible ? '' : 'display:none') + '">' +
       '<div class="insp-card-header">' +
         '<div class="insp-card-meta">' +
           '<div class="insp-avatar">EFL</div>' +
@@ -3735,13 +3763,21 @@ function buildInspCard(parts) {
         '<button class="insp-react-btn' + (inspLikes[a.id] ? ' active' : '') + '" onclick="toggleInspLike(this,\x27' + a.id + '\x27)">' +
         '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 14s-6-3.5-6-8a4 4 0 0 1 6-3.44A4 4 0 0 1 14 6c0 4.5-6 8-6 8z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>' +
         '<span>' + (a.like_count||0) + ' líbí se</span></button>' +
-      '</div>';
-  } catch(e) {
-    console.error('[buildInspCard]', e);
-    card.innerHTML = '<div style="padding:16px;color:#7a9090;font-size:13px">Článek se nepodařilo zobrazit.</div>';
-  }
+      '</div>' +
+    '</div>';
+}
 
-  return card;
+function switchSeriesPart(btn, idx, sid) {
+  var card = document.getElementById('insp-card-' + sid);
+  if (!card) return;
+  // Toggle tabs
+  card.querySelectorAll('.insp-series-tab').forEach(function(t, i) {
+    t.classList.toggle('active', i === idx);
+  });
+  // Toggle parts
+  card.querySelectorAll('.insp-series-part').forEach(function(p, i) {
+    p.style.display = i === idx ? '' : 'none';
+  });
 }
 
 function toggleCheckOpt(e, articleId, idx) {
